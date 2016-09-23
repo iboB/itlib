@@ -108,6 +108,7 @@
 #pragma once
 
 #include <type_traits>
+#include <cstddef>
 
 #define CHOBO_STATIC_VECTOR_ERROR_HANDLING_NONE  0
 #define CHOBO_STATIC_VECTOR_ERROR_HANDLING_THROW 1
