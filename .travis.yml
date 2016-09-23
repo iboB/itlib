@@ -1,0 +1,50 @@
+language: cpp
+sudo: required
+dist: precise
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
+git:
+  depth: 5
+
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.9
+      env: COMPILER=g++-4.9
+      before_install:
+        - sudo apt-get update -qq
+
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      env: COMPILER=g++-5
+      before_install:
+        - sudo apt-get update -qq
+
+script:
+  - cd test
+  - mkdir -p debug_build
+  - cd debug_build
+  - cmake -DCMAKE_CXX_COMPILER=$COMPILER .. -DCMAKE_BUILD_TYPE=Debug
+  - make -j2
+  - ctest --output-on-failure
+  - cd ..
+  - mkdir -p release_build
+  - cd release_build
+  - cmake -DCMAKE_CXX_COMPILER=$COMPILER .. -DCMAKE_BUILD_TYPE=Release
+  - make -j2
+  - ctest --output-on_failure
