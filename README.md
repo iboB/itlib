@@ -5,9 +5,16 @@ A collection of small single-header C++11 libraries by [Chobolabs](http://www.ch
 
 [![Language](https://img.shields.io/badge/language-C++-blue.svg)](https://isocpp.org/) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-Every `.hpp` file in `include/chobo` is a standalone library, and has no dependencies other than the standard lib.
+## Build Status
 
-List of libraries:
+OS and compiler | Build status
+-----|-----
+Linux / GCC 4.9 and 5.0 | [![Travis CI](https://travis-ci.org/Chobolabs/chobo-shl.svg?branch=master)](https://travis-ci.org/Chobolabs/chobo-shl)
+Windows / MSVC 14 (2015) 32 and 64 bit | [![Appveyor](https://ci.appveyor.com/api/projects/status/vq4932w0wbo83jwg?svg=true)](https://ci.appveyor.com/project/iboB/chobo-shl)
+
+## Libraries
+
+Every `.hpp` file in `include/chobo` is a standalone library, and has no dependencies other than the standard lib.
 
 library    | description
 --------------------- | --------------------------------
@@ -21,8 +28,7 @@ More detailed documentation is available in each header file.
 
 The libraries use the C++11 standard and there are no plans for support of earlier ones.
 
-Usage
------
+## Usage
 
 Choose one or more libraries that you like and copy somewhere in your include paths.
 
@@ -33,8 +39,7 @@ Supported compilers:
 
 Other C++11 compliant compilers may also work.
 
-Copyright
----------
+## Copyright
 
 Copyright &copy; 2016 [Chobolabs Inc.](http://www.chobolabs.com/)
 
