@@ -106,8 +106,9 @@
 #include <algorithm>
 #include <type_traits>
 
-// simple flat map class similar to boost::flat_map
-// but without the smorgasbord of dependencies
+#if !defined(CHOBO_FLAT_MAP_NO_CONST_CHAR_OVERLOADS)
+#include <cstring>
+#endif
 
 #if !defined(CHOBO_FLAT_MAP_NO_THROW)
 #   include <stdexcept>
