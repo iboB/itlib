@@ -14,7 +14,7 @@ Windows / MSVC 14 (2015) 32 and 64 bit | [![Appveyor](https://ci.appveyor.com/ap
 
 ## Libraries
 
-Every `.hpp` file in `include/chobo` is a standalone library, and has no dependencies other than the standard lib.
+Every `.hpp` file in `include/chobo` is a standalone library and has no dependencies other than the standard lib.
 
 library    | description
 --------------------- | --------------------------------
@@ -38,6 +38,15 @@ Supported compilers:
 * Clang 3.2 or newer
 
 Other C++11 compliant compilers may also work.
+
+## Contributing
+
+Pull requests and issues are welcome.
+
+Please make one pull request and issue per library, tagging them with the library name in the title with brackets. Example: 
+
+* *[vector_view] Added insert methods*
+* *[flat_map] Crash when using with xxxx container*
 
 ## Copyright
 
