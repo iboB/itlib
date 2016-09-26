@@ -1,4 +1,4 @@
-// chobo-vector-view v1.00
+// chobo-vector-view v1.01
 //
 // A view of a std::vector which makes it look as a vector of another type
 //
@@ -28,6 +28,8 @@
 //                  VERSION HISTORY
 //
 //  1.00 (2016-09-23) First public release
+//  1.01 (2016-09-27) Added checks for unsupported resizes when
+//             sizeof(view type) is less than half of sizeof(vec type)
 //
 //
 //                  DOCUMENTATION
@@ -258,8 +260,27 @@ public:
 
     void resize(size_type n)
     {
-        n = (n * sizeof(value_type) + sizeof(vec_value_type) - 1) / sizeof(vec_value_type);
-        m_vector.resize(n);
+        size_type s = (n * sizeof(value_type) + sizeof(vec_value_type) - 1) / sizeof(vec_value_type);
+        m_vector.resize(s);
+
+#if !defined CHOBO_VECTOR_VIEW_NO_RESIZE_CHECK
+        // Is this assert fails, here's what has happened:
+        // The size of the type of the view is smaller than the half of the size of the vector.
+        // Since the vector's number of elements must be a whole number, we cannot resize it to
+        // hold cerrtain numbers of the type of the view (ie not multiples of the sizeof(vec_type)/sizeof(view_type))
+        //
+        // In theory this could be supported if we add a custom size variable for the view class
+        // However, besides the increase in complexity, this will cause us to lose a cruicial
+        // feature - having changes to the vector from outside be automatically reflected on the view
+        // because it's only a view, and has no state of its own.
+        // Adding such size will be a state for this class.
+        // Perhaps if there is need such a feature could be implemented but in a class
+        // with another name, where it's clear that persisting it would be hurtful.
+        //
+        // So to avoid potential bugs this assertion, as well as the static assertions in
+        // push_back and pop_back have been added.
+        assert(size() == n && "unsupported resize");
+#endif
     }
 
     void resize(size_type n, const value_type& val)
@@ -342,17 +363,26 @@ public:
 
     void push_back(const value_type& val)
     {
+        // see comment in resize for an explanation
+        static_assert(sizeof(value_type) > sizeof(vec_value_type) / 2,
+            "vector_view::push_back is not supported for value_type with size smaller than half of the viewed type");
         resize(size() + 1, val);
     }
 
     void push_back(value_type&& val)
     {
+        // see comment in resize for an explanation
+        static_assert(sizeof(value_type) > sizeof(vec_value_type) / 2,
+            "vector_view::push_back is not supported for value_type with size smaller than half of the viewed type");
         resize(size() + 1);
         back() = std::move(val);
     }
 
     void pop_back()
     {
+        // see comment in resize for an explanation
+        static_assert(sizeof(value_type) > sizeof(vec_value_type) / 2,
+            "vector_view::pop_back is not supported for value_type with size smaller than half of the viewed type");
         resize(size() - 1);
     }
 
@@ -630,6 +660,12 @@ TEST_CASE("[vector_view] test")
     v3dview4d.resize(2);
     CHECK(v3dview4d.size() == 2);
     CHECK(vec4d.size() == 2);
+
+    // smaller
+    auto iview = make_vector_view<int>(vec4d);
+    CHECK(iview.size() == 8);
+    iview.resize(12);
+    CHECK(vec4d.size() == 3);
 }
 
 TEST_CASE("[const_vector_view] test")
@@ -716,6 +752,10 @@ TEST_CASE("[const_vector_view] test")
 
     vvec4d.resize(3);
     CHECK(v3dview4d.size() == 4);
+
+    // smaller
+    auto iview = make_vector_view<int>(vec4d);
+    CHECK(iview.size() == 12);
 }
 
 #endif
