@@ -37,7 +37,7 @@
 // of std::map. Flat map has an optional underlying container which by default
 // is std::vector. Thus the items in the map are in a continuous block of
 // memory. Thus iterating over the map is cache friendly, at the cost of
-// O(n log2 n) insert and O(n) erase.
+// O(n) for insert and erase.
 //
 // The elements inside (like in std::map) are kept in an order sorted by key.
 // Getting a value by key is O(log2 n)

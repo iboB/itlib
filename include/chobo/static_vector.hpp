@@ -41,7 +41,7 @@
 //
 // Example:
 //
-// chobo::static_vector<int, 4> myvec; // a static vector of size 0 and capacity 10
+// chobo::static_vector<int, 4> myvec; // a static vector of size 0 and capacity 4
 // myvec.resize(2); // vector is {0,0}
 // myvec[1] = 11; // vector is {0,11}
 // myvec.push_back(7); // vector is {0,11,7}
