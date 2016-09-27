@@ -201,7 +201,7 @@ public:
     iterator find(const key_type& k)
     {
         auto i = lower_bound(k);
-        if (i != end() && i->first == k)
+        if (i != end() && !m_cmp(k, *i))
             return i;
 
         return end();
@@ -210,7 +210,7 @@ public:
     const_iterator find(const key_type& k) const
     {
         auto i = lower_bound(k);
-        if (i != end() && i->first == k)
+        if (i != end() && !m_cmp(k, *i))
             return i;
 
         return end();
@@ -225,7 +225,7 @@ public:
     std::pair<iterator, bool> insert(P&& val)
     {
         auto i = lower_bound(val.first);
-        if (i != end() && i->first == val.first)
+        if (i != end() && !m_cmp(val.first, *i))
         {
             return { i, false };
         }
@@ -236,7 +236,7 @@ public:
     std::pair<iterator, bool> insert(const value_type& val)
     {
         auto i = lower_bound(val.first);
-        if (i != end() && i->first == val.first)
+        if (i != end() && !m_cmp(val.first, *i))
         {
             return { i, false };
         }
@@ -271,7 +271,7 @@ public:
     mapped_type& operator[](const key_type& k)
     {
         auto i = lower_bound(k);
-        if (i != end() && i->first == k)
+        if (i != end() && !m_cmp(k, *i))
         {
             return i->second;
         }
@@ -283,7 +283,7 @@ public:
     mapped_type& operator[](key_type&& k)
     {
         auto i = lower_bound(k);
-        if (i != end() && i->first == k)
+        if (i != end() && !m_cmp(k, *i))
         {
             return i->second;
         }
@@ -295,7 +295,7 @@ public:
     mapped_type& at(const key_type& k)
     {
         auto i = lower_bound(k);
-        if (i == end() || i->first != k)
+        if (i == end() || m_cmp(*i, k))
         {
             _CHOBO_THROW_FLAT_MAP_OUT_OF_RANGE();
         }
@@ -306,7 +306,7 @@ public:
     const mapped_type& at(const key_type& k) const
     {
         auto i = lower_bound(k);
-        if (i == end() || i->first != k)
+        if (i == end() || m_cmp(*i, k))
         {
             _CHOBO_THROW_FLAT_MAP_OUT_OF_RANGE();
         }
@@ -412,10 +412,16 @@ private:
     {
         pair_compare() = default;
         pair_compare(const key_compare& kc) : kcmp(kc) {}
-        bool operator()(const value_type& a, const key_type& b)
+        bool operator()(const value_type& a, const key_type& b) const
         {
             return kcmp(a.first, b);
         }
+
+        bool operator()(const key_type& a, const value_type& b) const
+        {
+            return kcmp(a, b.first);
+        }
+
         key_compare kcmp;
     };
     pair_compare m_cmp;
@@ -440,9 +446,31 @@ bool operator!=(const flat_map<Key, T, Compare, Container>& a, const flat_map<Ke
 
 #include <string>
 
+namespace chobo_flat_map_test
+{
+
+// struct with no operator==
+struct int_wrap
+{
+    int_wrap() = default;
+    int_wrap(int i) : val(i) {}
+    int val;
+
+    struct compare
+    {
+        bool operator()(const int_wrap& a, const int_wrap& b) const
+        {
+            return a.val < b.val;
+        }
+    };
+};
+
+}
+
 TEST_CASE("[flat_map] test")
 {
     using namespace chobo;
+    using namespace chobo_flat_map_test;
 
     flat_map<int, float> ifmap;
     CHECK(ifmap.empty());
@@ -541,6 +569,46 @@ TEST_CASE("[flat_map] test")
     CHECK(simap2 != simap);
     simap2 = simap;
     CHECK(simap2 == simap);
+
+    // no == comparable tests
+    flat_map<int_wrap, int, int_wrap::compare> iwmap;
+    iwmap[5] = 1;
+    iwmap[20] = 15;
+    iwmap[10] = 5;
+
+    auto iwi = iwmap.emplace(3, 4);
+    CHECK(iwi.second == true);
+    CHECK(iwi.first == iwmap.begin());
+
+    CHECK(iwmap.begin()->first.val == 3);
+    CHECK(iwmap.begin()->second == 4);
+    CHECK(iwmap.rbegin()->first.val == 20);
+    CHECK(iwmap.rbegin()->second == 15);
+    CHECK(iwmap.at(10) == 5);
+
+    iwi = iwmap.insert(std::pair<int_wrap, int>(11, 6));
+    CHECK(iwi.second == true);
+    CHECK(iwi.first + 2 == iwmap.end());
+
+    CHECK(iwmap[11] == 6);
+
+    iwi = iwmap.emplace(10, 55);
+    CHECK(iwi.second == false);
+    CHECK(iwi.first->second == 5);
+
+    CHECK(iwmap.find(18) == iwmap.end());
+    CHECK(iwmap.find(11) != iwmap.end());
+
+    const auto ciwmap = iwmap;
+
+    CHECK(ciwmap.begin()->first.val == 3);
+    CHECK(ciwmap.begin()->second == 4);
+    CHECK(ciwmap.rbegin()->first.val == 20);
+    CHECK(ciwmap.rbegin()->second == 15);
+    CHECK(ciwmap.at(10) == 5);
+
+    CHECK(ciwmap.find(18) == ciwmap.end());
+    CHECK(ciwmap.find(11) != ciwmap.end());
 }
 
 #if defined(CHOBO_FLAT_MAP_TEST_STATIC_VECTOR_WITH_DOCTEST)
