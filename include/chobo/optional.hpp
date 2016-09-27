@@ -247,7 +247,7 @@ public:
     {
         destroy();
         void* p = &m_data;
-        new (p) value_type(std::forward<Args>(args)...);
+        ::new (p) value_type(std::forward<Args>(args)...);
         m_is_valid = true;
     }
 

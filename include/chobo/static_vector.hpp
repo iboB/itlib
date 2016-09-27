@@ -484,7 +484,7 @@ public:
         }
 
         position->~T();
-        new (position) T(std::forward<Args>(args)...);
+        ::new (position) T(std::forward<Args>(args)...);
 
         return position;
     }
