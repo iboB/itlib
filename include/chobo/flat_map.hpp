@@ -1,4 +1,4 @@
-// chobo-flat-map v1.00
+// chobo-flat-map v1.01
 //
 // std::map-like class with an underlying vector
 //
@@ -27,6 +27,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2016-09-27) Fix for keys with no operator==. Clean up of assignment.
+//                    Added swap method.
 //  1.00 (2016-09-23) First public release
 //
 //

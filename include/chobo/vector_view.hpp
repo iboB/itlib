@@ -27,9 +27,9 @@
 //
 //                  VERSION HISTORY
 //
-//  1.00 (2016-09-23) First public release
 //  1.01 (2016-09-27) Added checks for unsupported resizes when
 //             sizeof(view type) is less than half of sizeof(vec type)
+//  1.00 (2016-09-23) First public release
 //
 //
 //                  DOCUMENTATION

@@ -1,4 +1,4 @@
-// chobo-static-vector v1.00
+// chobo-static-vector v1.01
 //
 // std::vector-like class with a fixed capacity
 //
@@ -27,6 +27,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2016-09-27) Qualified operator new. Fixed self usurp on assignment
 //  1.00 (2016-09-23) First public release
 //
 //

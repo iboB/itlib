@@ -1,4 +1,4 @@
-// chobo-optional v1.00
+// chobo-optional v1.01
 //
 // A value wrapper with an optional invalid state.
 //
@@ -27,6 +27,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2016-09-27) Qualified operator new
 //  1.00 (2016-09-23) First public release
 //
 //
