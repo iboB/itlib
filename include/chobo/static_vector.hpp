@@ -242,6 +242,12 @@ public:
 
     static_vector& operator=(const static_vector& v)
     {
+        if (this == &v)
+        {
+            // prevent self usurp
+            return *this;
+        }
+
         clear();
         for (auto& elem : v)
         {
@@ -693,6 +699,10 @@ TEST_CASE("[static_vector] test")
     CHECK_THROWS_AS(svec.emplace(svec.begin(), "55"), std::out_of_range);
     CHECK(svec.size() == svec.capacity());
 #endif
+
+    // self usurp
+    svec = svec;
+    CHECK(svec.size() == svec.capacity());
 }
 
 #endif
