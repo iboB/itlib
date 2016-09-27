@@ -156,15 +156,13 @@ public:
     flat_map& operator=(const flat_map& x)
     {
         m_cmp = x.m_cmp;
-        container_type copy = x.m_container;
-        m_container.swap(copy);
+        m_container = x.m_container;
         return *this;
     }
     flat_map& operator=(flat_map&& x)
     {
         m_cmp = std::move(x.m_cmp);
-        container_type copy = std::move(x.m_container);
-        m_container.swap(copy);
+        m_container = std::move(x.m_container);
         return *this;
     }
 
@@ -312,6 +310,12 @@ public:
         }
 
         return i->second;
+    }
+
+    void swap(flat_map& x)
+    {
+        std::swap(m_cmp, x.m_cmp);
+        m_container.swap(x.m_container);
     }
 
     const container_type& container() const noexcept
@@ -609,6 +613,25 @@ TEST_CASE("[flat_map] test")
 
     CHECK(ciwmap.find(18) == ciwmap.end());
     CHECK(ciwmap.find(11) != ciwmap.end());
+
+    // swap
+    flat_map<int, int> m1, m2;
+    m1.reserve(10);
+    m1[1] = 2;
+    m1[2] = 5;
+    auto m1c = m1.capacity();
+
+    CHECK(m2.capacity() == 0);
+    m1.swap(m2);
+
+    CHECK(m2.size() == 2);
+    CHECK(m2.capacity() == m1c);
+    CHECK(m1.capacity() == 0);
+
+    // self usurp
+    m2 = m2;
+    CHECK(m2.size() == 2);
+    CHECK(m2.capacity() == m1c);
 }
 
 #if defined(CHOBO_FLAT_MAP_TEST_STATIC_VECTOR_WITH_DOCTEST)
