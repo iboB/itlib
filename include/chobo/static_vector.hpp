@@ -138,7 +138,6 @@
 #   define _CHOBO_STATIC_VECTOR_OUT_OF_RANGE_IF(cond, rescue_return) \
     do { if (cond) { assert(false && "chobo::static_vector out of range"); throw std::out_of_range("chobo::static_vector out of range"); } } while(false)
 #elif CHOBO_STATIC_VECTOR_ERROR_HANDLING == CHOBO_STATIC_VECTOR_ERROR_HANDLING_ASSERT_AND_RESCUE
-#   include <stdexcept>
 #   include <cassert>
 #   define _CHOBO_STATIC_VECTOR_OUT_OF_RANGE_IF(cond, rescue_return) \
     do { if (cond) { assert(false && "chobo::static_vector out of range"); return rescue_return; } } while(false)
