@@ -17,3 +17,6 @@
 
 #define CHOBO_VECTOR_VIEW_TEST_WITH_DOCTEST
 #include "chobo/vector_view.hpp"
+
+#define CHOBO_SMALL_VECTOR_TEST_WITH_DOCTEST
+#include "chobo/small_vector.hpp"
