@@ -1178,7 +1178,7 @@ public:
     using super::pointer;
     using super::size_type;
 
-    pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
+    typename pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
     {
         ++allocations;
         allocated_bytes += n * sizeof(T);
