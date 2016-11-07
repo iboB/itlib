@@ -1115,7 +1115,7 @@ private:
     Alloc m_alloc;
 };
 
-template<typename T, size_t StaticCapacity, intptr_t RevertToStaticSize, class Alloc>
+template<typename T, size_t StaticCapacity, size_t RevertToStaticSize, class Alloc>
 bool operator==(const small_vector<T, StaticCapacity, RevertToStaticSize, Alloc>& a,
     const small_vector<T, StaticCapacity, RevertToStaticSize, Alloc>& b)
 {
@@ -1133,7 +1133,7 @@ bool operator==(const small_vector<T, StaticCapacity, RevertToStaticSize, Alloc>
     return true;
 }
 
-template<typename T, size_t StaticCapacity, intptr_t RevertToStaticSize, class Alloc>
+template<typename T, size_t StaticCapacity, size_t RevertToStaticSize, class Alloc>
 bool operator!=(const small_vector<T, StaticCapacity, RevertToStaticSize, Alloc>& a,
     const small_vector<T, StaticCapacity, RevertToStaticSize, Alloc>& b)
 {
@@ -1175,17 +1175,14 @@ class counting_allocator : public std::allocator<T>
 public:
     typedef std::allocator<T> super;
 
-    using super::pointer;
-    using super::size_type;
-
-    T* allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
+    T* allocate(size_t n, std::allocator<void>::const_pointer hint = 0)
     {
         ++allocations;
         allocated_bytes += n * sizeof(T);
         return super::allocate(n, hint);
     }
 
-    void deallocate(T* p, std::size_t n)
+    void deallocate(T* p, size_t n)
     {
         ++deallocations;
         deallocated_bytes += n * sizeof(T);
