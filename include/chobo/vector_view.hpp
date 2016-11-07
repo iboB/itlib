@@ -36,7 +36,7 @@
 //
 // Simply include this file wherever you need.
 // A vector view is a class which attaches to an existing std::vector
-// and provides a view to it's data as an alternative type, along
+// and provides a view to its data as an alternative type, along
 // with a working std::vector-like interface.
 //
 // THIS IS DANGEROUS, so you must know the risks ot doing so before
@@ -73,7 +73,7 @@
 //
 //                  Config bounds checks:
 //
-// By default bounds checks are made in debug mode (via an asser) when accessing
+// By default bounds checks are made in debug mode (via an assert) when accessing
 // elements (with `at` or `[]`). Iterators are not checked (yet...)
 //
 // To disable them, you can define CHOBO_VECTOR_VIEW_NO_DEBUG_BOUNDS_CHECK
