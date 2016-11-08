@@ -27,7 +27,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.00 (2016-11-09) First public release
+//  1.00 (2016-11-08) First public release
 //
 //
 //                  DOCUMENTATION
