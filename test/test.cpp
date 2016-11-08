@@ -20,3 +20,8 @@
 
 #define CHOBO_SMALL_VECTOR_TEST_WITH_DOCTEST
 #include "chobo/small_vector.hpp"
+
+#define CHOBO_MEMORY_VIEW_TEST_WITH_DOCTEST
+#include "chobo/memory_view.hpp"
+
+
