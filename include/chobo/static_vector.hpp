@@ -1,4 +1,4 @@
-// chobo-static-vector v1.01
+// chobo-static-vector v1.02
 //
 // std::vector-like class with a fixed capacity
 //
@@ -27,6 +27,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2017-02-05) Added swap to make it a better drop-in replacement of std::vector
 //  1.01 (2016-09-27) Qualified operator new. Fixed self usurp on assignment
 //  1.00 (2016-09-23) First public release
 //
@@ -519,6 +520,38 @@ public:
         }
     }
 
+    void swap(static_vector& v)
+    {
+        static_vector* longer;
+        static_vector* shorter;
+
+        if (v.m_size > m_size)
+        {
+            longer = &v;
+            shorter = this;
+        }
+        else
+        {
+            longer = this;
+            shorter = &v;
+        }
+
+        for (size_t i = 0; i < shorter->size(); ++i)
+        {
+            std::swap(shorter->at(i), longer->at(i));
+        }
+
+        auto short_size = shorter->m_size;
+
+        for (size_t i = shorter->size(); i < longer->size(); ++i)
+        {
+            shorter->emplace_back(std::move(longer->at(i)));
+            longer->at(i).~T();
+        }
+
+        longer->m_size = short_size;
+    }
+
 private:
     typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type m_data[Capacity];
     size_t m_size = 0;
@@ -704,6 +737,24 @@ TEST_CASE("[static_vector] test")
     // self usurp
     svec = svec;
     CHECK(svec.size() == svec.capacity());
+
+    // swap
+    svec = { "1", "2", "3" };
+    svec2 = { "4", "5", "6", "7" };
+
+    svec.swap(svec2);
+
+    CHECK(svec.size() == 4);
+    CHECK(svec2.size() == 3);
+    CHECK(svec2.front() == "1");
+    CHECK(svec.back() == "7");
+
+    svec = { "a", "b", "c" };
+    svec2.swap(svec);
+
+    CHECK(svec2.size() == svec.size());
+    CHECK(svec2.back() == "c");
+    CHECK(svec.front() == "1");
 }
 
 #endif
