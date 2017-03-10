@@ -24,4 +24,8 @@
 #define CHOBO_MEMORY_VIEW_TEST_WITH_DOCTEST
 #include "chobo/memory_view.hpp"
 
+#define CHOBO_VECTOR_TEST_WITH_DOCTEST
+#include "chobo/vector.hpp"
+
+
 
