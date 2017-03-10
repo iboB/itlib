@@ -3,7 +3,7 @@
 // std::vector-like class with a fixed capacity
 //
 // MIT License:
-// Copyright(c) 2016 Chobolabs Inc.
+// Copyright(c) 2016-2017 Chobolabs Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
