@@ -4,7 +4,7 @@
 // the size modifying functions
 //
 // MIT License:
-// Copyright(c) 2016 Chobolabs Inc.
+// Copyright(c) 2016-2017 Chobolabs Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -29,6 +29,7 @@
 //                  VERSION HISTORY
 //
 //  1.00 (2016-11-09) First public release
+//  1.01 (2017-03-10) Added const_memory_view constructor from memory_view
 //
 //
 //                  DOCUMENTATION
@@ -314,6 +315,13 @@ public:
         : m_ptr(ptr)
         , m_size(size)
     {}
+
+    template <typename T>
+    const_memory_view(const memory_view<T>& view)
+    {
+        m_ptr = view.m_ptr;
+        m_size = view.size;
+    }
 
     const_memory_view(const const_memory_view&) = default;
     const_memory_view(const_memory_view&&) = default;
