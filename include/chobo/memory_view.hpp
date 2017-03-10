@@ -316,8 +316,8 @@ public:
         , m_size(size)
     {}
 
-    template <typename T>
-    const_memory_view(const memory_view<T>& view)
+    template <typename U>
+    const_memory_view(const memory_view<U>& view)
     {
         m_ptr = view.m_ptr;
         m_size = view.size;
