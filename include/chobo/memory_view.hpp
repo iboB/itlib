@@ -28,8 +28,8 @@
 //
 //                  VERSION HISTORY
 //
-//  1.00 (2016-11-09) First public release
 //  1.01 (2017-03-10) Added const_memory_view constructor from memory_view
+//  1.00 (2016-11-09) First public release
 //
 //
 //                  DOCUMENTATION

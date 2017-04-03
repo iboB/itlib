@@ -1,4 +1,4 @@
-// chobo-vector-ptr v1.00
+// chobo-vector-ptr v1.01
 //
 // A non-owning pointer to std::vector which can be used in generic code
 //
@@ -27,6 +27,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2017-04-02) Fixed compilation error on assign and insert with count
+//                    and value when count or value is 0
 //  1.00 (2016-09-23) First public release
 //
 //
@@ -173,7 +175,7 @@ public:
     value_type* data() noexcept { return m_vector->data(); }
     const value_type* data() const noexcept { return m_vector->data(); }
 
-    template <class InputIterator>
+    template <class InputIterator, typename = decltype(*std::declval<InputIterator>())>
     void assign(InputIterator first, InputIterator last) { m_vector->assign(first, last); }
     void assign(size_type n, const value_type& val) { m_vector->assign(n, val); }
     void assign(std::initializer_list<value_type> il) { m_vector->asign(il); }
@@ -185,7 +187,7 @@ public:
 
     iterator insert(const_iterator position, const value_type& val) { return m_vector->insert(position, val); }
     iterator insert(const_iterator position, size_type n, const value_type& val) { return m_vector->insert(position, n, val); }
-    template <class InputIterator>
+    template <class InputIterator, typename = decltype(*std::declval<InputIterator>())>
     iterator insert(const_iterator position, InputIterator first, InputIterator last) { return m_vector->insert(position, first, last); }
     iterator insert(const_iterator position, value_type&& val) { return m_vector->insert(position, std::forward<value_type>(val)); }
     iterator insert(const_iterator position, std::initializer_list<value_type> il) { return m_vector->insert(il); }
@@ -436,6 +438,15 @@ TEST_CASE("[vector_ptr] test")
     CHECK(!p4);
     CHECK(p2);
     CHECK(p2.size() == 3);
+
+    p2.assign(3, 0);    
+    CHECK(vec.size() == 3);
+    CHECK(vec.front() == 0);
+    CHECK(vec.back() == 0);
+
+    p2.insert(p2.begin(), 1, 0);
+    CHECK(vec.size() == 4);
+    CHECK(vec.front() == 0);
 }
 
 TEST_CASE("[const_vector_ptr] test")

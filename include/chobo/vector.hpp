@@ -1,4 +1,4 @@
-// chobo-vector v1.00
+// chobo-vector v1.01
 //
 // An std::vector-like class with no debug bounds checks which is faster in 
 // "Debug" mode
@@ -28,6 +28,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2017-04-02) Fixed compilation error on (count, value) constructor and
+//                    assign, and insert methods when count or value is 0
 //  1.00 (2017-03-10) First public release
 //
 //
@@ -94,7 +96,7 @@ public:
         assign_impl(count, value);
     }
 
-    template <class InputIterator>
+    template <class InputIterator, typename = decltype(*std::declval<InputIterator>())>
     vector(InputIterator first, InputIterator last, const Alloc& alloc = Alloc())
         : vector(alloc)
     {
@@ -173,7 +175,7 @@ public:
         assign_impl(count, value);
     }
 
-    template <class InputIterator>
+    template <class InputIterator, typename = decltype(*std::declval<InputIterator>())>
     void assign(InputIterator first, InputIterator last)
     {
         clear();
@@ -428,7 +430,7 @@ public:
         return pos;
     }
 
-    template <typename InputIterator>
+    template <typename InputIterator, typename = decltype(*std::declval<InputIterator>())>
     iterator insert(const_iterator position, InputIterator first, InputIterator last)
     {
         auto pos = grow_at(position, last - first);
@@ -990,6 +992,21 @@ TEST_CASE("[vector] test")
         CHECK(cvec.size() == 3);
         CHECK(cvec.front() == 'b');
         CHECK(cvec.back() == 'z');
+
+        // 0 is implicitly castable to nullptr_t which can be an iterator in our case
+        vector<int> nullptr_test(2, 0);
+        CHECK(nullptr_test.size() == 2);
+        CHECK(nullptr_test.front() == 0);
+        CHECK(nullptr_test.back() == 0);
+
+        nullptr_test.assign(3, 0);
+        CHECK(nullptr_test.size() == 3);
+        CHECK(nullptr_test.front() == 0);
+        CHECK(nullptr_test.back() == 0);
+        
+        nullptr_test.insert(nullptr_test.begin(), 1, 0);
+        CHECK(nullptr_test.size() == 4);
+        CHECK(nullptr_test.front() == 0);
     }
 
     CHECK(allocations == deallocations);
