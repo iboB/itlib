@@ -1,4 +1,4 @@
-// chobo-memory-view v1.01
+// chobo-memory-view v1.02
 //
 // A view of a chunk of memory which makes it look as a std::vector sans
 // the size modifying functions
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2017-06-20) Explicit operator bool
 //  1.01 (2017-03-10) Added const_memory_view constructor from memory_view
 //  1.00 (2016-11-09) First public release
 //
@@ -153,7 +154,7 @@ public:
         m_size = size;
     }
 
-    operator bool() const
+    explicit operator bool() const
     {
         return !!m_ptr;
     }
@@ -340,7 +341,7 @@ public:
         m_size = size;
     }
 
-    operator bool() const
+    explicit operator bool() const
     {
         return !!m_ptr;
     }
@@ -468,6 +469,7 @@ TEST_CASE("[memory_view] test")
     using namespace chobo;
 
     memory_view<int> e;
+    CHECK(!e);
     CHECK(e.size() == 0);
     CHECK(e.begin() == e.end());
     CHECK(e.cbegin() == e.cend());
@@ -478,6 +480,7 @@ TEST_CASE("[memory_view] test")
     int i[] = { 0,2,3,4 };
 
     e.reset(i, 4);
+    CHECK(e);
     CHECK(e.size() == 4);
     CHECK(e.begin() + 4 == e.end());
     CHECK(e.cbegin() + 4 == e.cend());
@@ -530,6 +533,7 @@ TEST_CASE("[const_memory_view] test")
     using namespace chobo;
 
     const_memory_view<int> e;
+    CHECK(!e);
     CHECK(e.size() == 0);
     CHECK(e.begin() == e.end());
     CHECK(e.cbegin() == e.cend());
@@ -540,6 +544,7 @@ TEST_CASE("[const_memory_view] test")
     const int i[] = { 1,2,3,4 };
 
     e.reset(i, 4);
+    CHECK(e);
     CHECK(e.size() == 4);
     CHECK(e.begin() + 4 == e.end());
     CHECK(e.cbegin() + 4 == e.cend());

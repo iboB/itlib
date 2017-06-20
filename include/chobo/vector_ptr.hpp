@@ -1,4 +1,4 @@
-// chobo-vector-ptr v1.01
+// chobo-vector-ptr v1.02
 //
 // A non-owning pointer to std::vector which can be used in generic code
 //
@@ -27,6 +27,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2017-06-20) Explicit operator bool
 //  1.01 (2017-04-02) Fixed compilation error on assign and insert with count
 //                    and value when count or value is 0
 //  1.00 (2016-09-23) First public release
@@ -132,7 +133,7 @@ public:
         m_vector = vec;
     }
 
-    operator bool() const
+    explicit operator bool() const
     {
         return !!m_vector;
     }
@@ -298,7 +299,7 @@ public:
         m_vector = vec;
     }
 
-    operator bool() const
+    explicit operator bool() const
     {
         return !!m_vector;
     }

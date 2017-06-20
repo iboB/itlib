@@ -1,4 +1,4 @@
-// chobo-optional v1.01
+// chobo-optional v1.02
 //
 // A value wrapper with an optional invalid state.
 //
@@ -27,6 +27,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2017-06-20) Explicit operator bool
 //  1.01 (2016-09-27) Qualified operator new
 //  1.00 (2016-09-23) First public release
 //
@@ -325,7 +326,7 @@ public:
         return m_is_valid;
     }
 
-    operator bool() const
+    explicit operator bool() const
     {
         return is_valid();
     }
