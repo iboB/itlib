@@ -175,7 +175,7 @@ namespace chobo
 {
 
 template<typename T, size_t StaticCapacity = 16, size_t RevertToStaticSize = 0, class Alloc = std::allocator<T>>
-struct small_vector
+struct small_vector: Alloc
 {
     static_assert(RevertToStaticSize <= StaticCapacity + 1, "chobo::small_vector: the revert-to-static size shouldn't exceed the static capacity by more than one");
 
@@ -201,10 +201,10 @@ public:
     {}
 
     small_vector(const Alloc& alloc)
-        : m_capacity(StaticCapacity)
+        : Alloc(alloc)
+        , m_capacity(StaticCapacity)
         , m_dynamic_capacity(0)
         , m_dynamic_data(nullptr)
-        , m_alloc(alloc)
     {
         m_begin = m_end = static_begin_ptr();
     }
@@ -239,14 +239,14 @@ public:
     {}
 
     small_vector(const small_vector& v, const Alloc& alloc)
-        : m_dynamic_capacity(0)
+        : Alloc(alloc)
+        , m_dynamic_capacity(0)
         , m_dynamic_data(nullptr)
-        , m_alloc(alloc)
     {
         if (v.size() > StaticCapacity)
         {
             m_dynamic_capacity = v.size();
-            m_begin = m_end = m_dynamic_data = m_alloc.allocate(m_dynamic_capacity);
+            m_begin = m_end = m_dynamic_data = get_alloc().allocate(m_dynamic_capacity);
             m_capacity = v.size();
         }
         else
@@ -257,23 +257,23 @@ public:
 
         for (auto p = v.m_begin; p != v.m_end; ++p)
         {
-            m_alloc.construct(m_end, *p);
+            get_alloc().construct(m_end, *p);
             ++m_end;
         }
     }
 
     small_vector(small_vector&& v)
-        : m_capacity(v.m_capacity)
+        : Alloc(std::move(v.get_alloc()))
+        , m_capacity(v.m_capacity)
         , m_dynamic_capacity(v.m_dynamic_capacity)
         , m_dynamic_data(v.m_dynamic_data)
-        , m_alloc(std::move(v.m_alloc))
     {
         if (v.m_begin == v.static_begin_ptr())
         {
             m_begin = m_end = static_begin_ptr();
             for (auto p = v.m_begin; p != v.m_end; ++p)
             {
-                m_alloc.construct(m_end, std::move(*p));
+                get_alloc().construct(m_end, std::move(*p));
                 ++m_end;
             }
 
@@ -297,7 +297,7 @@ public:
 
         if (m_dynamic_data)
         {
-            m_alloc.deallocate(m_dynamic_data, m_dynamic_capacity);
+            get_alloc().deallocate(m_dynamic_data, m_dynamic_capacity);
         }
     }
 
@@ -315,7 +315,7 @@ public:
 
         for (auto p = v.m_begin; p != v.m_end; ++p)
         {
-            m_alloc.construct(m_end, *p);
+            get_alloc().construct(m_end, *p);
             ++m_end;
         }
 
@@ -328,7 +328,7 @@ public:
     {
         clear();
 
-        m_alloc = std::move(v.m_alloc);
+        get_alloc() = std::move(v.get_alloc());
         m_capacity = v.m_capacity;
         m_dynamic_capacity = v.m_dynamic_capacity;
         m_dynamic_data = v.m_dynamic_data;
@@ -338,7 +338,7 @@ public:
             m_begin = m_end = static_begin_ptr();
             for (auto p = v.m_begin; p != v.m_end; ++p)
             {
-                m_alloc.construct(m_end, std::move(*p));
+                get_alloc().construct(m_end, std::move(*p));
                 ++m_end;
             }
 
@@ -379,7 +379,7 @@ public:
 
     allocator_type get_allocator() const
     {
-        return m_alloc;
+        return get_alloc();
     }
 
     const_reference at(size_type i) const
@@ -508,7 +508,7 @@ public:
 
     size_t max_size() const noexcept
     {
-        return m_alloc.max_size();
+        return get_alloc().max_size();
     }
 
     void reserve(size_type new_cap)
@@ -530,19 +530,19 @@ public:
         // now we need to transfer the existing elements into the new buffer
         for (size_type i = 0; i < s; ++i)
         {
-            m_alloc.construct(new_buf + i, std::move(*(m_begin + i)));
+            get_alloc().construct(new_buf + i, std::move(*(m_begin + i)));
         }
 
         // free old elements
         for (size_type i = 0; i < s; ++i)
         {
-            m_alloc.destroy(m_begin + i);
+            get_alloc().destroy(m_begin + i);
         }
 
         if (m_begin != static_begin_ptr())
         {
             // we've moved from dyn to dyn memory, so deallocate the old one
-            m_alloc.deallocate(m_begin, m_capacity);
+            get_alloc().deallocate(m_begin, m_capacity);
         }
 
         m_begin = new_buf;
@@ -573,18 +573,18 @@ public:
         else
         {
             // alloc new smaller buffer
-            m_begin = m_end = m_alloc.allocate(s);
+            m_begin = m_end = get_alloc().allocate(s);
             m_capacity = s;
         }
 
         for (auto p = m_dynamic_data; p != old_end; ++p)
         {
-            m_alloc.construct(m_end, std::move(*p));
+            get_alloc().construct(m_end, std::move(*p));
             ++m_end;
-            m_alloc.destroy(p);
+            get_alloc().destroy(p);
         }
 
-        m_alloc.deallocate(m_dynamic_data, m_dynamic_capacity);
+        get_alloc().deallocate(m_dynamic_data, m_dynamic_capacity);
         m_dynamic_data = nullptr;
         m_dynamic_capacity = 0;
     }
@@ -601,9 +601,9 @@ public:
         m_capacity = StaticCapacity;
         for (auto p = m_dynamic_data; p != old_end; ++p)
         {
-            m_alloc.construct(m_end, std::move(*p));
+            get_alloc().construct(m_end, std::move(*p));
             ++m_end;
-            m_alloc.destroy(p);
+            get_alloc().destroy(p);
         }
     }
 
@@ -612,7 +612,7 @@ public:
     {
         for (auto p = m_begin; p != m_end; ++p)
         {
-            m_alloc.destroy(p);
+            get_alloc().destroy(p);
         }
 
         if (RevertToStaticSize > 0)
@@ -629,14 +629,14 @@ public:
     iterator insert(const_iterator position, const value_type& val)
     {
         auto pos = grow_at(position, 1);
-        m_alloc.construct(pos, val);
+        get_alloc().construct(pos, val);
         return pos;
     }
 
     iterator insert(const_iterator position, value_type&& val)
     {
         auto pos = grow_at(position, 1);
-        m_alloc.construct(pos, std::move(val));
+        get_alloc().construct(pos, std::move(val));
         return pos;
     }
 
@@ -645,7 +645,7 @@ public:
         auto pos = grow_at(position, count);
         for (size_type i = 0; i < count; ++i)
         {
-            m_alloc.construct(pos + i, val);
+            get_alloc().construct(pos + i, val);
         }
         return pos;
     }
@@ -658,7 +658,7 @@ public:
         auto np = pos;
         for (auto p = first; p != last; ++p, ++np)
         {
-            m_alloc.construct(np, *p);
+            get_alloc().construct(np, *p);
         }
         return pos;
     }
@@ -669,7 +669,7 @@ public:
         size_type i = 0;
         for (auto& elem : ilist)
         {
-            m_alloc.construct(pos + i, elem);
+            get_alloc().construct(pos + i, elem);
             ++i;
         }
         return pos;
@@ -679,7 +679,7 @@ public:
     iterator emplace(const_iterator position, Args&&... args)
     {
         auto pos = grow_at(position, 1);
-        m_alloc.construct(pos, std::forward<Args>(args)...);
+        get_alloc().construct(pos, std::forward<Args>(args)...);
         return pos;
     }
 
@@ -697,20 +697,20 @@ public:
     void push_back(const_reference val)
     {
         auto pos = grow_at(m_end, 1);
-        m_alloc.construct(pos, val);
+        get_alloc().construct(pos, val);
     }
 
     void push_back(T&& val)
     {
         auto pos = grow_at(m_end, 1);
-        m_alloc.construct(pos, std::move(val));
+        get_alloc().construct(pos, std::move(val));
     }
 
     template<typename... Args>
     void emplace_back(Args&&... args)
     {
         auto pos = grow_at(m_end, 1);
-        m_alloc.construct(pos, std::forward<Args>(args)...);
+        get_alloc().construct(pos, std::forward<Args>(args)...);
     }
 
     void pop_back()
@@ -730,12 +730,12 @@ public:
 
             while (m_end > new_end)
             {
-                m_alloc.destroy(--m_end);
+                get_alloc().destroy(--m_end);
             }
 
             while (new_end > m_end)
             {
-                m_alloc.construct(m_end++, v);
+                get_alloc().construct(m_end++, v);
             }
         }
         else
@@ -747,25 +747,25 @@ public:
 
             for (size_type i = 0; i < num_transfer; ++i)
             {
-                m_alloc.construct(new_buf + i, std::move(*(m_begin + i)));
+                get_alloc().construct(new_buf + i, std::move(*(m_begin + i)));
             }
 
             // free obsoletes
             for (size_type i = 0; i < s; ++i)
             {
-                m_alloc.destroy(m_begin + i);
+                get_alloc().destroy(m_begin + i);
             }
 
             // construct new elements
             for (size_type i = num_transfer; i < n; ++i)
             {
-                m_alloc.construct(new_buf + i, v);
+                get_alloc().construct(new_buf + i, v);
             }
 
             if (m_begin != static_begin_ptr())
             {
                 // we've moved from dyn to dyn memory, so deallocate the old one
-                m_alloc.deallocate(m_begin, m_capacity);
+                get_alloc().deallocate(m_begin, m_capacity);
             }
 
             if (new_buf == static_begin_ptr())
@@ -794,12 +794,12 @@ public:
 
             while (m_end > new_end)
             {
-                m_alloc.destroy(--m_end);
+                get_alloc().destroy(--m_end);
             }
 
             while (new_end > m_end)
             {
-                m_alloc.construct(m_end++);
+                get_alloc().construct(m_end++);
             }
         }
         else
@@ -811,25 +811,25 @@ public:
 
             for (size_type i = 0; i < num_transfer; ++i)
             {
-                m_alloc.construct(new_buf + i, std::move(*(m_begin + i)));
+                get_alloc().construct(new_buf + i, std::move(*(m_begin + i)));
             }
 
             // free obsoletes
             for (size_type i = 0; i < n; ++i)
             {
-                m_alloc.destroy(m_begin + i);
+                get_alloc().destroy(m_begin + i);
             }
 
             // construct new elements
             for (size_type i = num_transfer; i < s; ++i)
             {
-                m_alloc.construct(new_buf + i);
+                get_alloc().construct(new_buf + i);
             }
 
             if (m_begin != static_begin_ptr())
             {
                 // we've moved from dyn to dyn memory, so deallocate the old one
-                m_alloc.deallocate(m_begin, m_capacity);
+                get_alloc().deallocate(m_begin, m_capacity);
             }
 
             if (new_buf == static_begin_ptr())
@@ -872,8 +872,8 @@ private:
 
             for (auto p = m_end - num - 1; p >= position; --p)
             {
-                m_alloc.construct(p + num, std::move(*p));
-                m_alloc.destroy(p);
+                get_alloc().construct(p + num, std::move(*p));
+                get_alloc().destroy(p);
             }
 
             return position;
@@ -889,25 +889,25 @@ private:
 
             for (; np != position; ++p, ++np)
             {
-                m_alloc.construct(np, std::move(*p));
+                get_alloc().construct(np, std::move(*p));
             }
 
             np += num;
             for (; p != m_end; ++p, ++np)
             {
-                m_alloc.construct(np, std::move(*p));
+                get_alloc().construct(np, std::move(*p));
             }
 
             // destroy old
             for (p = m_begin; p != m_end; ++p)
             {
-                m_alloc.destroy(p);
+                get_alloc().destroy(p);
             }
 
             if (m_begin != static_begin_ptr())
             {
                 // we've moved from dyn to dyn memory, so deallocate the old one
-                m_alloc.deallocate(m_begin, m_capacity);
+                get_alloc().deallocate(m_begin, m_capacity);
             }
 
             m_capacity = m_dynamic_capacity;
@@ -940,13 +940,13 @@ private:
 
             for (auto p = position, np = position + num; np != m_end; ++p, ++np)
             {
-                m_alloc.destroy(p);
-                m_alloc.construct(p, std::move(*np));
+                get_alloc().destroy(p);
+                get_alloc().construct(p, std::move(*np));
             }
 
             for (auto p = m_end - num; p != m_end; ++p)
             {
-                m_alloc.destroy(p);
+                get_alloc().destroy(p);
             }
 
             m_end -= num;
@@ -962,19 +962,19 @@ private:
             auto p = m_begin, np = new_buf;
             for (; p != position; ++p, ++np)
             {
-                m_alloc.construct(np, std::move(*p));
-                m_alloc.destroy(p);
+                get_alloc().construct(np, std::move(*p));
+                get_alloc().destroy(p);
             }
 
             for (; p != position + num; ++p)
             {
-                m_alloc.destroy(p);
+                get_alloc().destroy(p);
             }
 
             for (; np != new_buf + s - num; ++p, ++np)
             {
-                m_alloc.construct(np, std::move(*p));
-                m_alloc.destroy(p);
+                get_alloc().construct(np, std::move(*p));
+                get_alloc().destroy(p);
             }
 
             position = new_buf + (position - m_begin);
@@ -993,7 +993,7 @@ private:
         m_begin = m_end = choose_data(count);
         for (size_type i = 0; i < count; ++i)
         {
-            m_alloc.construct(m_end, value);
+            get_alloc().construct(m_end, value);
             ++m_end;
         }
 
@@ -1009,7 +1009,7 @@ private:
         m_begin = m_end = choose_data(last - first);
         for (auto p = first; p != last; ++p)
         {
-            m_alloc.construct(m_end, *p);
+            get_alloc().construct(m_end, *p);
             ++m_end;
         }
 
@@ -1024,7 +1024,7 @@ private:
         m_begin = m_end = choose_data(ilist.size());
         for (auto& elem : ilist)
         {
-            m_alloc.construct(m_end, elem);
+            get_alloc().construct(m_end, elem);
             ++m_end;
         }
 
@@ -1059,7 +1059,7 @@ private:
                     m_dynamic_capacity /= 2;
                 }
 
-                m_dynamic_data = m_alloc.allocate(m_dynamic_capacity);
+                m_dynamic_data = get_alloc().allocate(m_dynamic_capacity);
                 return m_dynamic_data;
             }
             else if (desired_capacity < RevertToStaticSize)
@@ -1088,11 +1088,11 @@ private:
                     // we don't have anything to destroy, so we can also deallocate the buffer
                     if (m_dynamic_data)
                     {
-                        m_alloc.deallocate(m_dynamic_data, m_dynamic_capacity);
+                        get_alloc().deallocate(m_dynamic_data, m_dynamic_capacity);
                     }
 
                     m_dynamic_capacity = desired_capacity;
-                    m_dynamic_data = m_alloc.allocate(m_dynamic_capacity);
+                    m_dynamic_data = get_alloc().allocate(m_dynamic_capacity);
                 }
 
                 return m_dynamic_data;
@@ -1105,6 +1105,9 @@ private:
         }
     }
 
+    allocator_type& get_alloc() { return static_cast<allocator_type&>(*this); }
+    const allocator_type& get_alloc() const { return static_cast<const allocator_type&>(*this); }
+
     pointer m_begin;
     pointer m_end;
 
@@ -1113,8 +1116,6 @@ private:
 
     size_t m_dynamic_capacity;
     pointer m_dynamic_data;
-
-    Alloc m_alloc;
 };
 
 template<typename T, size_t StaticCapacity, size_t RevertToStaticSize, class Alloc>
