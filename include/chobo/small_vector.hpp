@@ -1,9 +1,9 @@
-// chobo-small-vector v1.01
+// chobo-small-vector v1.02
 //
 // std::vector-like class with a static buffer for initial capacity
 //
 // MIT License:
-// Copyright(c) 2016 Chobolabs Inc.
+// Copyright(c) 2016-2018 Chobolabs Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -27,6 +27,10 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2018-04-24) Class inehrits from its allocator to make use of the
+//                    empty base class optimization.
+//                    emplace_back returns a reference to the inserted element
+//                    as per the c++17 standard.
 //  1.01 (2017-04-02) Fixed compilation error on (count, value) constructor and
 //                    assign, and insert methods when count or value is 0
 //  1.00 (2016-11-08) First public release
@@ -707,10 +711,11 @@ public:
     }
 
     template<typename... Args>
-    void emplace_back(Args&&... args)
+    reference emplace_back(Args&&... args)
     {
         auto pos = grow_at(m_end, 1);
         get_alloc().construct(pos, std::forward<Args>(args)...);
+        return *pos;
     }
 
     void pop_back()
@@ -1253,7 +1258,7 @@ TEST_CASE("[small_vector] static")
         CHECK(it == ivec.end());
         CHECK(it == ivec.cend());
 
-        ivec.emplace_back(3);
+        auto& back = ivec.emplace_back(3);
         CHECK(ivec.size() == 2);
         auto rit = ivec.rbegin();
         CHECK(*rit == 3);
@@ -1264,6 +1269,8 @@ TEST_CASE("[small_vector] static")
         CHECK(rit == ivec.crend());
         CHECK(ivec.front() == 12);
         CHECK(ivec.back() == 3);
+        CHECK(back == 3);
+        CHECK(&back == &ivec.back());
 
         ivec.insert(ivec.begin(), 53);
         ivec.insert(ivec.begin() + 2, 90);
@@ -1314,8 +1321,10 @@ TEST_CASE("[small_vector] static")
         svec.assign({ "as", "df" });
         CHECK(svec.size() == 2);
         string s1 = "the quick brown fox jumped over the lazy dog 1234567890";
-        svec.emplace_back(s1);
+        auto& rs = svec.emplace_back(s1);
         CHECK(svec.back() == s1);
+        CHECK(rs == s1);
+        CHECK(&rs == &svec.back());
 
         auto svec1 = svec;
         CHECK(svec1 == svec);
@@ -1450,7 +1459,7 @@ TEST_CASE("[small_vector] dynamic")
         CHECK(it == ivec.end());
         CHECK(it == ivec.cend());
 
-        ivec.emplace_back(3);
+        auto& back = ivec.emplace_back(3);
         CHECK(ivec.size() == 2);
         auto rit = ivec.rbegin();
         CHECK(*rit == 3);
@@ -1461,6 +1470,8 @@ TEST_CASE("[small_vector] dynamic")
         CHECK(rit == ivec.crend());
         CHECK(ivec.front() == 12);
         CHECK(ivec.back() == 3);
+        CHECK(back == 3);
+        CHECK(&back == &ivec.back());
 
         ivec.insert(ivec.begin(), 53);
         CHECK(ivec.capacity() == 3);
@@ -1504,8 +1515,10 @@ TEST_CASE("[small_vector] dynamic")
         svec.assign({ "as", "df" });
         CHECK(svec.size() == 2);
         string s1 = "the quick brown fox jumped over the lazy dog 1234567890";
-        svec.emplace_back(s1);
+        auto& rs = svec.emplace_back(s1);
         CHECK(svec.back() == s1);
+        CHECK(rs == s1);
+        CHECK(&rs == &svec.back());
 
         auto svec1 = svec;
         CHECK(svec1 == svec);
