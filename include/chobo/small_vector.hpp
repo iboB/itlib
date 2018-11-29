@@ -184,15 +184,16 @@ struct small_vector: Alloc
 {
     static_assert(RevertToStaticSize <= StaticCapacity + 1, "chobo::small_vector: the revert-to-static size shouldn't exceed the static capacity by more than one");
 
+    using atraits = std::allocator_traits<Alloc>;
 public:
     using allocator_type = Alloc;
-    using value_type = typename std::allocator_traits<Alloc>::value_type;
-    using size_type = typename std::allocator_traits<Alloc>::size_type;
-    using difference_type = typename std::allocator_traits<Alloc>::difference_type;
+    using value_type = typename atraits::value_type;
+    using size_type = typename atraits::size_type;
+    using difference_type = typename atraits::difference_type;
     using reference = T&;
     using const_reference = const T&;
-    using pointer = typename std::allocator_traits<Alloc>::pointer;
-    using const_pointer = typename std::allocator_traits<Alloc>::const_pointer;
+    using pointer = typename atraits::pointer;
+    using const_pointer = typename atraits::const_pointer;
     using iterator = pointer;
     using const_iterator = const_pointer;
     using reverse_iterator = std::reverse_iterator<iterator>;
@@ -240,7 +241,7 @@ public:
     }
 
     small_vector(const small_vector& v)
-        : small_vector(v, std::allocator_traits<Alloc>::select_on_container_copy_construction(v.get_allocator()))
+        : small_vector(v, atraits::select_on_container_copy_construction(v.get_allocator()))
     {}
 
     small_vector(const small_vector& v, const Alloc& alloc)
@@ -251,7 +252,7 @@ public:
         if (v.size() > StaticCapacity)
         {
             m_dynamic_capacity = v.size();
-            m_begin = m_end = m_dynamic_data = get_alloc().allocate(m_dynamic_capacity);
+            m_begin = m_end = m_dynamic_data = atraits::allocate(get_alloc(), m_dynamic_capacity);
             m_capacity = v.size();
         }
         else
@@ -262,7 +263,7 @@ public:
 
         for (auto p = v.m_begin; p != v.m_end; ++p)
         {
-            get_alloc().construct(m_end, *p);
+            atraits::construct(get_alloc(), m_end, *p);
             ++m_end;
         }
     }
@@ -278,7 +279,7 @@ public:
             m_begin = m_end = static_begin_ptr();
             for (auto p = v.m_begin; p != v.m_end; ++p)
             {
-                get_alloc().construct(m_end, std::move(*p));
+                atraits::construct(get_alloc(), m_end, std::move(*p));
                 ++m_end;
             }
 
@@ -302,7 +303,7 @@ public:
 
         if (m_dynamic_data)
         {
-            get_alloc().deallocate(m_dynamic_data, m_dynamic_capacity);
+            atraits::deallocate(get_alloc(), m_dynamic_data, m_dynamic_capacity);
         }
     }
 
@@ -320,7 +321,7 @@ public:
 
         for (auto p = v.m_begin; p != v.m_end; ++p)
         {
-            get_alloc().construct(m_end, *p);
+            atraits::construct(get_alloc(), m_end, *p);
             ++m_end;
         }
 
@@ -343,7 +344,7 @@ public:
             m_begin = m_end = static_begin_ptr();
             for (auto p = v.m_begin; p != v.m_end; ++p)
             {
-                get_alloc().construct(m_end, std::move(*p));
+                atraits::construct(get_alloc(), m_end, std::move(*p));
                 ++m_end;
             }
 
@@ -513,7 +514,7 @@ public:
 
     size_t max_size() const noexcept
     {
-        return get_alloc().max_size();
+        return atraits::max_size();
     }
 
     void reserve(size_type new_cap)
@@ -535,19 +536,19 @@ public:
         // now we need to transfer the existing elements into the new buffer
         for (size_type i = 0; i < s; ++i)
         {
-            get_alloc().construct(new_buf + i, std::move(*(m_begin + i)));
+            atraits::construct(get_alloc(), new_buf + i, std::move(*(m_begin + i)));
         }
 
         // free old elements
         for (size_type i = 0; i < s; ++i)
         {
-            get_alloc().destroy(m_begin + i);
+            atraits::destroy(get_alloc(), m_begin + i);
         }
 
         if (m_begin != static_begin_ptr())
         {
             // we've moved from dyn to dyn memory, so deallocate the old one
-            get_alloc().deallocate(m_begin, m_capacity);
+            atraits::deallocate(get_alloc(), m_begin, m_capacity);
         }
 
         m_begin = new_buf;
@@ -578,18 +579,18 @@ public:
         else
         {
             // alloc new smaller buffer
-            m_begin = m_end = get_alloc().allocate(s);
+            m_begin = m_end = atraits::allocate(get_alloc(), s);
             m_capacity = s;
         }
 
         for (auto p = m_dynamic_data; p != old_end; ++p)
         {
-            get_alloc().construct(m_end, std::move(*p));
+            atraits::construct(get_alloc(), m_end, std::move(*p));
             ++m_end;
-            get_alloc().destroy(p);
+            atraits::destroy(get_alloc(), p);
         }
 
-        get_alloc().deallocate(m_dynamic_data, m_dynamic_capacity);
+        atraits::deallocate(get_alloc(), m_dynamic_data, m_dynamic_capacity);
         m_dynamic_data = nullptr;
         m_dynamic_capacity = 0;
     }
@@ -606,9 +607,9 @@ public:
         m_capacity = StaticCapacity;
         for (auto p = m_dynamic_data; p != old_end; ++p)
         {
-            get_alloc().construct(m_end, std::move(*p));
+            atraits::construct(get_alloc(), m_end, std::move(*p));
             ++m_end;
-            get_alloc().destroy(p);
+            atraits::destroy(get_alloc(), p);
         }
     }
 
@@ -617,7 +618,7 @@ public:
     {
         for (auto p = m_begin; p != m_end; ++p)
         {
-            get_alloc().destroy(p);
+            atraits::destroy(get_alloc(), p);
         }
 
         if (RevertToStaticSize > 0)
@@ -634,14 +635,14 @@ public:
     iterator insert(const_iterator position, const value_type& val)
     {
         auto pos = grow_at(position, 1);
-        get_alloc().construct(pos, val);
+        atraits::construct(get_alloc(), pos, val);
         return pos;
     }
 
     iterator insert(const_iterator position, value_type&& val)
     {
         auto pos = grow_at(position, 1);
-        get_alloc().construct(pos, std::move(val));
+        atraits::construct(get_alloc(), pos, std::move(val));
         return pos;
     }
 
@@ -650,7 +651,7 @@ public:
         auto pos = grow_at(position, count);
         for (size_type i = 0; i < count; ++i)
         {
-            get_alloc().construct(pos + i, val);
+            atraits::construct(get_alloc(), pos + i, val);
         }
         return pos;
     }
@@ -663,7 +664,7 @@ public:
         auto np = pos;
         for (auto p = first; p != last; ++p, ++np)
         {
-            get_alloc().construct(np, *p);
+            atraits::construct(get_alloc(), np, *p);
         }
         return pos;
     }
@@ -674,7 +675,7 @@ public:
         size_type i = 0;
         for (auto& elem : ilist)
         {
-            get_alloc().construct(pos + i, elem);
+            atraits::construct(get_alloc(), pos + i, elem);
             ++i;
         }
         return pos;
@@ -684,7 +685,7 @@ public:
     iterator emplace(const_iterator position, Args&&... args)
     {
         auto pos = grow_at(position, 1);
-        get_alloc().construct(pos, std::forward<Args>(args)...);
+        atraits::construct(get_alloc(), pos, std::forward<Args>(args)...);
         return pos;
     }
 
@@ -702,20 +703,20 @@ public:
     void push_back(const_reference val)
     {
         auto pos = grow_at(m_end, 1);
-        get_alloc().construct(pos, val);
+        atraits::construct(get_alloc(), pos, val);
     }
 
     void push_back(T&& val)
     {
         auto pos = grow_at(m_end, 1);
-        get_alloc().construct(pos, std::move(val));
+        atraits::construct(get_alloc(), pos, std::move(val));
     }
 
     template<typename... Args>
     reference emplace_back(Args&&... args)
     {
         auto pos = grow_at(m_end, 1);
-        get_alloc().construct(pos, std::forward<Args>(args)...);
+        atraits::construct(get_alloc(), pos, std::forward<Args>(args)...);
         return *pos;
     }
 
@@ -736,12 +737,12 @@ public:
 
             while (m_end > new_end)
             {
-                get_alloc().destroy(--m_end);
+                atraits::destroy(get_alloc(), --m_end);
             }
 
             while (new_end > m_end)
             {
-                get_alloc().construct(m_end++, v);
+                atraits::construct(get_alloc(), m_end++, v);
             }
         }
         else
@@ -753,25 +754,25 @@ public:
 
             for (size_type i = 0; i < num_transfer; ++i)
             {
-                get_alloc().construct(new_buf + i, std::move(*(m_begin + i)));
+                atraits::construct(get_alloc(), new_buf + i, std::move(*(m_begin + i)));
             }
 
             // free obsoletes
             for (size_type i = 0; i < s; ++i)
             {
-                get_alloc().destroy(m_begin + i);
+                atraits::destroy(get_alloc(), m_begin + i);
             }
 
             // construct new elements
             for (size_type i = num_transfer; i < n; ++i)
             {
-                get_alloc().construct(new_buf + i, v);
+                atraits::construct(get_alloc(), new_buf + i, v);
             }
 
             if (m_begin != static_begin_ptr())
             {
                 // we've moved from dyn to dyn memory, so deallocate the old one
-                get_alloc().deallocate(m_begin, m_capacity);
+                atraits::deallocate(get_alloc(), m_begin, m_capacity);
             }
 
             if (new_buf == static_begin_ptr())
@@ -800,12 +801,12 @@ public:
 
             while (m_end > new_end)
             {
-                get_alloc().destroy(--m_end);
+                atraits::destroy(get_alloc(), --m_end);
             }
 
             while (new_end > m_end)
             {
-                get_alloc().construct(m_end++);
+                atraits::construct(get_alloc(), m_end++);
             }
         }
         else
@@ -817,25 +818,25 @@ public:
 
             for (size_type i = 0; i < num_transfer; ++i)
             {
-                get_alloc().construct(new_buf + i, std::move(*(m_begin + i)));
+                atraits::construct(get_alloc(), new_buf + i, std::move(*(m_begin + i)));
             }
 
             // free obsoletes
             for (size_type i = 0; i < n; ++i)
             {
-                get_alloc().destroy(m_begin + i);
+                atraits::destroy(get_alloc(), m_begin + i);
             }
 
             // construct new elements
             for (size_type i = num_transfer; i < s; ++i)
             {
-                get_alloc().construct(new_buf + i);
+                atraits::construct(get_alloc(), new_buf + i);
             }
 
             if (m_begin != static_begin_ptr())
             {
                 // we've moved from dyn to dyn memory, so deallocate the old one
-                get_alloc().deallocate(m_begin, m_capacity);
+                atraits::deallocate(get_alloc(), m_begin, m_capacity);
             }
 
             if (new_buf == static_begin_ptr())
@@ -878,8 +879,8 @@ private:
 
             for (auto p = m_end - num - 1; p >= position; --p)
             {
-                get_alloc().construct(p + num, std::move(*p));
-                get_alloc().destroy(p);
+                atraits::construct(get_alloc(), p + num, std::move(*p));
+                atraits::destroy(get_alloc(), p);
             }
 
             return position;
@@ -895,25 +896,25 @@ private:
 
             for (; np != position; ++p, ++np)
             {
-                get_alloc().construct(np, std::move(*p));
+                atraits::construct(get_alloc(), np, std::move(*p));
             }
 
             np += num;
             for (; p != m_end; ++p, ++np)
             {
-                get_alloc().construct(np, std::move(*p));
+                atraits::construct(get_alloc(), np, std::move(*p));
             }
 
             // destroy old
             for (p = m_begin; p != m_end; ++p)
             {
-                get_alloc().destroy(p);
+                atraits::destroy(get_alloc(), p);
             }
 
             if (m_begin != static_begin_ptr())
             {
                 // we've moved from dyn to dyn memory, so deallocate the old one
-                get_alloc().deallocate(m_begin, m_capacity);
+                atraits::deallocate(get_alloc(), m_begin, m_capacity);
             }
 
             m_capacity = m_dynamic_capacity;
@@ -946,13 +947,13 @@ private:
 
             for (auto p = position, np = position + num; np != m_end; ++p, ++np)
             {
-                get_alloc().destroy(p);
-                get_alloc().construct(p, std::move(*np));
+                atraits::destroy(get_alloc(), p);
+                atraits::construct(get_alloc(), p, std::move(*np));
             }
 
             for (auto p = m_end - num; p != m_end; ++p)
             {
-                get_alloc().destroy(p);
+                atraits::destroy(get_alloc(), p);
             }
 
             m_end -= num;
@@ -968,19 +969,19 @@ private:
             auto p = m_begin, np = new_buf;
             for (; p != position; ++p, ++np)
             {
-                get_alloc().construct(np, std::move(*p));
-                get_alloc().destroy(p);
+                atraits::construct(get_alloc(), np, std::move(*p));
+                atraits::destroy(get_alloc(), p);
             }
 
             for (; p != position + num; ++p)
             {
-                get_alloc().destroy(p);
+                atraits::destroy(get_alloc(), p);
             }
 
             for (; np != new_buf + s - num; ++p, ++np)
             {
-                get_alloc().construct(np, std::move(*p));
-                get_alloc().destroy(p);
+                atraits::construct(get_alloc(), np, std::move(*p));
+                atraits::destroy(get_alloc(), p);
             }
 
             position = new_buf + (position - m_begin);
@@ -999,7 +1000,7 @@ private:
         m_begin = m_end = choose_data(count);
         for (size_type i = 0; i < count; ++i)
         {
-            get_alloc().construct(m_end, value);
+            atraits::construct(get_alloc(), m_end, value);
             ++m_end;
         }
 
@@ -1015,7 +1016,7 @@ private:
         m_begin = m_end = choose_data(last - first);
         for (auto p = first; p != last; ++p)
         {
-            get_alloc().construct(m_end, *p);
+            atraits::construct(get_alloc(), m_end, *p);
             ++m_end;
         }
 
@@ -1030,7 +1031,7 @@ private:
         m_begin = m_end = choose_data(ilist.size());
         for (auto& elem : ilist)
         {
-            get_alloc().construct(m_end, elem);
+            atraits::construct(get_alloc(), m_end, elem);
             ++m_end;
         }
 
@@ -1065,7 +1066,7 @@ private:
                     m_dynamic_capacity /= 2;
                 }
 
-                m_dynamic_data = get_alloc().allocate(m_dynamic_capacity);
+                m_dynamic_data = atraits::allocate(get_alloc(), m_dynamic_capacity);
                 return m_dynamic_data;
             }
             else if (desired_capacity < RevertToStaticSize)
@@ -1094,11 +1095,11 @@ private:
                     // we don't have anything to destroy, so we can also deallocate the buffer
                     if (m_dynamic_data)
                     {
-                        get_alloc().deallocate(m_dynamic_data, m_dynamic_capacity);
+                        atraits::deallocate(get_alloc(), m_dynamic_data, m_dynamic_capacity);
                     }
 
                     m_dynamic_capacity = desired_capacity;
-                    m_dynamic_data = get_alloc().allocate(m_dynamic_capacity);
+                    m_dynamic_data = atraits::allocate(get_alloc(), m_dynamic_capacity);
                 }
 
                 return m_dynamic_data;
@@ -1168,8 +1169,8 @@ bool operator!=(const small_vector<T, StaticCapacity, RevertToStaticSize, Alloc>
 #include <string>
 #include <utility>
 
-namespace chobo_small_vector_test
-{
+#if !defined(CHOBO_TEST_COUNTING_ALLOCATOR)
+#define CHOBO_TEST_COUNTING_ALLOCATOR 1
 
 size_t allocations = 0;
 size_t deallocations = 0;
@@ -1181,43 +1182,59 @@ size_t destructions = 0;
 template <typename T>
 class counting_allocator : public std::allocator<T>
 {
-public:
-    typedef std::allocator<T> super;
+};
 
-    T* allocate(size_t n, std::allocator<void>::const_pointer hint = 0)
+namespace std
+{
+
+template <typename T>
+class allocator_traits<counting_allocator<T>> /* hacky */ : public allocator_traits<std::allocator<T>>
+{
+public:
+    typedef std::allocator_traits<std::allocator<T>> super;
+    typedef counting_allocator<T> Alloc;
+
+    static T* allocate(Alloc& a, size_t n, typename std::allocator_traits<super>::const_pointer hint = 0)
     {
         ++allocations;
         allocated_bytes += n * sizeof(T);
-        return super::allocate(n, hint);
+        return super::allocate(a, n, hint);
     }
 
-    void deallocate(T* p, size_t n)
+    static void deallocate(Alloc& a, T* p, size_t n)
     {
         ++deallocations;
         deallocated_bytes += n * sizeof(T);
-        return super::deallocate(p, n);
+        return super::deallocate(a, p, n);
     }
 
     template< class U, class... Args >
-    void construct(U* p, Args&&... args)
+    static void construct(Alloc& a, U* p, Args&&... args)
     {
         ++constructions;
-        return super::construct(p, std::forward<Args>(args)...);
+        return super::construct(a, p, std::forward<Args>(args)...);
     }
 
     template< class U >
-    void destroy(U* p)
+    static void destroy(Alloc& a, U* p)
     {
         ++destructions;
-        return super::destroy(p);
+        return super::destroy(a, p);
+    }
+
+    static Alloc select_on_container_copy_construction(const Alloc& a)
+    {
+        return a;
     }
 };
+
 }
+
+#endif
 
 TEST_CASE("[small_vector] static")
 {
     using namespace chobo;
-    using namespace chobo_small_vector_test;
     using namespace std;
 
     static_assert(sizeof(small_vector<void*, 10>) - sizeof(small_vector<void*, 3>) == sizeof(void*) * 7, "small_vector needs to have a static buffer");
@@ -1417,7 +1434,6 @@ TEST_CASE("[small_vector] static")
 TEST_CASE("[small_vector] dynamic")
 {
     using namespace chobo;
-    using namespace chobo_small_vector_test;
     using namespace std;
     {
         small_vector<int, 1, 0, counting_allocator<int>> ivec;
@@ -1593,7 +1609,6 @@ TEST_CASE("[small_vector] dynamic")
 TEST_CASE("[small_vector] static-dynamic")
 {
     using namespace chobo;
-    using namespace chobo_small_vector_test;
     using namespace std;
 
     {
