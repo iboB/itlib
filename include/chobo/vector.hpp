@@ -28,7 +28,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.02 (2018-29-11) Removed references to deprecated std::allocator members
+//  1.02 (2018-11-29) Removed references to deprecated std::allocator members
 //  1.01 (2017-04-02) Fixed compilation error on (count, value) constructor and
 //                    assign, and insert methods when count or value is 0
 //  1.00 (2017-03-10) First public release

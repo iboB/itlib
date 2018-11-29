@@ -27,7 +27,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.03 (2018-29-11) Removed references to deprecated std::allocator members
+//  1.03 (2018-11-29) Removed references to deprecated std::allocator members
 //  1.02 (2017-06-20) Explicit operator bool
 //  1.01 (2017-04-02) Fixed compilation error on assign and insert with count
 //                    and value when count or value is 0

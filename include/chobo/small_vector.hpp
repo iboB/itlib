@@ -27,7 +27,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.03 (2018-29-11) Removed references to deprecated std::allocator members
+//  1.03 (2018-11-29) Removed references to deprecated std::allocator members
 //  1.02 (2018-04-24) Class inehrits from its allocator to make use of the
 //                    empty base class optimization.
 //                    emplace_back returns a reference to the inserted element
