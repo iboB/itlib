@@ -37,7 +37,7 @@ The libraries use the C++11 standard and there are no plans for support of earli
 Choose one or more libraries that you like and copy somewhere in your include paths.
 
 Supported compilers:
-* VC 2015
+* VC 2015 or newer
 * GCC 4.9 or newer
 * Clang 3.2 or newer
 
@@ -54,7 +54,7 @@ Please make one pull request and issue per library, tagging them with the librar
 
 ## Copyright
 
-Copyright &copy; 2016-2017 [Chobolabs Inc.](http://www.chobolabs.com/)
+Copyright &copy; 2016-2018 [Chobolabs Inc.](http://www.chobolabs.com/)
 
 This libraries are distributed under the MIT Software License. See LICENSE.txt for
 further details or copy [here](http://opensource.org/licenses/MIT).
