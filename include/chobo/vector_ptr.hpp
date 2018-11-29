@@ -1,9 +1,9 @@
-// chobo-vector-ptr v1.02
+// chobo-vector-ptr v1.03
 //
 // A non-owning pointer to std::vector which can be used in generic code
 //
 // MIT License:
-// Copyright(c) 2016 Chobolabs Inc.
+// Copyright(c) 2016-2018 Chobolabs Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -27,6 +27,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.03 (2018-29-11) Removed references to deprecated std::allocator members
 //  1.02 (2017-06-20) Explicit operator bool
 //  1.01 (2017-04-02) Fixed compilation error on assign and insert with count
 //                    and value when count or value is 0
@@ -90,10 +91,10 @@ public:
     typedef Alloc allocator_type;
     typedef typename vector::size_type size_type;
     typedef typename vector::difference_type difference_type;
-    typedef typename allocator_type::reference reference;
-    typedef typename allocator_type::const_reference const_reference;
-    typedef typename allocator_type::pointer pointer;
-    typedef typename allocator_type::const_pointer const_pointer;
+    typedef value_type& reference;
+    typedef const value_type& const_reference;
+    typedef typename std::allocator_traits<allocator_type>::pointer pointer;
+    typedef typename std::allocator_traits<allocator_type>::pointer const_pointer;
     typedef typename vector::iterator iterator;
     typedef typename vector::const_iterator const_iterator;
     typedef typename std::reverse_iterator<iterator> reverse_iterator;
@@ -440,7 +441,7 @@ TEST_CASE("[vector_ptr] test")
     CHECK(p2);
     CHECK(p2.size() == 3);
 
-    p2.assign(3, 0);    
+    p2.assign(3, 0);
     CHECK(vec.size() == 3);
     CHECK(vec.front() == 0);
     CHECK(vec.back() == 0);

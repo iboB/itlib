@@ -1,4 +1,4 @@
-// chobo-small-vector v1.02
+// chobo-small-vector v1.03
 //
 // std::vector-like class with a static buffer for initial capacity
 //
@@ -27,6 +27,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.03 (2018-29-11) Removed references to deprecated std::allocator members
 //  1.02 (2018-04-24) Class inehrits from its allocator to make use of the
 //                    empty base class optimization.
 //                    emplace_back returns a reference to the inserted element
@@ -185,13 +186,13 @@ struct small_vector: Alloc
 
 public:
     using allocator_type = Alloc;
-    using value_type = typename Alloc::value_type;
-    using size_type = typename Alloc::size_type;
-    using difference_type = typename Alloc::difference_type;
-    using reference = typename Alloc::reference;
-    using const_reference = typename Alloc::const_reference;
-    using pointer = typename Alloc::pointer;
-    using const_pointer = typename Alloc::const_pointer;
+    using value_type = typename std::allocator_traits<Alloc>::value_type;
+    using size_type = typename std::allocator_traits<Alloc>::size_type;
+    using difference_type = typename std::allocator_traits<Alloc>::difference_type;
+    using reference = T&;
+    using const_reference = const T&;
+    using pointer = typename std::allocator_traits<Alloc>::pointer;
+    using const_pointer = typename std::allocator_traits<Alloc>::const_pointer;
     using iterator = pointer;
     using const_iterator = const_pointer;
     using reverse_iterator = std::reverse_iterator<iterator>;

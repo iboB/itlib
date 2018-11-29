@@ -1,10 +1,10 @@
-// chobo-vector v1.01
+// chobo-vector v1.02
 //
-// An std::vector-like class with no debug bounds checks which is faster in 
+// An std::vector-like class with no debug bounds checks which is faster in
 // "Debug" mode
 //
 // MIT License:
-// Copyright(c) 2017 Chobolabs Inc.
+// Copyright(c) 2017-2018 Chobolabs Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2018-29-11) Removed references to deprecated std::allocator members
 //  1.01 (2017-04-02) Fixed compilation error on (count, value) constructor and
 //                    assign, and insert methods when count or value is 0
 //  1.00 (2017-03-10) First public release
@@ -39,7 +40,7 @@
 // It defines the class chobo::vector, which is a drop-in replacement of
 // std::vector. Unlike some standard library releases, most notably
 // Dincumware's, it has no debug iterator checks, thus having a much, much
-// better performance in "Debug" mode. 
+// better performance in "Debug" mode.
 //
 //                  TESTS
 //
@@ -61,13 +62,13 @@ struct vector
 {
 public:
     using allocator_type = Alloc;
-    using value_type = typename Alloc::value_type;
-    using size_type = typename Alloc::size_type;
-    using difference_type = typename Alloc::difference_type;
-    using reference = typename Alloc::reference;
-    using const_reference = typename Alloc::const_reference;
-    using pointer = typename Alloc::pointer;
-    using const_pointer = typename Alloc::const_pointer;
+    using value_type = typename std::allocator_traits<Alloc>::value_type;
+    using size_type = typename std::allocator_traits<Alloc>::size_type;
+    using difference_type = typename std::allocator_traits<Alloc>::difference_type;
+    using reference = T & ;
+    using const_reference = const T&;
+    using pointer = typename std::allocator_traits<Alloc>::pointer;
+    using const_pointer = typename std::allocator_traits<Alloc>::const_pointer;
     using iterator = pointer;
     using const_iterator = const_pointer;
     using reverse_iterator = std::reverse_iterator<iterator>;
@@ -633,7 +634,7 @@ private:
 
                 m_alloc.deallocate(m_begin, m_capacity);
             }
-            
+
             m_capacity = new_cap;
             m_begin = new_buf;
             m_end = new_buf + s + num;
@@ -664,7 +665,7 @@ private:
             m_alloc.destroy(p);
         }
 
-        m_end -= num; 
+        m_end -= num;
 
         return ++position;
     }
@@ -720,7 +721,7 @@ private:
             ++m_end;
         }
     }
-    
+
     pointer m_begin;
     pointer m_end;
 
@@ -1003,7 +1004,7 @@ TEST_CASE("[vector] test")
         CHECK(nullptr_test.size() == 3);
         CHECK(nullptr_test.front() == 0);
         CHECK(nullptr_test.back() == 0);
-        
+
         nullptr_test.insert(nullptr_test.begin(), 1, 0);
         CHECK(nullptr_test.size() == 4);
         CHECK(nullptr_test.front() == 0);
