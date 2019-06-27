@@ -317,11 +317,10 @@ public:
         , m_size(size)
     {}
 
-    template <typename U>
-    const_memory_view(const memory_view<U>& view)
+    const_memory_view(const memory_view<T>& view)
     {
-        m_ptr = view.m_ptr;
-        m_size = view.size;
+        m_ptr = view.data();
+        m_size = view.size();
     }
 
     const_memory_view(const const_memory_view&) = default;
