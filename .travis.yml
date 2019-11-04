@@ -1,7 +1,8 @@
+if: tag IS blank # don't build tags
+sudo: true # travis-ci/travis-ci#9033
+os: linux
 language: cpp
-sudo: required
-dist: precise
-
+compiler: gcc
 notifications:
   email:
     on_success: change
@@ -11,40 +12,20 @@ git:
 
 matrix:
   include:
-    - os: linux
-      compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-4.9
-      env: COMPILER=g++-4.9
-      before_install:
-        - sudo apt-get update -qq
+    # GCC 5
+    - env: BUILD_TYPE=Debug
+    - env: BUILD_TYPE=Release
 
-    - os: linux
-      compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-5
-      env: COMPILER=g++-5
-      before_install:
-        - sudo apt-get update -qq
+    # Clang
+    - compiler: clang
+      env: BUILD_TYPE=Debug
+    - compiler: clang
+      env: BUILD_TYPE=Release
 
 script:
   - cd test
-  - mkdir -p debug_build
-  - cd debug_build
-  - cmake -DCMAKE_CXX_COMPILER=$COMPILER .. -DCMAKE_BUILD_TYPE=Debug
-  - make -j2
+  - mkdir -p build
+  - cd build
+  - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+  - make -j
   - ctest --output-on-failure
-  - cd ..
-  - mkdir -p release_build
-  - cd release_build
-  - cmake -DCMAKE_CXX_COMPILER=$COMPILER .. -DCMAKE_BUILD_TYPE=Release
-  - make -j2
-  - ctest --output-on_failure
