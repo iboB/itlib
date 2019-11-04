@@ -1,9 +1,9 @@
-// chobo-static-vector v1.02
+// chobo-static-vector v1.03
 //
 // std::vector-like class with a fixed capacity
 //
 // MIT License:
-// Copyright(c) 2016-2017 Chobolabs Inc.
+// Copyright(c) 2016-2019 Chobolabs Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -27,6 +27,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.03 (2019-11-04) Proper noexcept specifiers on move ctor and assignment
 //  1.02 (2017-02-05) Added swap to make it a better drop-in replacement of std::vector
 //  1.01 (2016-09-27) Qualified operator new. Fixed self usurp on assignment
 //  1.00 (2016-09-23) First public release
@@ -228,7 +229,7 @@ public:
         }
     }
 
-    static_vector(static_vector&& v)
+    static_vector(static_vector&& v) noexcept(std::is_nothrow_move_constructible<T>::value)
     {
         for (auto i = v.begin(); i != v.end(); ++i)
         {
@@ -259,7 +260,7 @@ public:
         return *this;
     }
 
-    static_vector& operator=(static_vector&& v)
+    static_vector& operator=(static_vector&& v) noexcept(std::is_nothrow_move_assignable<T>::value)
     {
         clear();
         for (auto i = v.begin(); i!=v.end(); ++i)
