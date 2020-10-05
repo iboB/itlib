@@ -445,6 +445,12 @@ const_memory_view<T> make_memory_view(const T* ptr, size_t size)
     return const_memory_view<T>(ptr, size);
 }
 
+template <typename T, size_t N>
+const_memory_view<T> make_memory_view(const T(&ar)[N])
+{
+    return const_memory_view<T>(ar, N);
+}
+
 template <typename Container>
 auto make_memory_view(Container& c, size_t offset = 0) -> memory_view<typename Container::value_type>
 {
