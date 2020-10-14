@@ -3,6 +3,7 @@
 #include <itlib/small_vector.hpp>
 
 #include <utility>
+#include <cstring>
 
 size_t allocations = 0;
 size_t deallocations = 0;

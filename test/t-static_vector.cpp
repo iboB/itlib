@@ -2,6 +2,8 @@
 
 #include <itlib/static_vector.hpp>
 
+#include <cstring>
+
 TEST_CASE("[static_vector] test")
 {
     using namespace itlib;
