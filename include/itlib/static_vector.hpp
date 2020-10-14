@@ -103,8 +103,8 @@
 //
 //                  TESTS
 //
-// You can find unit_tests for flat_map at its official repo:
-// https://github.com/iboB/itlib/blob/master/test/t-static_vector.cpp
+// You can find unit tests for static_vector in its official repo:
+// https://github.com/iboB/itlib/blob/master/test/
 //
 #pragma once
 
