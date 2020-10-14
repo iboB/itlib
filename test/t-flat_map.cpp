@@ -180,11 +180,11 @@ TEST_CASE("[flat_map] test")
     CHECK(m2.capacity() == m1c);
 }
 
-#if defined(CHOBO_FLAT_MAP_TEST_STATIC_VECTOR_WITH_DOCTEST)
+#include <itlib/static_vector.hpp>
 
 TEST_CASE("[flat_map] static_vector test")
 {
-    using namespace chobo;
+    using namespace itlib;
 
     flat_map<int, char, std::less<int>, static_vector<std::pair<int, char>, 10>> smap;
     CHECK(smap.empty());
@@ -247,5 +247,3 @@ TEST_CASE("[flat_map] static_vector test")
     ifit = smap.find(6);
     CHECK(ifit == smap.end());
 }
-
-#endif
