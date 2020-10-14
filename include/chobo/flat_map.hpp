@@ -1,9 +1,9 @@
-// chobo-flat-map v1.01
+// chobo-flat-map v1.02
 //
 // std::map-like class with an underlying vector
 //
 // MIT License:
-// Copyright(c) 2016 Chobolabs Inc.
+// Copyright(c) 2016-2020 Chobolabs Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -27,6 +27,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2020-10-14) Added forgotten forward of arguments of emplace
 //  1.01 (2016-09-27) Fix for keys with no operator==. Clean up of assignment.
 //                    Added swap method.
 //  1.00 (2016-09-23) First public release
@@ -244,10 +245,10 @@ public:
         return{ m_container.emplace(i, val), true };
     }
 
-    template <class... Args>
+    template <typename... Args>
     std::pair<iterator, bool> emplace(Args&&... args)
     {
-        value_type val(args...);
+        value_type val(std::forward<Args>(args)...);
         return insert(std::move(val));
     }
 
