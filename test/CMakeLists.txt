@@ -10,3 +10,5 @@ macro(add_itlib_test test)
     set_target_properties(${tname} PROPERTIES FOLDER test)
     add_test(NAME itlib-${test} COMMAND $<TARGET_FILE:${tname}>)
 endmacro()
+
+add_itlib_test(flat_map t-flat_map.cpp)
