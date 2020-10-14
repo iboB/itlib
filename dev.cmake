@@ -1,0 +1,28 @@
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+option(ITLIB_TSAN "itlib: build with thread sanitizer on" OFF)
+option(ITLIB_ASAN "itlib: build with address sanitizer on" OFF)
+option(ITLIB_CLANG_TIDY "itlib: use clang tidy" OFF)
+
+set(ITLIB_SAN_FLAGS "")
+if(MSVC)
+    set(ITLIB_WARNING_FLAGS "-D_CRT_SECURE_NO_WARNINGS /wd4251 /wd4275")
+else()
+    set(ITLIB_WARNING_FLAGS "-Wall -Wextra")
+    if(ITLIB_TSAN)
+        set(ITLIB_SAN_FLAGS "-fsanitize=thread -g")
+    elseif(ITLIB_ASAN)
+        set(ITLIB_SAN_FLAGS "-fsanitize=address,undefined,leak -pthread -g")
+    endif()
+
+    if(ITLIB_CLANG_TIDY)
+        set(CMAKE_CXX_CLANG_TIDY clang-tidy)
+    endif()
+endif()
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ITLIB_WARNING_FLAGS} ${ITLIB_SAN_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ITLIB_WARNING_FLAGS} ${ITLIB_SAN_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ITLIB_SAN_FLAGS}")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ITLIB_SAN_FLAGS}")
