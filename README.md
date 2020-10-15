@@ -1,11 +1,11 @@
-itlib: iboB's Template Library
-==============================
+itlib: iboB's Template Libraries
+================================
 
 A collection of small single-header C++ libraries similar to or extending the C++ standard library. See below for a list.
 
 [![Language](https://img.shields.io/badge/language-C++-blue.svg)](https://isocpp.org/) [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-itlib used to be [chobo-shl](https://github.com/Chobolabs/chobo-shl) which is no longer supported. New libraries and updates to the existing ones will be added here.
+itlib was forked from [chobo-shl](https://github.com/Chobolabs/chobo-shl) which is no longer supported. New libraries and updates to the existing ones are added here.
 
 ## Build Status
 
@@ -23,7 +23,7 @@ A class with the interface of `std::map` but implemented with an underlying `std
 
 ### [make_ptr.hpp](https://github.com/iboB/itlib/blob/master/include/itlib/make_ptr.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
-Small helper functions for creating std::shared_ptr and std::unique_ptr, which make the code shorter and more readable.
+Small helper functions for creating std::shared_ptr and std::unique_ptr which make the code shorter and more readable.
 
 ### [memory_view.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/memory_view.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
@@ -39,9 +39,9 @@ A mix between `std::vector` and `std::array`: A dynamically sized container with
 
 ## Usage
 
-Clone the repo or choose one or more libraries that you like and copy somewhere in your include paths.
+Clone the repo or choose one or more libraries that you like and copy them somewhere in your include paths.
 
-Every library is self-contained, so you can copy, move, and modify whichever you like and not wory about interdependencies.
+Every library is self-contained so you can copy, move, and modify whichever you like and not wory about interdependencies.
 
 ## Contributing
 
