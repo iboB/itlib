@@ -21,6 +21,10 @@ Documentation is provided in comments at the top of each file.
 
 A class with the interface of `std::map` but implemented with an underlying `std::vector`-type container, thus providing better cache locality of the elements. Similar to [`boost::flat_map`](http://www.boost.org/doc/libs/1_61_0/doc/html/boost/container/flat_map.html) with the notable difference that the underlying container can be changed via a template argument (thus making the class not strictly an `std::map` drop-in replacement)
 
+### [make_ptr.hpp](https://github.com/iboB/itlib/blob/master/include/itlib/make_ptr.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
+
+Small helper functions for creating std::shared_ptr and std::unique_ptr, which make the code shorter and more readable.
+
 ### [memory_view.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/memory_view.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
 A class which provides a std::vector like interface (sans the methods which might change the size or capacity) to a chunk of memory. Similar to C++20's `span`
