@@ -490,12 +490,12 @@ public:
         return position;
     }
 
-    iterator erase(iterator position)
+    iterator erase(const_iterator position)
     {
         auto dist = position - begin();
         position->~T();
 
-        for (auto i = position + 1; i != end(); ++i)
+        for (auto i = begin() + dist + 1; i != end(); ++i)
         {
             *(i - 1) = std::move(*i);
         }
