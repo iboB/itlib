@@ -86,6 +86,10 @@ public:
 
     sentry& operator=(sentry&&) = delete;
 
+private:
+    Func m_func;
+
+public:
 #if __cplusplus >= 201700
     // c++ 17 has guaranteed copy-elision, so we can afford to do this
     sentry(sentry&&) = delete;
@@ -101,9 +105,6 @@ public:
 private:
     bool m_has_func = true;
 #endif
-
-private:
-    Func m_func;
 };
 
 template <typename Func>

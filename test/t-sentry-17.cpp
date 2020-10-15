@@ -14,14 +14,20 @@ TEST_CASE("Basic")
 
     int i = 0;
     {
-        auto s = make_sentry([&i]() { i = 3; });
+        sentry s([&i]() { i = 3; });
         CHECK(i == 0);
     }
     CHECK(i == 3);
 
+    {
+        auto s = make_sentry([&i]() { i = 5; });
+        CHECK(i == 3);
+    }
+    CHECK(i == 5);
+
     std::unique_ptr<std::string> ptr(new std::string("asd"));
     {
-        auto s = make_sentry([cptr = std::move(ptr)]() {
+        sentry s([cptr = std::move(ptr)]() {
             CHECK(*cptr == "asd");
         });
     }
