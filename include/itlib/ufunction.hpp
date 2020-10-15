@@ -98,7 +98,7 @@ private:
     template <typename FO>
     struct copy_wrapper
     {
-        static_assert(!std::is_const_v<FO>, "Cannot bind to a const function");
+        static_assert(!std::is_const<FO>::value, "Cannot bind to a const function");
         FO func_object;
         copy_wrapper(FO&& f) : func_object(std::move(f)) {}
 
@@ -115,7 +115,10 @@ private:
         }
 
         template <typename... Args>
-        auto operator()(Args&&... args) { return func_object(std::forward<Args>(args)...); }
+        auto operator()(Args&&... args) -> decltype(func_object(std::forward<Args>(args)...))
+        {
+            return func_object(std::forward<Args>(args)...);
+        }
     };
 };
 
