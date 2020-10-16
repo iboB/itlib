@@ -25,11 +25,15 @@ A class with the interface of `std::map` but implemented with an underlying `std
 
 ### [make_ptr.hpp](https://github.com/iboB/itlib/blob/master/include/itlib/make_ptr.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
-Small helper functions for creating std::shared_ptr and std::unique_ptr which make the code shorter and more readable.
+Small helper functions for creating `std::shared_ptr` and `std::unique_ptr` which make the code shorter and more readable.
+
+### [mem_streambuf.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/mem_streambuf.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
+
+Two helper classes: `mem_ostreambuf` and `mem_istreambuf` which allow you to work with `std::stream`-s with buffers of contiguous memory.
 
 ### [memory_view.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/memory_view.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
-A class which provides a std::vector like interface (sans the methods which might change the size or capacity) to a chunk of memory. Similar to C++20's `span`
+A class which provides a `std::vector` like interface (sans the methods which might change the size or capacity) to a chunk of memory. Similar to C++20's `std::span`
 
 ### [sentry.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/sentry.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) [![Standard](https://img.shields.io/badge/C%2B%2B-17-red.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
@@ -37,7 +41,7 @@ A sentry class which executes a function object on destruction. Works with C++11
 
 ### [small_vector.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/small_vector.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
-A mix between a `vector` and a `static_vector`. It's a dynamic array, optimized for use when the number of elements is small. Like `static_vector` is has a static buffer with a given capacity, but can fall back to dynamically allocated memory, should the size exceed it. Similar to [`boost::small_vector`](http://www.boost.org/doc/libs/1_61_0/doc/html/boost/container/small_vector.html)
+A mix between `std::vector` and `itlib::static_vector`. It's a dynamic array, optimized for use when the number of elements is small. Like `static_vector` is has a static buffer with a given capacity, but can fall back to dynamically allocated memory, should the size exceed it. Similar to [`boost::small_vector`](http://www.boost.org/doc/libs/1_61_0/doc/html/boost/container/small_vector.html)
 
 ### [static_vector.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/static_vector.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
