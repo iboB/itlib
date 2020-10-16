@@ -9,7 +9,9 @@ itlib was forked from [chobo-shl](https://github.com/Chobolabs/chobo-shl) which 
 
 ## Build Status
 
-*TODO: add github actions*
+Building with GitHub actions on Windows with MSVC, Ubuntu with GCC, and macOS with clang. Debug and Release. With address sanitizer.
+
+[![Build](https://github.com/iboB/itlib/workflows/Build/badge.svg)](https://github.com/iboB/itlib/actions?query=workflow%3ABuild)
 
 ## Libraries
 
