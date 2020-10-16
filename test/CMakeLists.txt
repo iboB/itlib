@@ -31,6 +31,8 @@ macro(add_itlib_test test)
     add_test_if_exist(${test} 17)
 endmacro()
 
+add_itlib_test(itlib)
+
 add_itlib_test(flat_map)
 add_itlib_test(make_ptr)
 add_itlib_test(memory_view)
