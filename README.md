@@ -37,6 +37,10 @@ Two helper classes: `mem_ostreambuf` and `mem_istreambuf` which allow you to wor
 
 A class which provides a `std::vector` like interface (sans the methods which might change the size or capacity) to a chunk of memory. Similar to C++20's `std::span`
 
+### [pod_vector.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/pod_vector.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
+
+A container similar to `std::vector`, which contains PODs. This fact is used to improve performance by skipping constructor and destructor calls and using `memcpy` and `memmove` to copy data, and `malloc`, and `free`, and, most importantly `realloc`, to manage memory.
+
 ### [sentry.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/sentry.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) [![Standard](https://img.shields.io/badge/C%2B%2B-17-red.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
 A sentry class which executes a function object on destruction. Works with C++11, but it's slightly easier to use with C++17.
