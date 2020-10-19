@@ -21,6 +21,10 @@ Documentation is provided in comments at the top of each file.
 
 In the list below each library shows its minimum supported C++ standard and has icons for other standards if additional features are available for them.
 
+### [dynamic_bitset.hpp](https://github.com/iboB/itlib/blob/master/include/itlib/dynamic_bitset.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
+
+A class similar to `std::bitset`, but the number of bits is not a part of the type. It's also somewhat similar to `vector&lt;bool&gt;`, but (so far) it has more limited modification capabilities.
+
 ### [flat_map.hpp](https://github.com/iboB/itlib/blob/master/include/itlib/flat_map.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
 A class with the interface of `std::map` but implemented with an underlying `std::vector`-type container, thus providing better cache locality of the elements. Similar to [`boost::flat_map`](http://www.boost.org/doc/libs/1_61_0/doc/html/boost/container/flat_map.html) with the notable difference that the underlying container can be changed via a template argument (thus making the class not strictly an `std::map` drop-in replacement)
