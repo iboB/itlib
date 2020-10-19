@@ -23,7 +23,7 @@ In the list below each library shows its minimum supported C++ standard and has 
 
 ### [dynamic_bitset.hpp](https://github.com/iboB/itlib/blob/master/include/itlib/dynamic_bitset.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
-A class similar to `std::bitset`, but the number of bits is not a part of the type. It's also somewhat similar to `vector&lt;bool&gt;`, but (so far) it has more limited modification capabilities.
+A class similar to `std::bitset`, but the number of bits is not a part of the type. It's also somewhat similar to `std::vector<bool>;`, but (so far) it has more limited modification capabilities.
 
 ### [flat_map.hpp](https://github.com/iboB/itlib/blob/master/include/itlib/flat_map.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
