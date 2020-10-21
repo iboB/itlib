@@ -219,6 +219,11 @@ TEST_CASE("basic")
         CHECK(cvec.front() == 'b');
         CHECK(cvec.back() == 'z');
 
+        cvec.resize(1);
+        CHECK(cvec.size() == 1);
+        CHECK(cvec.front() == 'b');
+        CHECK(cvec.back() == 'b');
+
         // 0 is implicitly castable to nullptr_t which can be an iterator in our case
         cpodvec<int32_t> nullptr_test(2, 0);
         CHECK(nullptr_test.size() == 2);

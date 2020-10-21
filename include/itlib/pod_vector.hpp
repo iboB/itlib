@@ -525,7 +525,7 @@ public:
     void resize(size_type n)
     {
         reserve(n);
-        if (m_alloc.zero_fill_new()) zero_fill(m_end, n - size());
+        if (n > size() && m_alloc.zero_fill_new()) zero_fill(m_end, n - size());
         m_end = m_begin + n;
     }
 
