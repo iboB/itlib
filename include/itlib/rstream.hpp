@@ -118,12 +118,12 @@ public:
         , m_restore(pos)
     {
         m_restore = in.tellg();
-        m_in.seekg(pos);
+        in.seekg(pos);
     }
 
     ~basic_redirect_rstream()
     {
-        m_in.seekg(m_restore);
+        this->m_in.seekg(m_restore);
     }
 private:
     std::streampos m_restore;
