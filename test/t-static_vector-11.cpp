@@ -129,7 +129,7 @@ TEST_CASE("[static_vector] test")
         CHECK(s.empty());
     }
 
-#if !defined(__EMSCRIPTEN__) || !defined(NDEBUG) // emscripten allows exceptions with -O0
+#if !defined(__EMSCRIPTEN__) // emscripten doesn't allow exceptions by default
     CHECK_THROWS_AS(svec.push_back("asd"), std::out_of_range);
     CHECK(svec.size() == svec.capacity());
     CHECK_THROWS_AS(svec.resize(55), std::out_of_range);

@@ -531,7 +531,7 @@ TEST_CASE("[small_vector] static-dynamic")
     allocations = deallocations = allocated_bytes = deallocated_bytes = constructions = destructions = 0;
 }
 
-#if !defined(__EMSCRIPTEN__) || !defined(NDEBUG) // emscripten allows exceptions with -O0
+#if !defined(__EMSCRIPTEN__) // emscripten doesn't allow exceptions by default
 TEST_CASE("[small_vector] out of range")
 {
     using namespace itlib;
