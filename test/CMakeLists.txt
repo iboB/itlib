@@ -14,7 +14,7 @@ macro(add_test_for_std test std)
     )
     target_link_libraries(${tname} doctest-${std} itlib ${CMAKE_THREAD_LIBS_INIT})
 
-    add_test(NAME itlib-${test}-${std} COMMAND $<TARGET_FILE:${tname}>)
+    add_test(NAME itlib-${test}-${std} COMMAND ${tname})
 endmacro()
 
 macro(add_test_if_exist test std)
