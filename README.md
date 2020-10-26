@@ -62,6 +62,10 @@ A mix between `std::vector` and `itlib::static_vector`. It's a dynamic array, op
 
 A mix between `std::vector` and `std::array`: A dynamically sized container with fixed capacity (supplied as a template parameter). This allows you to have dynamically sized vectors on the stack or as cache-local value members, as long as you know a big enough capacity beforehand. Similar to [`boost::static_vector`](http://www.boost.org/doc/libs/1_61_0/doc/html/boost/container/static_vector.html).
 
+### [time_t.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/time_t.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
+
+A thin wrapper of `std::time_t` which provides thread safe `std::tm` getters and type-safe (`std::chrono::duration`-based) arithmetic
+
 ### [ufunction.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/ufunction.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) [![Standard](https://img.shields.io/badge/C%2B%2B-14-yellow.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
 Unique function. A replacement of `std::function` which is non-copyable (can capture non-copyable values, and wrap non-copyable objects), and noexcept move-constructible (won't implicitly make owners no-noexcept move-constructible)
