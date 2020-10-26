@@ -115,7 +115,7 @@ public:
 #if defined(_MSC_VER)
         gmtime_s(&ret, &mt);
 #else
-        gmtime_s(&mt, &ret);
+        gmtime_r(&mt, &ret);
 #endif
         return ret;
     }
@@ -127,7 +127,7 @@ public:
 #if defined(_MSC_VER)
         localtime_s(&ret, &mt);
 #else
-        localtime_s(&mt, &ret);
+        localtime_r(&mt, &ret);
 #endif
         return ret;
     }

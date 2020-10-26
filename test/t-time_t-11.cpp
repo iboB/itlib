@@ -60,7 +60,7 @@ TEST_CASE("[time_t] tm")
     CHECK((lt.tm_wday == 0 || lt.tm_wday == 1));
 
     std::locale::global(std::locale("en_US.utf8"));
-    auto fmt = itlib::strftime("%A %c", tm);
-    CHECK(fmt.length() == 25);
-    CHECK(fmt == "Monday 9/10/2001 05:33:20");
+    auto fmt = itlib::strftime("%A %D %T", tm);
+    CHECK(fmt.length() == 24);
+    CHECK(fmt == "Monday 09/10/01 05:33:20");
 }
