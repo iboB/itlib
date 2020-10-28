@@ -1,4 +1,4 @@
-// itlib-pod-vector v1.00
+// itlib-pod-vector v1.01
 //
 // A vector of PODs. Similar to std::vector, but doesn't call constructors or
 // destructors and instead uses memcpy and memmove to manage the data
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2020-10-28) Switched static assert from is_pod to is_trivial
 //  1.00 (2020-10-18) Initial release
 //
 //
@@ -104,7 +105,7 @@ public:
 template<typename T, class Alloc = impl::pod_allocator>
 class pod_vector
 {
-    static_assert(std::is_pod<T>::value, "itlib::pod_vector with non-POD type");
+    static_assert(std::is_trivial<T>::value, "itlib::pod_vector with non-trivial type");
 
     template<typename U, typename A>
     friend class pod_vector; // so we can move between types
