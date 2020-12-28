@@ -45,6 +45,10 @@ A class which provides a `std::vector` like interface (sans the methods which mi
 
 A container similar to `std::vector`, which contains PODs. This fact is used to improve performance by skipping constructor and destructor calls and using `memcpy` and `memmove` to copy data, and `malloc` and `free`, and, most importantly `realloc`, to manage memory.
 
+### [qalgorithm.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/qalgorithm.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
+
+Wrappers of `<algorithm>` functions which work on entire containers for less typing in the most common use-cases.
+
 ### [rstream.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/rstream.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
 Read stream. Simple `std::istream` wrappers which don't allow seeks, allowing you to be certain that reads are sequential, and thus allow a redirect, so you can represent several streams as one.
@@ -52,7 +56,6 @@ Read stream. Simple `std::istream` wrappers which don't allow seeks, allowing yo
 ### [sentry.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/sentry.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) [![Standard](https://img.shields.io/badge/C%2B%2B-17-red.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
 A sentry class which executes a function object on destruction. Works with C++11, but it's slightly easier to use with C++17.
-
 
 ### [small_vector.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/small_vector.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
