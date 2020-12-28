@@ -66,6 +66,10 @@ A mix between `std::vector` and `std::array`: A dynamically sized container with
 
 A thin wrapper of `std::time_t` which provides thread safe `std::tm` getters and type-safe (`std::chrono::duration`-based) arithmetic
 
+### [type_traits.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/type_traits.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) [![Standard](https://img.shields.io/badge/C%2B%2B-17-red.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
+
+Additional type traits to extend the standard library's `<type_traits>`
+
 ### [ufunction.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/ufunction.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) [![Standard](https://img.shields.io/badge/C%2B%2B-14-yellow.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
 
 Unique function. A replacement of `std::function` which is non-copyable (can capture non-copyable values, and wrap non-copyable objects), and noexcept move-constructible (won't implicitly make owners no-noexcept move-constructible)
