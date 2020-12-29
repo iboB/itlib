@@ -71,3 +71,33 @@ TEST_CASE("find")
     cp = itlib::pfind_if(cvec, [](int i) { return i > 300; });
     CHECK(!cp);
 }
+
+TEST_CASE("erase_first")
+{
+    using ivec = std::vector<int>;
+    ivec vec = {1,2,3,4};
+    CHECK_FALSE(itlib::erase_first(vec, 8));
+    CHECK(vec.size() == 4);
+    CHECK_FALSE(itlib::erase_first_if(vec, [](int i) { return i > 4; }));
+    CHECK(vec.size() == 4);
+    CHECK(itlib::erase_first(vec, 2));
+    CHECK(vec == ivec{1, 3, 4});
+    CHECK(itlib::erase_first_if(vec, [](int i) { return i > 2; }));
+    CHECK(vec == ivec{1, 4});
+}
+
+TEST_CASE("erase_all")
+{
+    using ivec = std::vector<int>;
+    ivec vec = {1,2,3,2,4};
+    CHECK(itlib::erase_all(vec, 8) == 0);
+    CHECK(vec.size() == 5);
+    CHECK(itlib::erase_all_if(vec, [](int i) { return i > 4; }) == 0);
+    CHECK(vec.size() == 5);
+
+    CHECK(itlib::erase_all(vec, 2) == 2);
+    CHECK(vec == ivec{1, 3, 4});
+    CHECK(itlib::erase_all_if(vec, [](int i) { return i > 2; }) == 2);
+    CHECK(vec.size() == 1);
+    CHECK(vec.front() == 1);
+}

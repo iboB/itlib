@@ -1,4 +1,4 @@
-// itlib-qalgorithm v1.00
+// itlib-qalgorithm v1.01
 //
 // Wrappers of <algorithm> algorithms for entire containers
 //
@@ -27,6 +27,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2020-12-29) Added erase functions
 //  1.00 (2020-12-28) First pulic release
 //
 //
@@ -39,6 +40,10 @@
 // * qfind_if - wraps std::find_if
 // * pfind - wraps std::find, returns a raw pointer to the element or nullptr if the element wasn't found
 // * pfind_if - wraps std::find_if, returns a raw pointer to the element or nullptr if the element wasn't found
+// * bool erase_first(container, value) - erase the first element equal to value. returns true if something was erased
+// * bool erase_first_if(container, pred) - erase the first elemenf which matches pred. returns true if something was erased
+// * size_t erase_all(container, value) - erases all elements equal to value, returns number of elements erased
+// * size_t erase_all_if(container, value) - erases all elements which match pred, returns number of elements erased
 //
 //
 //                  TESTS
@@ -96,6 +101,42 @@ typename impl::pointer_t<Container>::type pfind_if(Container& c, Pred&& pred)
     auto f = std::find_if(c.begin(), c.end(), std::forward<Pred>(pred));
     if (f == c.end()) return nullptr;
     return &(*f);
+}
+
+template <typename Container, typename Value>
+bool erase_first(Container& c, const Value& val)
+{
+    auto f = qfind(c, val);
+    if (f == c.end()) return false;
+    c.erase(f);
+    return true;
+}
+
+template <typename Container, typename Pred>
+bool erase_first_if(Container& c, Pred&& pred)
+{
+    auto f = qfind_if(c, std::forward<Pred>(pred));
+    if (f == c.end()) return false;
+    c.erase(f);
+    return true;
+}
+
+template <typename Container, typename Value>
+typename Container::size_type erase_all(Container& c, const Value& val)
+{
+    auto newend = std::remove(c.begin(), c.end(), val);
+    auto ret = c.end() - newend;
+    c.erase(newend, c.end());
+    return ret;
+}
+
+template <typename Container, typename Pred>
+typename Container::size_type erase_all_if(Container& c, Pred&& pred)
+{
+    auto newend = std::remove_if(c.begin(), c.end(), std::forward<Pred>(pred));
+    auto ret = c.end() - newend;
+    c.erase(newend, c.end());
+    return ret;
 }
 
 }
