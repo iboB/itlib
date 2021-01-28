@@ -27,7 +27,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.01 (2020-10-18) Added assign
+//  1.01 (2021-01-28) Added assign
 //                    Added append
 //                    Clear trailing bits after resize
 //  1.00 (2020-10-18) Initial release
