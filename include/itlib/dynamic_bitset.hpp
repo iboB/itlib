@@ -3,7 +3,7 @@
 // A class similar to std::bitset but the size is not a part of the type
 //
 // MIT License:
-// Copyright(c) 2020 Borislav Stanimirov
+// Copyright(c) 2020-2021 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -27,6 +27,9 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2020-10-18) Added assign
+//                    Added append
+//                    Clear trailing bits after resize
 //  1.00 (2020-10-18) Initial release
 //
 //
@@ -80,6 +83,10 @@
 //      set bit to value
 // * void flip(size_type i)
 //      flip bit
+// * void assign(const Buffer&)
+//      set values from a given word-type buffer
+// * void append(const dynamic_bitset&)
+//      append an existing dynamic bitset to this one
 // * void reserve(size_type size)
 //      reserve buffer for size bits
 // * void resize(size_type size)
@@ -242,6 +249,11 @@ public:
     void reserve(size_type size) { m_buf.reserve(word_size(size)); }
     void resize(size_type size)
     {
+        auto pad = m_size % bits_per_word;
+        if (pad) {
+            // clear the tail of the buf with zeroes in case they remain from previous ops
+            m_buf.back() &= word_mask(pad) - 1;
+        }
         m_size = size;
         m_buf.resize(word_size(size));
     }
@@ -249,6 +261,38 @@ public:
     {
         resize(m_size + 1);
         set(m_size-1, b);
+    }
+
+    void assign(const buffer_type& buf)
+    {
+        m_buf = buf;
+        m_size = m_buf.size() * bits_per_word;
+    }
+
+    void append(const dynamic_bitset& other)
+    {
+        if (other.empty()) return;
+
+        const auto pad = m_size % bits_per_word;
+        if (pad == 0)
+        {
+            // lucky
+            m_buf.insert(m_buf.end(), other.m_buf.begin(), other.m_buf.end());
+            m_size += other.size();
+            return;
+        }
+
+        auto back_buf_index = m_buf.size() - 1;
+        resize(m_size + other.m_size);
+        auto myi = m_buf.begin() + back_buf_index;
+        for (size_t i = 0; i<other.m_buf.size(); ++i)
+        {
+            auto cur = other.m_buf[i];
+            *myi |= cur << pad;
+            ++myi;
+            if (myi == m_buf.end()) break;
+            *myi = cur >> (bits_per_word - pad);
+        }
     }
 
     // vector-like

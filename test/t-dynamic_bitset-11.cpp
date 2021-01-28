@@ -1,8 +1,8 @@
 #include "doctest.hpp"
 
 #include <itlib/dynamic_bitset.hpp>
-
-using db32 = itlib::dynamic_bitset<std::vector<uint32_t>>;
+using vec32 = std::vector<uint32_t>;
+using db32 = itlib::dynamic_bitset<vec32>;
 
 TEST_CASE("statics")
 {
@@ -146,6 +146,37 @@ TEST_CASE("test")
     CHECK_FALSE(f.all());
 }
 
+TEST_CASE("set/get")
+{
+    db32 b(2);
+    b.set(0);
+    b.set(1);
+    CHECK(b.test(0));
+    CHECK(b.test(1));
+    CHECK(b.buffer().size() == 1);
+    CHECK(b.buffer().front() == 3);
+
+    for (int i = 0; i < 29; ++i)
+    {
+        b.push_back(true);
+        CHECK(b.size() == i + 3);
+        CHECK(b.all());
+        CHECK(b.buffer().size() == 1);
+        CHECK(b.buffer().front() == (1u << b.size()) - 1);
+    }
+
+    b.push_back(true);
+    CHECK(b.buffer().size() == 1);
+    CHECK(b.buffer().front() == 0xffffffff);
+    CHECK(b.all());
+
+    b.push_back(true);
+    CHECK(b.buffer().size() == 2);
+    CHECK(b.buffer().front() == 0xffffffff);
+    CHECK(b.buffer().back() == 1);
+    CHECK(b.all());
+}
+
 template <typename Bitset>
 bool advance_check(size_t n)
 {
@@ -218,4 +249,117 @@ TEST_CASE("iterators")
     for (int i=0; i<130; ++i, ++cit);
     CHECK(*cit);
     CHECK(cx[130]);
+}
+
+#define PART_A 0xbaadf00d, 0xfeee1234, 0x43210523, 0xfaadbeed
+#define PART_B 0x78901234, 0x777cdcdc
+
+TEST_CASE("asign")
+{
+    vec32 ia = {PART_A};
+    db32 b;
+    b.assign(ia);
+    CHECK(b.size() == ia.size() * 32);
+    CHECK(b.buffer() == ia);
+}
+
+TEST_CASE("resize")
+{
+    vec32 ia = {0xfaadbeed};
+    db32 b;
+    b.assign(ia);
+
+    b.resize(b.size() - 1);
+    CHECK(b.buffer() == ia);
+
+    b.resize(b.size() - 15);
+    CHECK(b.buffer().back() == 0x7aadbeed);
+
+    b.push_back(false);
+    CHECK(b.buffer().back() == 0xbeed);
+}
+
+TEST_CASE("append lucky")
+{
+    vec32 ia = {PART_A};
+    vec32 ib = {PART_B};
+
+    db32 b1;
+    b1.assign(ia);
+
+    db32 b1c;
+    b1c.append(b1);
+    CHECK(b1c.size() == b1.size());
+    CHECK(b1c.buffer() == b1.buffer());
+
+    db32 b2;
+    b1.append(b2);
+    CHECK(b1c.size() == b1.size());
+    CHECK(b1c.buffer() == b1.buffer());
+
+    b2.assign(ib);
+
+    b1.append(b2);
+    CHECK(b1.size() == (ia.size() + ib.size()) * 32);
+    CHECK(b1.buffer() == vec32{PART_A, PART_B});
+
+    b2.resize(b2.size() - 11);
+    b1.append(b2);
+    CHECK(b1.size() == (ia.size() + 2*ib.size()) * 32 - 11);
+    CHECK(b1.buffer() == vec32{PART_A, PART_B, PART_B});
+}
+
+TEST_CASE("append actually")
+{
+    db32 b1;
+    b1.push_back(true);
+    db32 b2;
+    b2.push_back(true);
+
+    b1.append(b2);
+    CHECK(b1.size() == 2);
+    CHECK(b1.buffer().size() == 1);
+    CHECK(b1.buffer().front() == 3);
+
+    b1.append(b2);
+    CHECK(b1.size() == 3);
+    CHECK(b1.buffer().size() == 1);
+    CHECK(b1.buffer().front() == 7);
+
+    vec32 ia = {PART_A};
+    b1.assign(ia);
+    b1.resize(b1.size() - 16);
+
+    vec32 ib = {PART_B};
+    b2.assign(ib);
+    b1.append(b2);
+    CHECK(b1.size() == (ia.size() + ib.size()) * 32 - 16);
+
+    {
+        auto& buf = b1.buffer();
+        CHECK(buf[0] == ia[0]);
+        CHECK(buf[1] == ia[1]);
+        CHECK(buf[2] == ia[2]);
+        // 0xfaadbeed
+        // 0x78901234, 0x777cdcdc
+        CHECK(buf[3] == 0x1234beed);
+        CHECK(buf[4] == 0xdcdc7890);
+        CHECK(buf[5] == 0x0000777c);
+    }
+
+    b1.assign(ia);
+    b1.resize(b1.size() - 8);
+    b1.append(b2);
+
+    {
+        auto& buf = b1.buffer();
+        CHECK(buf[0] == ia[0]);
+        CHECK(buf[1] == ia[1]);
+        CHECK(buf[2] == ia[2]);
+        // 0xfaadbeed
+        // 0x78901234, 0x777cdcdc
+        CHECK(buf[3] == 0x34adbeed);
+        CHECK(buf[4] == 0xdc789012);
+        CHECK(buf[5] == 0x00777cdc);
+    }
 }
