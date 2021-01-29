@@ -27,7 +27,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.02 (2021-01-29)
+//  1.02 (2021-01-29) Added copy
 //                    Added iterator +-num arithmetic
 //  1.01 (2021-01-28) Added assign
 //                    Added append
@@ -367,6 +367,40 @@ public:
 
     const_iterator begin() const { return const_iterator(*this, 0); }
     const_iterator end() const { return const_iterator(*this, m_size); }
+
+    void copy(iterator from, iterator to, const_iterator source)
+    {
+        while (from.index % bits_per_word)
+        {
+            // copy single bits until we reach a word boundary of our bitset
+            if (from == to) return;
+            *from++ = *source++;
+        }
+
+        const auto pad = source.index % bits_per_word;
+        auto own_windex = word_index(from.index);
+        auto src_windex = word_index(source.index);
+        auto& src = source.bitset.m_buf;
+        // for each whole word of our bitset
+        while (to - from >= bits_per_word)
+        {
+            m_buf[own_windex] = src[src_windex] >> pad;
+            if (pad)
+            {
+                // there is padding so there must be at least one more element in the source
+                m_buf[own_windex] |= src[src_windex + 1] << (bits_per_word - pad);
+            }
+            ++own_windex;
+            ++src_windex;
+            from.index += bits_per_word;
+        }
+
+        if (from == to) return; // we finished on a word boundary
+
+        // now what remains is some bits from source that need to be splicet onto our last element
+        const auto rpad = to.index % bits_per_word;
+        m_buf[own_windex] = ((src[src_windex] >> pad) & (word_mask(rpad) - 1)) | (m_buf[own_windex] & ~(word_mask(rpad) - 1));
+    }
 
     // static ops
 

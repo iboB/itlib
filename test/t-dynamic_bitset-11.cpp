@@ -369,3 +369,48 @@ TEST_CASE("append actually")
         CHECK(buf[5] == 0x00777cdc);
     }
 }
+
+TEST_CASE("copy")
+{
+    vec32 ia = {PART_A};
+    vec32 ib = {PART_B};
+
+    db32 b1;
+    b1.assign(ia);
+
+    db32 b2;
+    b2.assign(ib);
+
+    b1.copy(b1.begin() + 32, b1.begin() + 64, b2.begin());
+
+    {
+        auto& buf = b1.buffer();
+        CHECK(buf[0] == ia[0]);
+        CHECK(buf[1] == ib[0]);
+        CHECK(buf[2] == ia[2]);
+        CHECK(buf[3] == ia[3]);
+    }
+
+    b1.assign(ia);
+    b1.copy(b1.begin() + 24, b1.begin() + 24 + 48, b2.begin() + 8);
+
+    // PART_A 0xbaadf00d, 0xfeee1234, 0x43210523, 0xfaadbeed
+    // PART_B 0x78901234, 0x777cdcdc
+    {
+        auto& buf = b1.buffer();
+        CHECK(buf[0] == 0x12adf00d);
+        CHECK(buf[1] == 0xdcdc7890);
+        CHECK(buf[2] == 0x4321057c);
+        CHECK(buf[3] == ia[3]);
+    }
+
+    b1.assign(ia);
+    b1.copy(b1.begin() + 20, b1.begin() + 20 + 52, b2.begin() + 12);
+    {
+        auto& buf = b1.buffer();
+        CHECK(buf[0] == 0x901df00d);
+        CHECK(buf[1] == 0x7cdcdc78);
+        CHECK(buf[2] == 0x43210577);
+        CHECK(buf[3] == ia[3]);
+    }
+}
