@@ -1,3 +1,4 @@
+
 itlib: iboB's Template Libraries
 ================================
 
@@ -21,61 +22,22 @@ Documentation is provided in comments at the top of each file.
 
 In the list below each library shows its minimum supported C++ standard and has icons for other standards if additional features are available for them.
 
-### [dynamic_bitset.hpp](https://github.com/iboB/itlib/blob/master/include/itlib/dynamic_bitset.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
-
-A class similar to `std::bitset`, but the number of bits is not a part of the type. It's also somewhat similar to `std::vector<bool>;`, but (so far) it has more limited modification capabilities.
-
-### [flat_map.hpp](https://github.com/iboB/itlib/blob/master/include/itlib/flat_map.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
-
-A class with the interface of `std::map` but implemented with an underlying `std::vector`-type container, thus providing better cache locality of the elements. Similar to [`boost::flat_map`](http://www.boost.org/doc/libs/1_61_0/doc/html/boost/container/flat_map.html) with the notable difference that the underlying container can be changed via a template argument (thus making the class not strictly an `std::map` drop-in replacement)
-
-### [make_ptr.hpp](https://github.com/iboB/itlib/blob/master/include/itlib/make_ptr.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
-
-Small helper functions for creating `std::shared_ptr` and `std::unique_ptr` which make the code shorter and more readable.
-
-### [mem_streambuf.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/mem_streambuf.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
-
-Two helper classes: `mem_ostreambuf` and `mem_istreambuf` which allow you to work with `std::stream`-s with buffers of contiguous memory.
-
-### [memory_view.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/memory_view.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
-
-A class which provides a `std::vector` like interface (sans the methods which might change the size or capacity) to a chunk of memory. Similar to C++20's `std::span`
-
-### [pod_vector.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/pod_vector.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
-
-A container similar to `std::vector`, which contains PODs. This fact is used to improve performance by skipping constructor and destructor calls and using `memcpy` and `memmove` to copy data, and `malloc` and `free`, and, most importantly `realloc`, to manage memory.
-
-### [qalgorithm.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/qalgorithm.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
-
-Wrappers of `<algorithm>` functions which work on entire containers for less typing in the most common use-cases.
-
-### [rstream.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/rstream.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
-
-Read stream. Simple `std::istream` wrappers which don't allow seeks, allowing you to be certain that reads are sequential, and thus allow a redirect, so you can represent several streams as one.
-
-### [sentry.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/sentry.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) [![Standard](https://img.shields.io/badge/C%2B%2B-17-red.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
-
-A sentry class which executes a function object on destruction. Works with C++11, but it's slightly easier to use with C++17.
-
-### [small_vector.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/small_vector.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
-
-A mix between `std::vector` and `itlib::static_vector`. It's a dynamic array, optimized for use when the number of elements is small. Like `static_vector` is has a static buffer with a given capacity, but can fall back to dynamically allocated memory, should the size exceed it. Similar to [`boost::small_vector`](http://www.boost.org/doc/libs/1_61_0/doc/html/boost/container/small_vector.html)
-
-### [static_vector.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/static_vector.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
-
-A mix between `std::vector` and `std::array`: A dynamically sized container with fixed capacity (supplied as a template parameter). This allows you to have dynamically sized vectors on the stack or as cache-local value members, as long as you know a big enough capacity beforehand. Similar to [`boost::static_vector`](http://www.boost.org/doc/libs/1_61_0/doc/html/boost/container/static_vector.html).
-
-### [time_t.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/time_t.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
-
-A thin wrapper of `std::time_t` which provides thread safe `std::tm` getters and type-safe (`std::chrono::duration`-based) arithmetic
-
-### [type_traits.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/type_traits.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) [![Standard](https://img.shields.io/badge/C%2B%2B-17-red.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
-
-Additional type traits to extend the standard library's `<type_traits>`
-
-### [ufunction.hpp](https://github.com/iboB/itlib/tree/master/include/itlib/ufunction.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) [![Standard](https://img.shields.io/badge/C%2B%2B-14-yellow.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)
-
-Unique function. A replacement of `std::function` which is non-copyable (can capture non-copyable values, and wrap non-copyable objects), and noexcept move-constructible (won't implicitly make owners no-noexcept move-constructible)
+ Library | Description
+---------|-------------
+ [**dynamic_bitset.hpp**](https://github.com/iboB/itlib/blob/master/include/itlib/dynamic_bitset.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) | A class similar to `std::bitset`, but the number of bits is not a part of the type. It's also somewhat similar to `std::vector<bool>;`, but (so far) it has more limited modification capabilities.
+ [**flat_map.hpp**](https://github.com/iboB/itlib/blob/master/include/itlib/flat_map.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) | A class with the interface of `std::map` but implemented with an underlying `std::vector`-type container, thus providing better cache locality of the elements. Similar to [`boost::flat_map`](http://www.boost.org/doc/libs/1_61_0/doc/html/boost/container/flat_map.html) with the notable difference that the underlying container can be changed via a template argument (thus making the class not strictly an `std::map` drop-in replacement)
+ [**make_ptr.hpp**](https://github.com/iboB/itlib/blob/master/include/itlib/make_ptr.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) | Small helper functions for creating `std::shared_ptr` and `std::unique_ptr` which make the code shorter and more readable.
+ [**mem_streambuf.hpp**](https://github.com/iboB/itlib/tree/master/include/itlib/mem_streambuf.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) | Two helper classes: `mem_ostreambuf` and `mem_istreambuf` which allow you to work with `std::stream`-s with buffers of contiguous memory.
+ [**memory_view.hpp**](https://github.com/iboB/itlib/tree/master/include/itlib/memory_view.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) | A class which provides a `std::vector` like interface (sans the methods which might change the size or capacity) to a chunk of memory. Similar to C++20's `std::span`
+ [**pod_vector.hpp**](https://github.com/iboB/itlib/tree/master/include/itlib/pod_vector.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) | A container similar to `std::vector`, which contains PODs. This fact is used to improve performance by skipping constructor and destructor calls and using `memcpy` and `memmove` to copy data, and `malloc` and `free`, and, most importantly `realloc`, to manage memory.
+ [**qalgorithm.hpp**](https://github.com/iboB/itlib/tree/master/include/itlib/qalgorithm.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) | Wrappers of `<algorithm>` functions which work on entire containers for less typing in the most common use-cases.
+ [**rstream.hpp**](https://github.com/iboB/itlib/tree/master/include/itlib/rstream.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) | Read stream. Simple `std::istream` wrappers which don't allow seeks, allowing you to be certain that reads are sequential, and thus allow a redirect, so you can represent several streams as one.
+ [**sentry.hpp**](https://github.com/iboB/itlib/tree/master/include/itlib/sentry.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) [![Standard](https://img.shields.io/badge/C%2B%2B-17-red.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) | A sentry class which executes a function object on destruction. Works with C++11, but it's slightly easier to use with C++17.
+ [**small_vector.hpp**](https://github.com/iboB/itlib/tree/master/include/itlib/small_vector.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) | A mix between `std::vector` and `itlib::static_vector`. It's a dynamic array, optimized for use when the number of elements is small. Like `static_vector` is has a static buffer with a given capacity, but can fall back to dynamically allocated memory, should the size exceed it. Similar to [`boost::small_vector`](http://www.boost.org/doc/libs/1_61_0/doc/html/boost/container/small_vector.html)
+ [**static_vector.hpp**](https://github.com/iboB/itlib/tree/master/include/itlib/static_vector.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) | A mix between `std::vector` and `std::array`: A dynamically sized container with fixed capacity (supplied as a template parameter). This allows you to have dynamically sized vectors on the stack or as cache-local value members, as long as you know a big enough capacity beforehand. Similar to [`boost::static_vector`](http://www.boost.org/doc/libs/1_61_0/doc/html/boost/container/static_vector.html).
+ [**time_t.hpp**](https://github.com/iboB/itlib/tree/master/include/itlib/time_t.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) | A thin wrapper of `std::time_t` which provides thread safe `std::tm` getters and type-safe (`std::chrono::duration`-based) arithmetic
+ [**type_traits.hpp**](https://github.com/iboB/itlib/tree/master/include/itlib/type_traits.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) [![Standard](https://img.shields.io/badge/C%2B%2B-17-red.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization)  | Additional type traits to extend the standard library's `<type_traits>`
+ [**ufunction.hpp**](https://github.com/iboB/itlib/tree/master/include/itlib/ufunction.hpp) [![Standard](https://img.shields.io/badge/C%2B%2B-11-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) [![Standard](https://img.shields.io/badge/C%2B%2B-14-yellow.svg)](https://en.wikipedia.org/wiki/C%2B%2B#Standardization) | Unique function. A replacement of `std::function` which is non-copyable (can capture non-copyable values, and wrap non-copyable objects), and noexcept move-constructible (won't implicitly make owners no-noexcept move-constructible)
 
 ## Usage
 
