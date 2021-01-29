@@ -243,12 +243,18 @@ TEST_CASE("iterators")
     *it = true;
     CHECK(*it);
     CHECK(x[130]);
+    auto it2 = it + 20;
+    CHECK(it2 == x.end());
+    CHECK(x.end() - it == 20);
 
     const auto cx = x;
     auto cit = cx.begin();
     for (int i=0; i<130; ++i, ++cit);
     CHECK(*cit);
     CHECK(cx[130]);
+    auto cit2 = cit + 20;
+    CHECK(cit2 == cx.end());
+    CHECK(cx.end() - cit == 20);
 }
 
 #define PART_A 0xbaadf00d, 0xfeee1234, 0x43210523, 0xfaadbeed

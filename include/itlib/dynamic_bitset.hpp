@@ -1,4 +1,4 @@
-// itlib-dynamic-bitset v1.00
+// itlib-dynamic-bitset v1.02
 //
 // A class similar to std::bitset but the size is not a part of the type
 //
@@ -27,6 +27,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2021-01-29)
+//                    Added iterator +-num arithmetic
 //  1.01 (2021-01-28) Added assign
 //                    Added append
 //                    Clear trailing bits after resize
@@ -102,6 +104,8 @@
 // * const_iterator begin() const
 // * const_iterator end() const
 //      const and mutating iterators
+// * void copy(iterator from, iterator to, const_iterator source)
+//      copy elements from another dynamic_bitset
 //
 // * static constexpr buffer_size_type word_size(size_type size) noexcept
 //      required word size for a given bit size
@@ -134,6 +138,7 @@ struct dynamic_bitset_iterator_base
     void dec() { --index; }
     bool operator==(const dynamic_bitset_iterator_base& other) const { return index==other.index; }
     bool operator!=(const dynamic_bitset_iterator_base& other) const { return index!=other.index; }
+    friend ptrdiff_t operator-(const dynamic_bitset_iterator_base& a, const dynamic_bitset_iterator_base& b) { return ptrdiff_t(a.index) - ptrdiff_t(b.index); }
     size_t index;
 };
 }
@@ -325,6 +330,8 @@ public:
         iterator operator++(int) { auto ret = *this; inc(); return ret; }
         iterator& operator--() { dec(); return *this; }
         iterator operator--(int) { auto ret = *this; dec(); return ret; }
+        friend iterator operator+(iterator a, ptrdiff_t b) { return iterator(a.bitset, a.index + b); }
+        friend iterator operator-(iterator a, ptrdiff_t b) { return iterator(a.bitset, a.index - b); }
         bool operator*() const
         {
             return bitset.test(index);
@@ -345,6 +352,8 @@ public:
         const_iterator operator++(int) { auto ret = *this; inc(); return ret; }
         const_iterator& operator--() { dec(); return *this; }
         const_iterator operator--(int) { auto ret = *this; dec(); return ret; }
+        friend const_iterator operator+(const_iterator a, ptrdiff_t b) { return const_iterator(a.bitset, a.index + b); }
+        friend const_iterator operator-(const_iterator a, ptrdiff_t b) { return const_iterator(a.bitset, a.index - b); }
         bool operator*() const
         {
             return bitset.test(index);
