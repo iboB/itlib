@@ -29,6 +29,7 @@
 //                  VERSION HISTORY
 //
 //  1.00 (2020-10-36) Initial release
+//  1.01 (2021-04-29) Added named ctors: now, from_gmtime, from_localtime
 //
 //
 //                  DOCUMENTATION
@@ -86,6 +87,26 @@ public:
     timestamp_type seconds_since_epoch() const { return m_t; }
 
     static time_t from_seconds(timestamp_type s) { return time_t(s); }
+
+    static time_t now() { return from_seconds(std::time(nullptr)); }
+
+    // non-const argument - gets normalized internally
+    static time_t from_gmtime(std::tm& gmtm)
+    {
+        auto tt =
+#ifdef _WIN32
+            _mkgmtime(&gmtm);
+#else
+            timegm(&gmtm);
+#endif
+        return from_seconds(tt);
+    }
+
+    // non-const argument - gets normalized internally
+    static time_t from_localtime(std::tm& localtm)
+    {
+        return from_seconds(mktime(&localtm));
+    }
 
     // cmp
     friend bool operator==(const time_t& a, const time_t& b) { return a.m_t == b.m_t; }

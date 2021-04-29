@@ -68,3 +68,46 @@ TEST_CASE("[time_t] tm")
     CHECK(fmt == "Monday 09/10/01 05:33:20");
 #endif
 }
+
+TEST_CASE("[time_t] from/to tm")
+{
+    std::tm tm = {};
+    tm.tm_year = 120;
+    tm.tm_mon = 11;
+    tm.tm_mday = 10;
+    tm.tm_hour = 15;
+    tm.tm_min = 30;
+    tm.tm_sec = 30;
+
+    CHECK(itlib::time_t::from_gmtime(tm).seconds_since_epoch() == 1607614230);
+
+    itlib::time_t now = itlib::time_t::now();
+
+    auto eq = [](const std::tm& a, const std::tm& b) {
+        return a.tm_sec == b.tm_sec
+            && a.tm_min == b.tm_min
+            && a.tm_hour == b.tm_hour
+            && a.tm_mday == b.tm_mday
+            && a.tm_mon == b.tm_mon
+            && a.tm_year == b.tm_year
+            && a.tm_wday == b.tm_wday
+            && a.tm_yday == b.tm_yday
+            && a.tm_isdst == b.tm_isdst;
+    };
+
+    {
+        auto gmtm = now.gmtime();
+        auto gmtmc = gmtm;
+        auto fromgm = itlib::time_t::from_gmtime(gmtm);
+        CHECK(fromgm == now);
+        CHECK(eq(gmtm, gmtmc)); // gmtm shouldn't be normalized it should be produced normalized by gmtime
+    }
+
+    {
+        auto localtm = now.localtime();
+        auto localtmc = localtm;
+        auto fromlocal = itlib::time_t::from_localtime(localtm);
+        CHECK(fromlocal == now);
+        CHECK(eq(localtm, localtmc)); // localtm shouldn't be normalized it should be produced normalized by localtime
+    }
+}
