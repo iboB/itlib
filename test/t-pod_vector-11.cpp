@@ -244,7 +244,37 @@ TEST_CASE("basic")
     mallocs = frees = reallocs = 0;
 }
 
-TEST_CASE("swap") {
+TEST_CASE("compare")
+{
+    {
+        cpodvec<int32_t> a;
+        CHECK(a == a);
+        cpodvec<int32_t> b;
+        CHECK(a == b);
+
+        b.push_back(1);
+        CHECK(a != b);
+        CHECK(b != a);
+
+        a.push_back(1);
+        CHECK(a == a);
+        CHECK(a == b);
+
+        for (int32_t i = 0; i < 23; ++i) {
+            a.push_back(i);
+            b.push_back(i);
+        }
+        CHECK(a == b);
+
+        b.back() = 1232;
+        CHECK(a != b);
+    }
+    CHECK(mallocs == frees);
+    mallocs = frees = reallocs = 0;
+}
+
+TEST_CASE("swap")
+{
     using namespace itlib;
     {
         cpodvec<int32_t>
