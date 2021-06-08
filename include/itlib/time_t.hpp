@@ -1,10 +1,10 @@
-// itlib-time_t v1.00
+// itlib-time_t v1.01
 //
 // A thin wrapper of std::time_t which provides thread safe std::tm getters and
 // type-safe (std::chrono::duration-based) arithmetic
 //
 // MIT License:
-// Copyright(c) 2020 Borislav Stanimirov
+// Copyright(c) 2020-2021 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the

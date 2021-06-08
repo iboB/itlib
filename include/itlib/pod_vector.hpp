@@ -1,4 +1,4 @@
-// itlib-pod-vector v1.01
+// itlib-pod-vector v1.02
 //
 // A vector of PODs. Similar to std::vector, but doesn't call constructors or
 // destructors and instead uses memcpy and memmove to manage the data
