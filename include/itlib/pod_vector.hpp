@@ -4,7 +4,7 @@
 // destructors and instead uses memcpy and memmove to manage the data
 //
 // MIT License:
-// Copyright(c) 2020 Borislav Stanimirov
+// Copyright(c) 2020-2021 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2021-06-08) Noexcept move ctor and move assignment operator
 //  1.01 (2020-10-28) Switched static assert from is_pod to is_trivial
 //  1.00 (2020-10-18) Initial release
 //
@@ -169,7 +170,7 @@ public:
         assign_copy(other.begin(), other.end());
     }
 
-    pod_vector(pod_vector&& other)
+    pod_vector(pod_vector&& other) noexcept
         : m_begin(other.m_begin)
         , m_end(other.m_end)
         , m_capacity(other.m_capacity)
@@ -192,7 +193,7 @@ public:
         return *this;
     }
 
-    pod_vector& operator=(pod_vector&& other)
+    pod_vector& operator=(pod_vector&& other) noexcept
     {
         if (this == &other) return *this; // prevent self usurp
 
