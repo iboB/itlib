@@ -1,10 +1,10 @@
-// itlib-static-vector v1.00
+// itlib-static-vector v1.01
 //
 // std::vector-like class with a fixed capacity
 //
 // MIT License:
 // Copyright(c) 2016-2019 Chobolabs Inc.
-// Copyright(c) 2020 Borislav Stanimirov
+// Copyright(c) 2020-2021 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2021-08-04) capacity() and max_size() to static constexpr methods
 //  1.00 (2020-10-14) Rebranded release from chobo-static-vector
 //
 //
@@ -394,12 +395,12 @@ public:
         return m_size;
     }
 
-    size_t max_size() const noexcept
+    static constexpr size_t max_size() noexcept
     {
         return Capacity;
     }
 
-    size_t capacity() const noexcept
+    static constexpr size_t capacity() noexcept
     {
         return Capacity;
     }
