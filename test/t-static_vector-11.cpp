@@ -43,10 +43,14 @@ TEST_CASE("[static_vector] test")
     CHECK(ivec.front() == 12);
     CHECK(ivec.back() == 3);
 
-    ivec.insert(ivec.begin(), 53);
-    ivec.insert(ivec.begin() + 2, 90);
-    ivec.insert(ivec.begin() + 4, 17);
-    ivec.insert(ivec.end(), 6);
+    auto iret = ivec.insert(ivec.begin(), 53);
+    CHECK(iret == ivec.begin());
+    iret = ivec.insert(ivec.begin() + 2, 90);
+    CHECK(iret == ivec.begin() + 2);
+    iret = ivec.insert(ivec.begin() + 4, 17);
+    CHECK(iret == ivec.begin() + 4);
+    iret = ivec.insert(ivec.end(), 6);
+    CHECK(iret == ivec.end() - 1);
 
     int ints[] = { 53, 12, 90, 3, 17, 6 };
     CHECK(ivec.size() == 6);
@@ -106,16 +110,18 @@ TEST_CASE("[static_vector] test")
     CHECK(svec.back() == s1);
     CHECK(svec == svec2);
 
-    svec.insert(svec.begin(), s1);
+    auto isret = svec.insert(svec.begin(), s1);
     CHECK(svec.size() == 4);
     CHECK(svec.back().c_str() == cstr);
     CHECK(svec.front() == svec.back());
+    CHECK(isret == svec.begin());
 
     cstr = s1.c_str();
-    svec.emplace(svec.begin() + 2, std::move(s1));
+    isret = svec.emplace(svec.begin() + 2, std::move(s1));
     CHECK(svec.size() == 5);
     CHECK(svec.front() == svec[2]);
     CHECK(svec[2].c_str() == cstr);
+    CHECK(isret == svec.begin() + 2);
 
     svec.clear();
     CHECK(svec.empty());
