@@ -31,7 +31,9 @@ TEST_CASE("[static_vector] test")
     CHECK(it == ivec.end());
     CHECK(it == ivec.cend());
 
-    ivec.emplace_back(3);
+    auto& ee = ivec.emplace_back(3);
+    CHECK(ee == 3);
+    CHECK(&ee == &ivec.back());
     CHECK(ivec.size() == 2);
     auto rit = ivec.rbegin();
     CHECK(*rit == 3);
@@ -86,8 +88,10 @@ TEST_CASE("[static_vector] test")
     static_vector<string, 11> svec = { "as", "df" };
     CHECK(svec.size() == 2);
     string s1 = "the quick brown fox jumped over the lazy dog 1234567890";
-    svec.emplace_back(s1);
+    auto& esret = svec.emplace_back(s1);
     CHECK(svec.back() == s1);
+    CHECK(esret == s1);
+    CHECK(&esret == &svec.back());
 
     auto svec1 = svec;
     static_assert(sizeof(svec1) == sizeof(string) * 11 + sizeof(size_t), "static_vector must have size of N*t + size_t");

@@ -1,4 +1,4 @@
-// itlib-static-vector v1.01
+// itlib-static-vector v1.02
 //
 // std::vector-like class with a fixed capacity
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2021-08-04) emplace_back() returns a reference as per C++17
 //  1.01 (2021-08-04) capacity() and max_size() to static constexpr methods
 //  1.00 (2020-10-14) Rebranded release from chobo-static-vector
 //
@@ -437,12 +438,13 @@ public:
     }
 
     template<typename... Args>
-    void emplace_back(Args&&... args)
+    reference emplace_back(Args&&... args)
     {
         I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(size() >= Capacity, );
 
         ::new(m_data + m_size) T(std::forward<Args>(args)...);
         ++m_size;
+        return back();
     }
 
     iterator insert(iterator position, const value_type& val)
