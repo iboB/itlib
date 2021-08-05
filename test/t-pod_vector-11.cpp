@@ -98,7 +98,9 @@ TEST_CASE("basic")
         CHECK(it == ivec.end());
         CHECK(it == ivec.cend());
 
-        ivec.emplace_back(3);
+        auto& ee = ivec.emplace_back(3);
+        CHECK(ee == 3);
+        CHECK(&ee == &ivec.back());
         CHECK(ivec.size() == 2);
         auto rit = ivec.rbegin();
         CHECK(*rit == 3);
@@ -110,14 +112,19 @@ TEST_CASE("basic")
         CHECK(ivec.front() == 12);
         CHECK(ivec.back() == 3);
 
-        ivec.insert(ivec.begin(), 53);
+        auto iret = ivec.insert(ivec.begin(), 53);
         CHECK(ivec.size() == 3);
         CHECK(ivec.capacity() == 3);
+        CHECK(iret == ivec.begin());
 
-        ivec.insert(ivec.begin() + 2, 90);
-        ivec.insert(ivec.begin() + 4, 17);
-        ivec.insert(ivec.end(), 6);
-        ivec.insert(ivec.begin(), { 1, 2 });
+        iret = ivec.insert(ivec.begin() + 2, 90);
+        CHECK(iret == ivec.begin() + 2);
+        iret = ivec.insert(ivec.begin() + 4, 17);
+        CHECK(iret == ivec.begin() + 4);
+        iret = ivec.insert(ivec.end(), 6);
+        CHECK(iret == ivec.end() - 1);
+        iret = ivec.insert(ivec.begin(), { 1, 2 });
+        CHECK(iret == ivec.begin());
 
         int32_t ints[] = { 1, 2, 53, 12, 90, 3, 17, 6 };
         CHECK(ivec.capacity() >= 8);
@@ -164,8 +171,9 @@ TEST_CASE("basic")
         svec.assign({ 's', 'f' });
         CHECK(svec.size() == 2);
         std::string s1 = "the quick brown fox jumped over the lazy dog 1234567890";
-        svec.emplace_back(s1[5]);
+        auto& esret = svec.emplace_back(s1[5]);
         CHECK(svec.back() == s1[5]);
+        CHECK(&esret == &svec.back());
 
         auto svec1 = svec;
         CHECK(svec1 == svec);
@@ -187,15 +195,17 @@ TEST_CASE("basic")
         CHECK(svec.back() == s1[5]);
         CHECK(svec == svec2);
 
-        svec.insert(svec.begin(), cstr);
+        auto isret = svec.insert(svec.begin(), cstr);
         CHECK(svec.size() == 4);
         CHECK(svec.back() == cstr);
         CHECK(svec.front() == svec.back());
+        CHECK(isret == svec.begin());
 
-        svec.emplace(svec.begin() + 2, std::move(s1[5]));
+        isret = svec.emplace(svec.begin() + 2, std::move(s1[5]));
         CHECK(svec.size() == 5);
         CHECK(svec.front() == svec[2]);
         CHECK(svec[2] == s1[5]);
+        CHECK(isret == svec.begin() + 2);
 
         svec.clear();
         CHECK(svec.empty());

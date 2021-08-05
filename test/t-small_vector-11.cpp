@@ -121,11 +121,16 @@ TEST_CASE("[small_vector] static")
         CHECK(back == 3);
         CHECK(&back == &ivec.back());
 
-        ivec.insert(ivec.begin(), 53);
-        ivec.insert(ivec.begin() + 2, 90);
-        ivec.insert(ivec.begin() + 4, 17);
-        ivec.insert(ivec.end(), 6);
-        ivec.insert(ivec.begin(), { 1, 2 });
+        auto iret = ivec.insert(ivec.begin(), 53);
+        CHECK(iret == ivec.begin());
+        iret = ivec.insert(ivec.begin() + 2, 90);
+        CHECK(iret == ivec.begin() + 2);
+        iret = ivec.insert(ivec.begin() + 4, 17);
+        CHECK(iret == ivec.begin() + 4);
+        iret = ivec.insert(ivec.end(), 6);
+        CHECK(iret == ivec.end() - 1);
+        iret = ivec.insert(ivec.begin(), { 1, 2 });
+        CHECK(iret == ivec.begin());
 
         int ints[] = { 1, 2, 53, 12, 90, 3, 17, 6 };
         CHECK(ivec.size() == 8);
@@ -202,16 +207,18 @@ TEST_CASE("[small_vector] static")
         CHECK(svec.back() == s1);
         CHECK(svec == svec2);
 
-        svec.insert(svec.begin(), s1);
+        auto isret = svec.insert(svec.begin(), s1);
         CHECK(svec.size() == 4);
         CHECK(svec.back().c_str() == cstr);
         CHECK(svec.front() == svec.back());
+        CHECK(isret == svec.begin());
 
         cstr = s1.c_str();
-        svec.emplace(svec.begin() + 2, std::move(s1));
+        isret = svec.emplace(svec.begin() + 2, std::move(s1));
         CHECK(svec.size() == 5);
         CHECK(svec.front() == svec[2]);
         CHECK(svec[2].c_str() == cstr);
+        CHECK(isret == svec.begin() + 2);
 
         svec.clear();
         CHECK(svec.empty());
@@ -328,13 +335,18 @@ TEST_CASE("[small_vector] dynamic")
         CHECK(back == 3);
         CHECK(&back == &ivec.back());
 
-        ivec.insert(ivec.begin(), 53);
+        auto iret = ivec.insert(ivec.begin(), 53);
         CHECK(ivec.capacity() == 3);
+        CHECK(iret == ivec.begin());
 
-        ivec.insert(ivec.begin() + 2, 90);
-        ivec.insert(ivec.begin() + 4, 17);
-        ivec.insert(ivec.end(), 6);
-        ivec.insert(ivec.begin(), { 1, 2 });
+        iret = ivec.insert(ivec.begin() + 2, 90);
+        CHECK(iret == ivec.begin() + 2);
+        iret = ivec.insert(ivec.begin() + 4, 17);
+        CHECK(iret == ivec.begin() + 4);
+        iret = ivec.insert(ivec.end(), 6);
+        CHECK(iret == ivec.end() - 1);
+        iret = ivec.insert(ivec.begin(), { 1, 2 });
+        CHECK(iret == ivec.begin());
 
         int ints[] = { 1, 2, 53, 12, 90, 3, 17, 6 };
         CHECK(ivec.capacity() >= 8);
@@ -402,16 +414,18 @@ TEST_CASE("[small_vector] dynamic")
         CHECK(svec.back() == s1);
         CHECK(svec == svec2);
 
-        svec.insert(svec.begin(), s1);
+        auto isret = svec.insert(svec.begin(), s1);
         CHECK(svec.size() == 4);
         CHECK(svec.back().c_str() == cstr);
         CHECK(svec.front() == svec.back());
+        CHECK(isret == svec.begin());
 
         cstr = s1.c_str();
-        svec.emplace(svec.begin() + 2, std::move(s1));
+        isret = svec.emplace(svec.begin() + 2, std::move(s1));
         CHECK(svec.size() == 5);
         CHECK(svec.front() == svec[2]);
         CHECK(svec[2].c_str() == cstr);
+        CHECK(isret == svec.begin() + 2);
 
         svec.clear();
         CHECK(svec.empty());
@@ -468,7 +482,9 @@ TEST_CASE("[small_vector] static-dynamic")
 
         CHECK(ivec.data() == d);
 
-        ivec.insert(ivec.end(), 3u, 8);
+        auto lastsize = ivec.size();
+        auto iret = ivec.insert(ivec.end(), 3u, 8);
+        CHECK(iret == ivec.begin() + lastsize);
 
         CHECK(ivec.size() == 6);
         CHECK(ivec.capacity() == 20);
@@ -510,13 +526,14 @@ TEST_CASE("[small_vector] static-dynamic")
         CHECK(ivec.data() != d);
 
         dd = ivec.data();
-        ivec.insert(ivec.begin() + 3, 5u, 88);
+        iret = ivec.insert(ivec.begin() + 3, 5u, 88);
         CHECK(ivec.size() == 9);
         CHECK(ivec.capacity() == 10);
         CHECK(ivec.data() == dd);
         CHECK(ivec[2] == 11);
         CHECK(ivec[7] == 88);
         CHECK(ivec[8] == 11);
+        CHECK(iret == ivec.begin() + 3);
 
         small_vector<int, 3, 4, counting_allocator<int>> ivec2(ivec.begin(), ivec.end());
         CHECK(ivec2.size() == 9);
