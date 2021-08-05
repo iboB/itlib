@@ -173,7 +173,7 @@ TEST_CASE("basic")
         std::string s1 = "the quick brown fox jumped over the lazy dog 1234567890";
         auto& esret = svec.emplace_back(s1[5]);
         CHECK(svec.back() == s1[5]);
-        CHECK(&esret == &svec.back());
+        CHECK((&esret == &svec.back()));
 
         auto svec1 = svec;
         CHECK(svec1 == svec);
@@ -199,13 +199,13 @@ TEST_CASE("basic")
         CHECK(svec.size() == 4);
         CHECK(svec.back() == cstr);
         CHECK(svec.front() == svec.back());
-        CHECK(isret == svec.begin());
+        CHECK((isret == svec.begin()));
 
         isret = svec.emplace(svec.begin() + 2, std::move(s1[5]));
         CHECK(svec.size() == 5);
         CHECK(svec.front() == svec[2]);
         CHECK(svec[2] == s1[5]);
-        CHECK(isret == svec.begin() + 2);
+        CHECK((isret == svec.begin() + 2));
 
         svec.clear();
         CHECK(svec.empty());
