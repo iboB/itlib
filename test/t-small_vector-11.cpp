@@ -157,14 +157,21 @@ TEST_CASE("[small_vector] static")
         CHECK(ivec2.at(2) == 3);
         CHECK(*ivec2.rbegin() == 4);
 
-        ivec.erase(ivec.begin());
+        auto eret = ivec.erase(ivec.begin());
         CHECK(ivec.size() == 7);
         CHECK(ivec.front() == 2);
         CHECK(memcmp(ivec.data(), ints + 1, ivec.size() * sizeof(int)) == 0);
+        CHECK(eret == ivec.begin());
 
-        ivec.erase(ivec.begin() + 2, ivec.begin() + 4);
+        eret = ivec.erase(ivec.begin() + 2, ivec.begin() + 4);
         CHECK(ivec.size() == 5);
         CHECK(ivec[3] == 17);
+        CHECK(eret == ivec.begin() + 2);
+
+        // empty erase
+        eret = ivec.erase(ivec.begin() + 1, ivec.begin() + 1);
+        CHECK(ivec.size() == 5);
+        CHECK(eret == ivec.begin() + 1);
 
         small_vector<string, 11, 0, counting_allocator<string>> svec;
         svec.assign({ "as", "df" });
@@ -350,14 +357,21 @@ TEST_CASE("[small_vector] dynamic")
         CHECK(ivec2.at(2) == 3);
         CHECK(*ivec2.rbegin() == 4);
 
-        ivec.erase(ivec.begin());
+        auto eret = ivec.erase(ivec.begin());
         CHECK(ivec.size() == 7);
         CHECK(ivec.front() == 2);
         CHECK(memcmp(ivec.data(), ints + 1, ivec.size() * sizeof(int)) == 0);
+        CHECK(eret == ivec.begin());
 
-        ivec.erase(ivec.begin() + 2, ivec.begin() + 4);
+        eret = ivec.erase(ivec.begin() + 2, ivec.begin() + 4);
         CHECK(ivec.size() == 5);
         CHECK(ivec[3] == 17);
+        CHECK(eret == ivec.begin() + 2);
+
+        // empty erase
+        eret = ivec.erase(ivec.begin() + 1, ivec.begin() + 1);
+        CHECK(ivec.size() == 5);
+        CHECK(eret == ivec.begin() + 1);
 
         small_vector<string, 1, 0, counting_allocator<string>> svec;
         svec.assign({ "as", "df" });
@@ -512,16 +526,20 @@ TEST_CASE("[small_vector] static-dynamic")
         CHECK(ivec2[7] == 88);
         CHECK(ivec2[8] == 11);
 
-        ivec.erase(ivec.begin() + 1, ivec.end() - 2);
+        auto eret = ivec.erase(ivec.begin() + 1, ivec.end() - 2);
         CHECK(ivec.size() == 3);
-        ivec.erase(ivec.end() - 1);
+        CHECK(eret == ivec.begin() + 1);
+
+        eret = ivec.erase(ivec.end() - 1);
         CHECK(ivec.size() == 2);
         CHECK(ivec.capacity() == 5);
         CHECK(ivec.data() == d);
+        CHECK(eret == ivec.end());
 
-        ivec2.erase(ivec2.begin() + 1, ivec2.end() - 2);
+        eret = ivec2.erase(ivec2.begin() + 1, ivec2.end() - 2);
         CHECK(ivec2.size() == 3);
         CHECK(ivec2.capacity() == 3);
+        CHECK(eret == ivec2.begin() + 1);
     }
 
     CHECK(allocations == deallocations);

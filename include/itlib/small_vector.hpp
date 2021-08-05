@@ -1,10 +1,10 @@
-// itlib-small-vector v1.00
+// itlib-small-vector v1.01
 //
 // std::vector-like class with a static buffer for initial capacity
 //
 // MIT License:
 // Copyright(c) 2016-2018 Chobolabs Inc.
-// Copyright(c) 2020 Borislav Stanimirov
+// Copyright(c) 2020-2021 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2021-08-05) Bugfix! Fixed return value of erase
 //  1.00 (2020-10-14) Rebranded release from chobo-small-vector
 //
 //
@@ -982,7 +983,7 @@ private:
             m_end = np;
         }
 
-        return ++position;
+        return position;
     }
 
     void assign_impl(size_type count, const T& value)
