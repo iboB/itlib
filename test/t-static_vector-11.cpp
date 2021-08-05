@@ -68,14 +68,16 @@ TEST_CASE("[static_vector] test")
     CHECK(ivec2.at(2) == 3);
     CHECK(*ivec2.rbegin() == 4);
 
-    ivec.erase(ivec.begin());
+    auto eret = ivec.erase(ivec.begin());
     CHECK(ivec.size() == 5);
     CHECK(ivec.front() == 12);
     CHECK(memcmp(ivec.data(), ints + 1, ivec.size() * sizeof(int)) == 0);
+    CHECK(eret == ivec.begin());
 
-    ivec.erase(ivec.begin() + 2);
+    eret = ivec.erase(ivec.begin() + 2);
     CHECK(ivec.size() == 4);
     CHECK(ivec[2] == 17);
+    CHECK(eret == ivec.begin() + 2);
 
     static_vector<string, 11> svec = { "as", "df" };
     CHECK(svec.size() == 2);
