@@ -144,14 +144,21 @@ TEST_CASE("basic")
         CHECK(ivec2.at(2) == 3);
         CHECK(*ivec2.rbegin() == 4);
 
-        ivec.erase(ivec.begin());
+        auto eret = ivec.erase(ivec.begin());
         CHECK(ivec.size() == 7);
         CHECK(ivec.front() == 2);
         CHECK(memcmp(ivec.data(), ints + 1, ivec.size() * sizeof(int32_t)) == 0);
+        CHECK(eret == ivec.begin());
 
-        ivec.erase(ivec.begin() + 2, ivec.begin() + 4);
+        eret = ivec.erase(ivec.begin() + 2, ivec.begin() + 4);
         CHECK(ivec.size() == 5);
         CHECK(ivec[3] == 17);
+        CHECK(eret == ivec.begin() + 2);
+
+        // empty erase
+        eret = ivec.erase(ivec.begin() + 1, ivec.begin() + 1);
+        CHECK(ivec.size() == 5);
+        CHECK(eret == ivec.begin() + 1);
 
         cpodvec<char> svec;
         svec.assign({ 's', 'f' });

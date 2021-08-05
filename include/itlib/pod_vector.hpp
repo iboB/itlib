@@ -1,4 +1,4 @@
-// itlib-pod-vector v1.03
+// itlib-pod-vector v1.04
 //
 // A vector of PODs. Similar to std::vector, but doesn't call constructors or
 // destructors and instead uses memcpy and memmove to manage the data
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.04 (2021-08-05) Bugfix! Fixed return value of erase
 //  1.03 (2021-06-08) Prevent memcmp calls with nullptr
 //  1.02 (2021-06-08) Noexcept move ctor and move assignment operator
 //  1.01 (2020-10-28) Switched static assert from is_pod to is_trivial
@@ -667,7 +668,7 @@ private:
 
         m_end -= num;
 
-        return ++position;
+        return position;
     }
 
     // grows buffer only on empty vectors
