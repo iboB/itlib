@@ -43,9 +43,9 @@
 // * Has the same public methods and operators and features like random-access
 // But:
 // * Operates only ot PODs
-// * Doesn't call constructors, destrutors, move and assign operators
+// * Doesn't call constructors, destructors, move and assign operators
 // * Instead uses memcpy and memmove to manage the data
-// Thus it achieves a much better performance, especially in Debug mode.
+// Thus, it achieves a much better performance, especially in Debug mode.
 //
 // pod_vector also allows "recast" where you can convert pod_vector<T> to
 // pod_vector<U>. This is very useful when operating with signed/unsigned char
@@ -65,7 +65,7 @@
 // deallocate, and reallocate. The default version uses malloc, free, and
 // realloc. If you make your own allocator you must conform to the definitons
 // of these functions.
-// the allocator must provide the following interface:
+// The allocator must provide the following interface:
 // * using size_type = ...; - size type for allocator and vector
 // * void* malloc(size_type size); - allocate memory
 // * void* realloc(void* old, size_type new_size); - allocate/reallocate memory
@@ -117,7 +117,7 @@ public:
     using allocator_type = Alloc;
     using value_type = T;
     using size_type = typename Alloc::size_type;
-    using reference = T& ;
+    using reference = T&;
     using const_reference = const T&;
     using pointer = T*;
     using const_pointer = const T*;
