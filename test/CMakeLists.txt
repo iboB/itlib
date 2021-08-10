@@ -35,6 +35,7 @@ add_itlib_test(itlib)
 
 add_itlib_test(dynamic_bitset)
 add_itlib_test(flat_map)
+add_itlib_test(flat_set)
 add_itlib_test(make_ptr)
 add_itlib_test(memory_view)
 add_itlib_test(mem_streambuf)
