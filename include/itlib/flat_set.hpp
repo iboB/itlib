@@ -1,4 +1,4 @@
-// itlib-flat-set v1.00
+// itlib-flat-set v1.01
 //
 // std::set-like class with an underlying vector
 //
@@ -27,6 +27,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2021-09-15) Constructors from std::initializer_list
 //  1.00 (2021-08-10) Initial-release
 //
 //
@@ -122,6 +123,17 @@ public:
     explicit flat_set(const key_compare& comp, const allocator_type& alloc = allocator_type())
         : m_cmp(comp)
         , m_container(alloc)
+    {}
+
+    flat_set(std::initializer_list<value_type> init, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type())
+        : m_cmp(comp)
+        , m_container(std::move(init), alloc)
+    {
+        std::sort(m_container.begin(), m_container.end(), m_cmp);
+    }
+
+    flat_set(std::initializer_list<value_type> init, const allocator_type& alloc)
+        : flat_set(std::move(init), key_compare(), alloc)
     {}
 
     flat_set(const flat_set& x) = default;

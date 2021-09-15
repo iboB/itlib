@@ -166,6 +166,22 @@ TEST_CASE("[flat_set] test")
     CHECK(m2.capacity() == m1c);
 }
 
+TEST_CASE("[flat_map] initialize")
+{
+    using namespace itlib;
+    flat_set<int> m1 = {5, 3, 23};
+    CHECK(m1.size() == 3);
+    CHECK(m1.container() == std::vector<int>{3, 5, 23});
+
+    flat_set<std::string> m2 = {"za", "b", "ccc", "azz"};
+    CHECK(m2.size() == 4);
+    auto& c = m2.container();
+    CHECK(c[0] == "azz");
+    CHECK(c[1] == "b");
+    CHECK(c[2] == "ccc");
+    CHECK(c[3] == "za");
+}
+
 #include <itlib/static_vector.hpp>
 
 TEST_CASE("[flat_set] static_vector test")
