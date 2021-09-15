@@ -180,6 +180,22 @@ TEST_CASE("[flat_map] test")
     CHECK(m2.capacity() == m1c);
 }
 
+TEST_CASE("[flat_map] initialize")
+{
+    using namespace itlib;
+    flat_map<int, int> m1 = {{5, 4}, {3, 44}, {23, 11}};
+    CHECK(m1.size() == 3);
+    CHECK(m1.container() == std::vector<std::pair<int, int>>{{3, 44}, {5, 4}, {23, 11}});
+
+    flat_map<std::string, bool> m2 = {{"za", true}, {"b", false}, {"ccc", true}, {"azz", false}};
+    CHECK(m2.size() == 4);
+    auto& c = m2.container();
+    CHECK(c[0].first == "azz");
+    CHECK(c[1].first == "b");
+    CHECK(c[2].first == "ccc");
+    CHECK(c[3].first == "za");
+}
+
 #include <itlib/static_vector.hpp>
 
 TEST_CASE("[flat_map] static_vector test")

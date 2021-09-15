@@ -1,10 +1,10 @@
-// itlib-flat-map v1.00
+// itlib-flat-map v1.01
 //
 // std::map-like class with an underlying vector
 //
 // MIT License:
 // Copyright(c) 2016-2019 Chobolabs Inc.
-// Copyright(c) 2020 Borislav Stanimirov
+// Copyright(c) 2020-2021 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2021-09-15) Constructors from std::initializer_list
 //  1.00 (2020-10-14) Rebranded release from chobo-flat-map
 //
 //
@@ -140,6 +141,17 @@ public:
     explicit flat_map(const key_compare& comp, const allocator_type& alloc = allocator_type())
         : m_cmp(comp)
         , m_container(alloc)
+    {}
+
+    flat_map(std::initializer_list<value_type> init, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type())
+        : m_cmp(comp)
+        , m_container(std::move(init), alloc)
+    {
+        std::sort(m_container.begin(), m_container.end(), m_cmp);
+    }
+
+    flat_map(std::initializer_list<value_type> init, const allocator_type& alloc)
+        : flat_map(std::move(init), key_compare(), alloc)
     {}
 
     flat_map(const flat_map& x) = default;
@@ -408,15 +420,9 @@ private:
     {
         pair_compare() = default;
         pair_compare(const key_compare& kc) : kcmp(kc) {}
-        bool operator()(const value_type& a, const key_type& b) const
-        {
-            return kcmp(a.first, b);
-        }
-
-        bool operator()(const key_type& a, const value_type& b) const
-        {
-            return kcmp(a, b.first);
-        }
+        bool operator()(const value_type& a, const value_type& b) const { return kcmp(a.first, b.first); }
+        bool operator()(const value_type& a, const key_type& b) const { return kcmp(a.first, b); }
+        bool operator()(const key_type& a, const value_type& b) const { return kcmp(a, b.first); }
 
         key_compare kcmp;
     };
