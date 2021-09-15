@@ -559,6 +559,24 @@ TEST_CASE("[small_vector] static-dynamic")
         CHECK(eret == ivec2.begin() + 1);
     }
 
+    {
+        small_vector<int, 4, 3, counting_allocator<int>> ivec(50);
+        ivec.resize(2);
+        CHECK(ivec.size() == 2);
+        CHECK(ivec.capacity() == 4);
+    }
+
+    {
+        small_vector<int, 4, 3, counting_allocator<int>> ivec(150);
+        ivec.resize(2, 53);
+        CHECK(ivec.size() == 2);
+        CHECK(ivec.capacity() == 4);
+        ivec.resize(15, 24);
+        CHECK(ivec.size() == 15);
+        CHECK(ivec.capacity() == 150); // reusing old buffer
+        CHECK(ivec[11] == 24);
+    }
+
     CHECK(allocations == deallocations);
     CHECK(allocated_bytes == deallocated_bytes);
     CHECK(constructions == destructions);

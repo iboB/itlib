@@ -1,4 +1,4 @@
-// itlib-small-vector v1.01
+// itlib-small-vector v1.02
 //
 // std::vector-like class with a static buffer for initial capacity
 //
@@ -28,6 +28,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2021-09-15) Bugfix! Fixed bad deallocation when reverting to
+//                    static size on resize()
 //  1.01 (2021-08-05) Bugfix! Fixed return value of erase
 //  1.00 (2020-10-14) Rebranded release from chobo-small-vector
 //
@@ -763,18 +765,17 @@ public:
                 atraits::construct(get_alloc(), new_buf + i, v);
             }
 
-            if (m_begin != static_begin_ptr())
-            {
-                // we've moved from dyn to dyn memory, so deallocate the old one
-                atraits::deallocate(get_alloc(), m_begin, m_capacity);
-            }
-
             if (new_buf == static_begin_ptr())
             {
                 m_capacity = StaticCapacity;
             }
             else
             {
+                if (m_begin != static_begin_ptr())
+                {
+                    // we've moved from dyn to dyn memory, so deallocate the old one
+                    atraits::deallocate(get_alloc(), m_begin, m_capacity);
+                }
                 m_capacity = m_dynamic_capacity;
             }
 
@@ -816,21 +817,15 @@ public:
             }
 
             // free obsoletes
-            for (size_type i = 0; i < n; ++i)
+            for (size_type i = 0; i < s; ++i)
             {
                 atraits::destroy(get_alloc(), m_begin + i);
             }
 
             // construct new elements
-            for (size_type i = num_transfer; i < s; ++i)
+            for (size_type i = num_transfer; i < n; ++i)
             {
                 atraits::construct(get_alloc(), new_buf + i);
-            }
-
-            if (m_begin != static_begin_ptr())
-            {
-                // we've moved from dyn to dyn memory, so deallocate the old one
-                atraits::deallocate(get_alloc(), m_begin, m_capacity);
             }
 
             if (new_buf == static_begin_ptr())
@@ -839,6 +834,11 @@ public:
             }
             else
             {
+                if (m_begin != static_begin_ptr())
+                {
+                    // we've moved from dyn to dyn memory, so deallocate the old one
+                    atraits::deallocate(get_alloc(), m_begin, m_capacity);
+                }
                 m_capacity = m_dynamic_capacity;
             }
 
