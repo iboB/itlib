@@ -17,8 +17,8 @@ enum class ecode
 TEST_CASE("i/e")
 {
     using iee = expected<int, ecode>;
-    static_assert(std::is_same<iee::value_type, int>::value);
-    static_assert(std::is_same<iee::error_type, ecode>::value);
+    static_assert(std::is_same<iee::value_type, int>::value, "is_same");
+    static_assert(std::is_same<iee::error_type, ecode>::value, "is_same");
 
     iee a;
     REQUIRE(!!a);
@@ -47,8 +47,8 @@ TEST_CASE("i/e")
 TEST_CASE("i/d")
 {
     using ide = expected<int, double>;
-    static_assert(std::is_same<ide::value_type, int>::value);
-    static_assert(std::is_same<ide::error_type, double>::value);
+    static_assert(std::is_same<ide::value_type, int>::value, "is_same");
+    static_assert(std::is_same<ide::error_type, double>::value, "is_same");
 
     ide a = 2.3;
     CHECK(a.value_or(5) == 2);
@@ -60,8 +60,8 @@ TEST_CASE("i/d")
 TEST_CASE("string")
 {
     using ise = expected<int, std::string>;
-    static_assert(std::is_same<ise::value_type, int>::value);
-    static_assert(std::is_same<ise::error_type, std::string>::value);
+    static_assert(std::is_same<ise::value_type, int>::value, "is_same");
+    static_assert(std::is_same<ise::error_type, std::string>::value, "is_same");
 
     ise a = 432;
     CHECK(!!a);
@@ -75,8 +75,8 @@ TEST_CASE("string")
     CHECK(u.error().empty());
 
     using sie = expected<std::string, int>;
-    static_assert(std::is_same<sie::value_type, std::string>::value);
-    static_assert(std::is_same<sie::error_type, int>::value);
+    static_assert(std::is_same<sie::value_type, std::string>::value, "is_same");
+    static_assert(std::is_same<sie::error_type, int>::value, "is_same");
 
     sie c;
     REQUIRE(c.has_value());
@@ -132,8 +132,8 @@ struct value : track_base<value> {};
 struct error : track_base<error> {};
 
 using vee = expected<value, error>;
-static_assert(std::is_same<vee::value_type, value>::value);
-static_assert(std::is_same<vee::error_type, error>::value);
+static_assert(std::is_same<vee::value_type, value>::value, "is_same");
+static_assert(std::is_same<vee::error_type, error>::value, "is_same");
 
 vee func(bool b)
 {
