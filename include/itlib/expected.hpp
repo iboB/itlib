@@ -70,7 +70,7 @@ unexpected_t<E> unexpected(E&& e)
 }
 
 struct unexpect {};
-unexpect unexpected() { return {}; }
+inline unexpect unexpected() noexcept { return {}; }
 
 template <typename T, typename E>
 class expected

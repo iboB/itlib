@@ -85,7 +85,7 @@ TEST_CASE("string")
     sie d = unexpected(23);
     REQUIRE(d.has_error());
 
-    sie u2 = unexpected();
+    sie u2 = itlib::unexpected();
     REQUIRE(!u2);
     CHECK(u2.error() == 0);
 }
@@ -138,7 +138,7 @@ static_assert(std::is_same<vee::error_type, error>::value, "is_same");
 vee func(bool b)
 {
     if(b) return {};
-    else return unexpected();
+    else return itlib::unexpected();
 }
 
 TEST_CASE("lifetime")
