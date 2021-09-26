@@ -70,7 +70,7 @@ TEST_CASE("string")
     REQUIRE(!b);
     CHECK(b.error() == "foo");
 
-    ise u = unexpect{};
+    ise u = unexpected_t<void>{};
     REQUIRE(!u);
     CHECK(u.error().empty());
 
