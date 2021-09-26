@@ -169,6 +169,90 @@ TEST_CASE("lifetime")
     value::reset_counters();
     error::reset_counters();
 
+    {
+        auto x = func(false);
+        x = func(false);
+        CHECK(error::def_constructions == 2);
+        CHECK(error::move_constructions == 0);
+        CHECK(error::move_assignments == 1);
+        CHECK(error::destructions == 1);
+
+        auto e = func(false).error();
+        CHECK(error::def_constructions == 3);
+        CHECK(error::move_constructions == 1);
+        CHECK(error::move_assignments == 1);
+        CHECK(error::destructions == 2);
+    }
+
+    CHECK(error::destructions == 4);
+
+    CHECK(value::def_constructions == 0);
+    CHECK(value::move_constructions == 0);
+    CHECK(value::move_assignments == 0);
+    CHECK(value::destructions == 0);
+
+    error::reset_counters();
+
+    {
+        auto x = func(true);
+        x = func(true);
+        CHECK(value::def_constructions == 2);
+        CHECK(value::move_constructions == 0);
+        CHECK(value::move_assignments == 1);
+        CHECK(value::destructions == 1);
+
+        auto e = func(true).value();
+        CHECK(value::def_constructions == 3);
+        CHECK(value::move_constructions == 1);
+        CHECK(value::move_assignments == 1);
+        CHECK(value::destructions == 2);
+    }
+
+    CHECK(value::destructions == 4);
+
+    CHECK(error::def_constructions == 0);
+    CHECK(error::move_constructions == 0);
+    CHECK(error::move_assignments == 0);
+    CHECK(error::destructions == 0);
+
+    value::reset_counters();
+
+    // value to error
+    {
+        auto x = func(false);
+        x = func(true);
+    }
+
+    CHECK(error::def_constructions == 1);
+    CHECK(error::move_constructions == 0);
+    CHECK(error::move_assignments == 0);
+    CHECK(error::destructions == 1);
+    CHECK(value::def_constructions == 1);
+    CHECK(value::move_constructions == 1);
+    CHECK(value::move_assignments == 0);
+    CHECK(value::destructions == 2);
+
+    value::reset_counters();
+    error::reset_counters();
+
+    // error to value
+    {
+        auto x = func(true);
+        x = func(false);
+    }
+
+    CHECK(error::def_constructions == 1);
+    CHECK(error::move_constructions == 1);
+    CHECK(error::move_assignments == 0);
+    CHECK(error::destructions == 2);
+    CHECK(value::def_constructions == 1);
+    CHECK(value::move_constructions == 0);
+    CHECK(value::move_assignments == 0);
+    CHECK(value::destructions == 1);
+
+    value::reset_counters();
+    error::reset_counters();
+
     CHECK(value::copy_constructions == 0);
     CHECK(value::copy_assignments == 0);
     CHECK(error::copy_constructions == 0);
