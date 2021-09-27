@@ -162,7 +162,7 @@ unexpected_t<E> unexpected(E&& e)
 template <>
 class unexpected_t<void> {};
 
-unexpected_t<void> unexpected() noexcept { return {}; }
+inline unexpected_t<void> unexpected() noexcept { return {}; }
 
 template <typename T, typename E>
 class expected
