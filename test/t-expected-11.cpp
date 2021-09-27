@@ -92,6 +92,13 @@ TEST_CASE("string")
     sie u2 = itlib::unexpected();
     REQUIRE(!u2);
     CHECK(u2.error() == 0);
+
+    const std::string fallback = "asdf";
+    CHECK(u2.value_or(fallback) == fallback);
+    CHECK(sie(itlib::unexpected()).value_or(fallback) == fallback);
+    CHECK(sie(itlib::unexpected()).value_or("mnp") == "mnp");
+    CHECK(sie("xyz").value_or(fallback) == "xyz");
+    CHECK(sie("xyz").value_or("mnp") == "xyz");
 }
 
 

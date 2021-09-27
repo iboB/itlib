@@ -1,4 +1,4 @@
-// itlib-expected v1.00
+// itlib-expected v1.01
 //
 // A union-type of a value and an error
 //
@@ -27,7 +27,8 @@
 //
 //                  VERSION HISTORY
 //
-//  1.00 (2021-09-26) Initial-release
+//  1.01 (2021-09-27) Fixed value_or which could return a ref to temporary
+//  1.00 (2021-09-26) Initial release
 //
 //
 //                  DOCUMENTATION
@@ -262,9 +263,10 @@ public:
     const T& operator*() const & { return value(); }
     T&& operator*() && { return std::move(value()); }
 
-    T& value_or(T& v) & { return has_value() ? value() : v; }
-    const T& value_or(const T& v) const & { return has_value() ? value() : v; }
-    T&& value_or(T&& v) && { return has_value() ? value() : std::move(v); }
+    template <typename U>
+    T value_or(U&& v) const & { return has_value() ? value() : std::forward<U>(v); }
+    template <typename U>
+    T value_or(U&& v) && { return has_value() ? std::move(value()) : std::forward<U>(v); }
 
     T* operator->() { return &value(); }
     const T* operator->() const { return &value(); }
