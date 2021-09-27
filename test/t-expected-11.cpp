@@ -5,6 +5,10 @@
 #include <type_traits>
 #include <string>
 
+#if defined(_MSC_VER)
+#pragma warning(disable : 4244)
+#endif
+
 using namespace itlib;
 
 enum class ecode
@@ -172,6 +176,7 @@ TEST_CASE("lifetime")
     {
         auto x = func(false);
         x = func(false);
+        REQUIRE(x.has_error());
         CHECK(error::def_constructions == 2);
         CHECK(error::move_constructions == 0);
         CHECK(error::move_assignments == 1);
@@ -196,6 +201,7 @@ TEST_CASE("lifetime")
     {
         auto x = func(true);
         x = func(true);
+        REQUIRE(x.has_value());
         CHECK(value::def_constructions == 2);
         CHECK(value::move_constructions == 0);
         CHECK(value::move_assignments == 1);
@@ -221,6 +227,7 @@ TEST_CASE("lifetime")
     {
         auto x = func(false);
         x = func(true);
+        CHECK(x.has_value());
     }
 
     CHECK(error::def_constructions == 1);
@@ -239,6 +246,7 @@ TEST_CASE("lifetime")
     {
         auto x = func(true);
         x = func(false);
+        CHECK(x.has_error());
     }
 
     CHECK(error::def_constructions == 1);
