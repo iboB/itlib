@@ -1,4 +1,4 @@
-// itlib-flat-map v1.01
+// itlib-flat-map v1.02
 //
 // std::map-like class with an underlying vector
 //
@@ -27,7 +27,8 @@
 //
 //
 //                  VERSION HISTORY
-//
+//  1.02 (2021-09-28) Fixed construction from std::initializer_list which
+//                    allowed duplicate keys to find their wey in the map
 //  1.01 (2021-09-15) Constructors from std::initializer_list
 //  1.00 (2020-10-14) Rebranded release from chobo-flat-map
 //
@@ -148,6 +149,10 @@ public:
         , m_container(std::move(init), alloc)
     {
         std::sort(m_container.begin(), m_container.end(), m_cmp);
+        auto new_end = std::unique(m_container.begin(), m_container.end(), [this](const value_type& a, const value_type& b) {
+            return !m_cmp(a, b) && !m_cmp(b, a);
+        });
+        m_container.erase(new_end, m_container.end());
     }
 
     flat_map(std::initializer_list<value_type> init, const allocator_type& alloc)

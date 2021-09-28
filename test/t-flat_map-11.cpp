@@ -194,6 +194,10 @@ TEST_CASE("[flat_map] initialize")
     CHECK(c[1].first == "b");
     CHECK(c[2].first == "ccc");
     CHECK(c[3].first == "za");
+
+    flat_map<int, int> m3 = {{5, 4}, {23, 11}, {3, 44}, {5, 4}, {23, 11}};
+    CHECK(m3.size() == 3);
+    CHECK(m3.container() == std::vector<std::pair<int, int>>{{3, 44}, {5, 4}, {23, 11}});
 }
 
 #include <itlib/static_vector.hpp>
