@@ -1,4 +1,4 @@
-// itlib-flat-set v1.01
+// itlib-flat-set v1.02
 //
 // std::set-like class with an underlying vector
 //
@@ -27,6 +27,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2021-09-28) Fixed construction from std::initializer_list which
+//                    allowed duplicate elements to find their wey in the set
 //  1.01 (2021-09-15) Constructors from std::initializer_list
 //  1.00 (2021-08-10) Initial-release
 //
@@ -125,12 +127,18 @@ public:
         , m_container(alloc)
     {}
 
-    flat_set(std::initializer_list<value_type> init, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type())
+    explicit flat_set(container_type container, const key_compare& comp = key_compare())
         : m_cmp(comp)
-        , m_container(std::move(init), alloc)
+        , m_container(std::move(container))
     {
         std::sort(m_container.begin(), m_container.end(), m_cmp);
+        auto new_end = std::unique(m_container.begin(), m_container.end());
+        m_container.erase(new_end, m_container.end());
     }
+
+    flat_set(std::initializer_list<value_type> init, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type())
+        : flat_set(container_type(std::move(init), alloc), comp)
+    {}
 
     flat_set(std::initializer_list<value_type> init, const allocator_type& alloc)
         : flat_set(std::move(init), key_compare(), alloc)

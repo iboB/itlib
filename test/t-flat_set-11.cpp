@@ -180,6 +180,13 @@ TEST_CASE("[flat_map] initialize")
     CHECK(c[1] == "b");
     CHECK(c[2] == "ccc");
     CHECK(c[3] == "za");
+
+    flat_set<std::string> m3 = {"ba", "aa", "ba", "gg", "ba"};
+    CHECK(m3.size() == 3);
+    auto& c3 = m3.container();
+    CHECK(c3[0] == "aa");
+    CHECK(c3[1] == "ba");
+    CHECK(c3[2] == "gg");
 }
 
 #include <itlib/static_vector.hpp>
