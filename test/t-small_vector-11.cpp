@@ -584,6 +584,28 @@ TEST_CASE("[small_vector] static-dynamic")
     allocations = deallocations = allocated_bytes = deallocated_bytes = constructions = destructions = 0;
 }
 
+struct foo
+{
+    int a;
+    bool operator==(const foo& other) const { return a == other.a; }
+};
+
+
+TEST_CASE("[small_vector] compare")
+{
+    itlib::small_vector<int, 10> ivec1 = {1, 2, 3};
+    itlib::small_vector<int, 2> ivec2 = {1, 2, 3};
+    CHECK(ivec1 == ivec2);
+    ivec2[1] = 8;
+    CHECK(ivec1 != ivec2);
+
+    itlib::small_vector<foo, 2> fvec1 = {{1}, {2}, {3}};
+    itlib::small_vector<foo, 5> fvec2 = {{1}, {2}, {3}};
+    CHECK(fvec1 == fvec2);
+    fvec2[1].a = 8;
+    CHECK(fvec1 != fvec2);
+}
+
 #if !defined(__EMSCRIPTEN__) // emscripten doesn't allow exceptions by default
 TEST_CASE("[small_vector] out of range")
 {

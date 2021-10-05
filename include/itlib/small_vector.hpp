@@ -1,4 +1,4 @@
-// itlib-small-vector v1.02
+// itlib-small-vector v1.03
 //
 // std::vector-like class with a static buffer for initial capacity
 //
@@ -28,6 +28,9 @@
 //
 //                  VERSION HISTORY
 //
+//  1.03 (2021-10-05) Use allocator member instead of inheriting from allocator
+//                    Allow compare with small_vector of different static_size
+//                    Don't rely on operator!= from T. Use operator== instead
 //  1.02 (2021-09-15) Bugfix! Fixed bad deallocation when reverting to
 //                    static size on resize()
 //  1.01 (2021-08-05) Bugfix! Fixed return value of erase
@@ -1121,9 +1124,12 @@ private:
     pointer m_dynamic_data;
 };
 
-template<typename T, size_t StaticCapacity, size_t RevertToStaticSize, class Alloc>
-bool operator==(const small_vector<T, StaticCapacity, RevertToStaticSize, Alloc>& a,
-    const small_vector<T, StaticCapacity, RevertToStaticSize, Alloc>& b)
+template<typename T,
+    size_t StaticCapacityA, size_t RevertToStaticSizeA, class AllocA,
+    size_t StaticCapacityB, size_t RevertToStaticSizeB, class AllocB
+>
+bool operator==(const small_vector<T, StaticCapacityA, RevertToStaticSizeA, AllocA>& a,
+    const small_vector<T, StaticCapacityB, RevertToStaticSizeB, AllocB>& b)
 {
     if (a.size() != b.size())
     {
@@ -1132,16 +1138,20 @@ bool operator==(const small_vector<T, StaticCapacity, RevertToStaticSize, Alloc>
 
     for (size_t i = 0; i < a.size(); ++i)
     {
-        if (a[i] != b[i])
+        if (!(a[i] == b[i]))
             return false;
     }
 
     return true;
 }
 
-template<typename T, size_t StaticCapacity, size_t RevertToStaticSize, class Alloc>
-bool operator!=(const small_vector<T, StaticCapacity, RevertToStaticSize, Alloc>& a,
-    const small_vector<T, StaticCapacity, RevertToStaticSize, Alloc>& b)
+template<typename T,
+    size_t StaticCapacityA, size_t RevertToStaticSizeA, class AllocA,
+    size_t StaticCapacityB, size_t RevertToStaticSizeB, class AllocB
+>
+bool operator!=(const small_vector<T, StaticCapacityA, RevertToStaticSizeA, AllocA>& a,
+    const small_vector<T, StaticCapacityB, RevertToStaticSizeB, AllocB>& b)
+
 {
     return !operator==(a, b);
 }
