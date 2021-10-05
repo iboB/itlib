@@ -174,3 +174,24 @@ TEST_CASE("[static_vector] test")
     CHECK(svec2.back() == "c");
     CHECK(svec.front() == "1");
 }
+
+struct foo
+{
+    int a;
+    bool operator==(const foo& other) const { return a == other.a; }
+};
+
+TEST_CASE("[static_vector] compare")
+{
+    itlib::static_vector<int, 10> ivec1 = {1, 2, 3};
+    itlib::static_vector<int, 5> ivec2 = {1, 2, 3};
+    CHECK(ivec1 == ivec2);
+    ivec2[1] = 8;
+    CHECK(ivec1 != ivec2);
+
+    itlib::static_vector<foo, 10> fvec1 = {{1}, {2}, {3}};
+    itlib::static_vector<foo, 5> fvec2 = {{1}, {2}, {3}};
+    CHECK(fvec1 == fvec2);
+    fvec2[1].a = 8;
+    CHECK(fvec1 != fvec2);
+}

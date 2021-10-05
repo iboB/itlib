@@ -1,4 +1,4 @@
-// itlib-static-vector v1.02
+// itlib-static-vector v1.03
 //
 // std::vector-like class with a fixed capacity
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.03 (2021-10-05) Don't rely on operator!= from T. Use operator== instead
 //  1.02 (2021-08-04) emplace_back() returns a reference as per C++17
 //  1.01 (2021-08-04) capacity() and max_size() to static constexpr methods
 //  1.00 (2020-10-14) Rebranded release from chobo-static-vector
@@ -569,7 +570,7 @@ bool operator==(const static_vector<T, CapacityA>& a, const static_vector<T, Cap
 
     for (size_t i = 0; i < a.size(); ++i)
     {
-        if (a[i] != b[i])
+        if (!(a[i] == b[i]))
             return false;
     }
 
@@ -579,18 +580,7 @@ bool operator==(const static_vector<T, CapacityA>& a, const static_vector<T, Cap
 template <typename T, size_t CapacityA, size_t CapacityB>
 bool operator!=(const static_vector<T, CapacityA>& a, const static_vector<T, CapacityB>& b)
 {
-    if (a.size() != b.size())
-    {
-        return true;
-    }
-
-    for (size_t i = 0; i < a.size(); ++i)
-    {
-        if (a[i] != b[i])
-            return true;
-    }
-
-    return false;
+    return !operator==(a, b);
 }
 
 }
