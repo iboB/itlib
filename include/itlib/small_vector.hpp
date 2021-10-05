@@ -176,7 +176,7 @@ namespace itlib
 {
 
 template<typename T, size_t StaticCapacity = 16, size_t RevertToStaticSize = 0, class Alloc = std::allocator<T>>
-struct small_vector: Alloc
+struct small_vector
 {
     static_assert(RevertToStaticSize <= StaticCapacity + 1, "itlib::small_vector: the revert-to-static size shouldn't exceed the static capacity by more than one");
 
@@ -203,7 +203,7 @@ public:
     {}
 
     small_vector(const Alloc& alloc)
-        : Alloc(alloc)
+        : m_alloc(alloc)
         , m_capacity(StaticCapacity)
         , m_dynamic_capacity(0)
         , m_dynamic_data(nullptr)
@@ -241,7 +241,7 @@ public:
     {}
 
     small_vector(const small_vector& v, const Alloc& alloc)
-        : Alloc(alloc)
+        : m_alloc(alloc)
         , m_dynamic_capacity(0)
         , m_dynamic_data(nullptr)
     {
@@ -265,7 +265,7 @@ public:
     }
 
     small_vector(small_vector&& v)
-        : Alloc(std::move(v.get_alloc()))
+        : m_alloc(std::move(v.get_alloc()))
         , m_capacity(v.m_capacity)
         , m_dynamic_capacity(v.m_dynamic_capacity)
         , m_dynamic_data(v.m_dynamic_data)
@@ -1106,8 +1106,10 @@ private:
         }
     }
 
-    allocator_type& get_alloc() { return static_cast<allocator_type&>(*this); }
-    const allocator_type& get_alloc() const { return static_cast<const allocator_type&>(*this); }
+    allocator_type& get_alloc() { return m_alloc; }
+    const allocator_type& get_alloc() const { return m_alloc; }
+
+    allocator_type m_alloc;
 
     pointer m_begin;
     pointer m_end;
@@ -1141,18 +1143,7 @@ template<typename T, size_t StaticCapacity, size_t RevertToStaticSize, class All
 bool operator!=(const small_vector<T, StaticCapacity, RevertToStaticSize, Alloc>& a,
     const small_vector<T, StaticCapacity, RevertToStaticSize, Alloc>& b)
 {
-    if (a.size() != b.size())
-    {
-        return true;
-    }
-
-    for (size_t i = 0; i < a.size(); ++i)
-    {
-        if (a[i] != b[i])
-            return true;
-    }
-
-    return false;
+    return !operator==(a, b);
 }
 
 }
