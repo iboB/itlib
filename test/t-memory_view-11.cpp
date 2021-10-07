@@ -66,8 +66,6 @@ TEST_CASE("[memory_view] test")
     }
 }
 
-
-
 TEST_CASE("[const_memory_view] test")
 {
     using namespace itlib;
@@ -127,4 +125,44 @@ TEST_CASE("[const_memory_view] test")
         CHECK(i - 1 == *sb);
         ++sb;
     }
+}
+
+template <typename MV>
+void test_slicing(const MV& mv)
+{
+    {
+        auto s = mv.slice(10);
+        CHECK(!!s);
+        CHECK(s.empty());
+        CHECK(s.begin() == mv.end());
+    }
+    {
+        auto s = mv.slice(1);
+        CHECK(s.size() == 4);
+        CHECK(s.begin() == mv.begin() + 1);
+    }
+    {
+        auto s = mv.slice(3, 1);
+        CHECK(s.size() == 1);
+        CHECK(s.begin() == mv.begin() + 3);
+    }
+
+    {
+        auto cp = mv;
+        cp.remove_prefix(2);
+        CHECK(cp.size() == 3);
+        CHECK(cp.begin() == mv.begin() + 2);
+        cp.remove_suffix(2);
+        CHECK(cp.size() == 1);
+        CHECK(cp.end() == mv.begin() + 3);
+    }
+}
+
+TEST_CASE("[memory_view] slicing")
+{
+    std::vector<int> ivec = { 6, 7, 8, 9, 10 };
+    auto mv = itlib::make_memory_view(ivec);
+    test_slicing(mv);
+    itlib::const_memory_view<int> cmv = mv;
+    test_slicing(cmv);
 }

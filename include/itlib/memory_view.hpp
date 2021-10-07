@@ -1,11 +1,11 @@
-// itlib-memory-view v1.00
+// itlib-memory-view v1.01
 //
 // A view of a chunk of memory which makes it look as a std::vector sans
 // the size modifying functions
 //
 // MIT License:
 // Copyright(c) 2016-2017 Chobolabs Inc.
-// Copyright(c) 2020 Borislav Stanimirov
+// Copyright(c) 2020-2021 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2021-10-07) Added slicing functionalities
 //  1.00 (2020-10-14) Rebranded release from chobo-memory-view
 //
 //
@@ -77,6 +78,11 @@
 // void reset(size_t size) - change the size, without changing the pointer
 // operator bool() const - returns whether the internal pointer is valid
 // T* get() noexcept - return the internal pointer (same as data())
+// slice(size_t offset, size_t count = ~0) - returns a new memory view which is a slice
+//   from this [offset, offset+count). If the slice would go beyond the end of the view
+//   the end of the view is used
+// remove_prefix(size_t n) - moves the start by n elements. UB if n > size
+// remove_suffix(size_t n) - moves the end by n elements towards start. UB if n > size
 //
 //
 //                  Configuration
@@ -285,6 +291,26 @@ public:
         return m_size;
     }
 
+    // slicing
+    memory_view slice(size_t off, size_t count = size_t(-1)) const
+    {
+        if (off > m_size) return memory_view(m_ptr + m_size, 0);
+        auto newSize = m_size - off;
+        if (count > newSize) count = newSize;
+        return memory_view(m_ptr + off, count);
+    }
+
+    void remove_prefix(size_t n)
+    {
+        m_ptr += n;
+        m_size -= n;
+    }
+
+    void remove_suffix(size_t n)
+    {
+        m_size -= n;
+    }
+
 private:
     T* m_ptr = nullptr;
     size_t m_size = 0;
@@ -423,6 +449,26 @@ public:
     size_t size() const noexcept
     {
         return m_size;
+    }
+
+    // slicing
+    const_memory_view slice(size_t off, size_t count = size_t(-1)) const
+    {
+        if (off > m_size) return const_memory_view(m_ptr + m_size, 0);
+        auto newSize = m_size - off;
+        if (count > newSize) count = newSize;
+        return const_memory_view(m_ptr + off, count);
+    }
+
+    void remove_prefix(size_t n)
+    {
+        m_ptr += n;
+        m_size -= n;
+    }
+
+    void remove_suffix(size_t n)
+    {
+        m_size -= n;
     }
 
 private:
