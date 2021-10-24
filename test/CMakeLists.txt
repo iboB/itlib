@@ -49,3 +49,8 @@ add_itlib_test(small_vector)
 add_itlib_test(time_t)
 add_itlib_test(type_traits)
 add_itlib_test(ufunction)
+
+find_package(Threads)
+if (Threads_FOUND)
+    add_itlib_test(mutex)
+endif()
