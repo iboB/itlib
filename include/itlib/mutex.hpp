@@ -47,7 +47,8 @@
 //
 // Defined types:
 // * strong_try_rec_mutex
-//
+//   Basically the only difference between this and std::recursive_mutex is the
+//   guarantee that try_lock has no spurious false returns
 //
 //                  TESTS
 //

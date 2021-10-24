@@ -54,4 +54,22 @@ TEST_CASE("strong_try_rec_mutex")
         ma.unlock();
         ta.join();
     }
+    SUBCASE("try fail")
+    {
+        mut m;
+        CHECK(m.try_lock());
+        std::thread ta([&]() {
+            CHECK_FALSE(m.try_lock());
+        });
+        CHECK(m.try_lock());
+        m.unlock();
+        std::thread tb([&]() {
+            CHECK_FALSE(m.try_lock());
+        });
+        ta.join();
+        CHECK(m.try_lock());
+        tb.join();
+        m.unlock();
+        m.unlock();
+    }
 }
