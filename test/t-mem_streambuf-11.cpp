@@ -68,6 +68,15 @@ public:
 TEST_CASE("out") {
     {
         ostr out;
+        out << "hello";
+        out << "world";
+        auto v = out.buf.get_container();
+        REQUIRE(v.size() == 10);
+        CHECK(memcmp(v.data(), "helloworld", 10) == 0);
+    }
+
+    {
+        ostr out;
         out << 123;
         auto& v = out.buf.peek_container();
         CHECK(v[0] == '1');
@@ -99,3 +108,19 @@ TEST_CASE("out") {
         CHECK(cv.front() == 'y');
     }
 }
+
+#include <itlib/static_vector.hpp>
+
+TEST_CASE("out with static_vector")
+{
+    itlib::mem_ostreambuf<itlib::static_vector<char, 1024>> buf;
+    std::ostream out(&buf);
+
+    out << "hello";
+    out << "world";
+
+    auto v = buf.get_container();
+    REQUIRE(v.size() == 10);
+    CHECK(memcmp(v.data(), "helloworld", 10) == 0);
+}
+

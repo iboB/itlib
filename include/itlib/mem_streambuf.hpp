@@ -1,4 +1,4 @@
-// itlib-mem-streambuf v1.00
+// itlib-mem-streambuf v1.01
 //
 // Unique Function
 // Non-copyable and noexcept move-constructible replacement for std::function
@@ -28,6 +28,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2021-11-18) Fixed mem_ostreambuf bug when used with containers whose
+//                    data() pointer returns non-null when empty
 //  1.00 (2020-10-16) Initial release
 //
 //
@@ -106,6 +108,7 @@ public:
 
     mem_ostreambuf(size_t reserve = 0)
     {
+        this->setp(m_data.data(), m_data.data());
         cap_resize_by(reserve);
     }
 
