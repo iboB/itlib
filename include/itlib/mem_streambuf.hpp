@@ -1,7 +1,6 @@
 // itlib-mem-streambuf v1.01
 //
-// Unique Function
-// Non-copyable and noexcept move-constructible replacement for std::function
+// std::streambuf implementations for working with contiguous memory
 //
 // MIT License:
 // Copyright(c) 2020 Borislav Stanimirov
@@ -29,7 +28,7 @@
 //                  VERSION HISTORY
 //
 //  1.01 (2021-11-18) Fixed mem_ostreambuf bug when used with containers whose
-//                    data() pointer returns non-null when empty
+//                    data() returns non-null when empty
 //  1.00 (2020-10-16) Initial release
 //
 //

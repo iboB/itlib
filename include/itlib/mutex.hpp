@@ -1,6 +1,5 @@
 // itlib-mutex v0.01 alpha
 //
-// Mutex
 // Mutex types to extend the existing standard mutexes
 //
 // MIT License:
