@@ -1,4 +1,4 @@
-// itlib-static-vector v1.03
+// itlib-static-vector v1.04
 //
 // std::vector-like class with a fixed capacity
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.04 (2021-11-18) Added assign ops
 //  1.03 (2021-10-05) Don't rely on operator!= from T. Use operator== instead
 //  1.02 (2021-08-04) emplace_back() returns a reference as per C++17
 //  1.01 (2021-08-04) capacity() and max_size() to static constexpr methods
@@ -193,22 +194,18 @@ public:
 
     static_vector(size_t count, const T& value)
     {
-        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(count > Capacity, );
+        assign_impl_val(count, value);
+    }
 
-        for (size_t i = 0; i < count; ++i)
-        {
-            push_back(value);
-        }
+    template <class InputIterator, typename = decltype(*std::declval<InputIterator>())>
+    static_vector(InputIterator first, InputIterator last)
+    {
+        assign_impl_iter(first, last);
     }
 
     static_vector(std::initializer_list<T> l)
     {
-        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(l.size() > Capacity, );
-
-        for (auto&& i : l)
-        {
-            push_back(i);
-        }
+        assign_impl_ilist(l);
     }
 
     static_vector(const static_vector& v)
@@ -271,6 +268,25 @@ public:
 
         v.clear();
         return *this;
+    }
+
+    void assign(size_type count, const T& value)
+    {
+        clear();
+        assign_impl_val(count, value);
+    }
+
+    template <class InputIterator, typename = decltype(*std::declval<InputIterator>())>
+    void assign(InputIterator first, InputIterator last)
+    {
+        clear();
+        assign_impl_iter(first, last);
+    }
+
+    void assign(std::initializer_list<T> ilist)
+    {
+        clear();
+        assign_impl_ilist(ilist);
     }
 
     const_reference at(size_type i) const
@@ -556,6 +572,37 @@ public:
     }
 
 private:
+    void assign_impl_val(size_t count, const T& value)
+    {
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(count > Capacity, );
+
+        for (size_t i = 0; i < count; ++i)
+        {
+            push_back(value);
+        }
+    }
+
+    template <class InputIterator>
+    void assign_impl_iter(InputIterator first, InputIterator last)
+    {
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(last - first > Capacity, );
+
+        for (auto i = first; i != last; ++i)
+        {
+            push_back(*i);
+        }
+    }
+
+    void assign_impl_ilist(std::initializer_list<T> l)
+    {
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(l.size() > Capacity, );
+
+        for (auto&& i : l)
+        {
+            push_back(i);
+        }
+    }
+
     typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type m_data[Capacity];
     size_t m_size = 0;
 };

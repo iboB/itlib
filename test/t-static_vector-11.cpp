@@ -195,3 +195,33 @@ TEST_CASE("[static_vector] compare")
     fvec2[1].a = 8;
     CHECK(fvec1 != fvec2);
 }
+
+TEST_CASE("[static_vector] assign")
+{
+    int foo[] = { 1, 2, 3 };
+    signed char bar[] = { 8, 9, 10, 11 };
+
+    itlib::static_vector<int, 10> a(std::begin(foo), std::end(foo));
+    REQUIRE(a.size() == 3);
+    CHECK(a[0] == 1);
+    CHECK(a[1] == 2);
+    CHECK(a[2] == 3);
+
+    a.assign(std::begin(bar), std::end(bar));
+    REQUIRE(a.size() == 4);
+    CHECK(a[0] == 8);
+    CHECK(a[1] == 9);
+    CHECK(a[2] == 10);
+    CHECK(a[3] == 11);
+
+    a.assign(2, 4);
+    REQUIRE(a.size() == 2);
+    CHECK(a[0] == 4);
+    CHECK(a[1] == 4);
+
+    a.assign({7, 6, 5});
+    REQUIRE(a.size() == 3);
+    CHECK(a[0] == 7);
+    CHECK(a[1] == 6);
+    CHECK(a[2] == 5);
+}
