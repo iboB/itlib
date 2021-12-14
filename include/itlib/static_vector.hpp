@@ -585,7 +585,7 @@ private:
     template <class InputIterator>
     void assign_impl_iter(InputIterator first, InputIterator last)
     {
-        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(last - first > Capacity, );
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(long(last - first) > long(Capacity), );
 
         for (auto i = first; i != last; ++i)
         {
