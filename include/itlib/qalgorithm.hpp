@@ -2,6 +2,7 @@
 //
 // Wrappers of <algorithm> algorithms for entire containers
 //
+// SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2020 Borislav Stanimirov
 //

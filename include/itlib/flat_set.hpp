@@ -2,6 +2,7 @@
 //
 // std::set-like class with an underlying vector
 //
+// SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2021 Borislav Stanimirov
 //

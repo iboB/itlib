@@ -2,6 +2,7 @@
 //
 // Additional helper type traits extending the standard <type_traits>
 //
+// SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2020 Borislav Stanimirov
 //

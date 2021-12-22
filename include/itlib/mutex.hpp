@@ -2,6 +2,7 @@
 //
 // Mutex types to extend the existing standard mutexes
 //
+// SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2021 Borislav Stanimirov
 //

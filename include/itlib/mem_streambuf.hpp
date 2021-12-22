@@ -2,6 +2,7 @@
 //
 // std::streambuf implementations for working with contiguous memory
 //
+// SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2020 Borislav Stanimirov
 //

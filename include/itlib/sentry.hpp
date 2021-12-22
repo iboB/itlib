@@ -2,6 +2,7 @@
 //
 // A sentry which invokes a function object when destroyed
 //
+// SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2020 Borislav Stanimirov
 //

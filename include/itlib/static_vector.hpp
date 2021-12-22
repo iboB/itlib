@@ -2,6 +2,7 @@
 //
 // std::vector-like class with a fixed capacity
 //
+// SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2016-2019 Chobolabs Inc.
 // Copyright(c) 2020-2021 Borislav Stanimirov

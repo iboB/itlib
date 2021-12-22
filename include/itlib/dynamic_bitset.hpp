@@ -2,6 +2,7 @@
 //
 // A class similar to std::bitset but the size is not a part of the type
 //
+// SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2020-2021 Borislav Stanimirov
 //

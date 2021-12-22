@@ -3,6 +3,7 @@
 // Unique Function
 // Non-copyable and noexcept move-constructible replacement for std::function
 //
+// SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2020 Borislav Stanimirov
 //

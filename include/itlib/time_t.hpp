@@ -3,6 +3,7 @@
 // A thin wrapper of std::time_t which provides thread safe std::tm getters and
 // type-safe (std::chrono::duration-based) arithmetic
 //
+// SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2020-2021 Borislav Stanimirov
 //

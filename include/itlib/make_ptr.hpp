@@ -2,6 +2,7 @@
 //
 // Helper functions for making std::shared_ptr and std::unique_ptr
 //
+// SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2020 Borislav Stanimirov
 //

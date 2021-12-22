@@ -3,6 +3,7 @@
 // A vector of PODs. Similar to std::vector, but doesn't call constructors or
 // destructors and instead uses memcpy and memmove to manage the data
 //
+// SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2020-2021 Borislav Stanimirov
 //

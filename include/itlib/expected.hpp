@@ -2,6 +2,7 @@
 //
 // A union-type of a value and an error
 //
+// SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2021 Borislav Stanimirov
 //

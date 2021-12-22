@@ -2,6 +2,7 @@
 //
 // std::vector-like class with a static buffer for initial capacity
 //
+// SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2016-2018 Chobolabs Inc.
 // Copyright(c) 2020-2021 Borislav Stanimirov

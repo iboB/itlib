@@ -3,6 +3,7 @@
 // A view of a chunk of memory which makes it look as a std::vector sans
 // the size modifying functions
 //
+// SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2016-2017 Chobolabs Inc.
 // Copyright(c) 2020-2021 Borislav Stanimirov

@@ -3,6 +3,7 @@
 // std::stream-like classes which impose more restrictions on reading
 // thus allowing somewhat optimal stream redirection
 //
+// SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2020 Borislav Stanimirov
 //
