@@ -1,10 +1,10 @@
-// itlib-sentry v1.00
+// itlib-sentry v1.01
 //
 // A sentry which invokes a function object when destroyed
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2020 Borislav Stanimirov
+// Copyright(c) 2020-2022 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2022-01-13) [[nodicard]] on constructor if compiled with C++17
 //  1.00 (2020-10-15) Initial release
 //
 //
@@ -80,6 +81,9 @@ template <typename Func>
 class sentry
 {
 public:
+#if __cplusplus >= 201700
+    [[nodiscard]]
+#endif
     explicit sentry(Func&& atexit) : m_func(std::forward<Func>(atexit)) {}
 
     sentry(const sentry&) = delete;
