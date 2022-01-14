@@ -28,7 +28,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.01 (2022-01-13) [[nodicard]] on constructor if compiled with C++17
+//  1.01 (2022-01-13) [[nodicard]] of type if compiled with C++17
 //  1.00 (2020-10-15) Initial release
 //
 //
@@ -78,12 +78,12 @@ namespace itlib
 {
 
 template <typename Func>
+#if __cplusplus >= 201700
+[[nodiscard]]
+#endif
 class sentry
 {
 public:
-#if __cplusplus >= 201700
-    [[nodiscard]]
-#endif
     explicit sentry(Func&& atexit) : m_func(std::forward<Func>(atexit)) {}
 
     sentry(const sentry&) = delete;
