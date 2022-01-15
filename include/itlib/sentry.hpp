@@ -74,14 +74,19 @@
 
 #include <utility>
 
+#if !defined(ITLIB_NODISCARD)
+#   if __cplusplus >= 201700
+#       define ITLIB_NODISCARD [[nodiscard]]
+#   else
+#       define ITLIB_NODISCARD
+#   endif
+#endif
+
 namespace itlib
 {
 
 template <typename Func>
-#if __cplusplus >= 201700
-[[nodiscard]]
-#endif
-class sentry
+class ITLIB_NODISCARD sentry
 {
 public:
     explicit sentry(Func&& atexit) : m_func(std::forward<Func>(atexit)) {}
