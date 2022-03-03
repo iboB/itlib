@@ -52,7 +52,7 @@
 //
 //                  TESTS
 //
-// You can find unit tests for ufunction in its official repo:
+// You can find unit tests for mutex in its official repo:
 // https://github.com/iboB/itlib/blob/master/test/
 //
 #pragma once
