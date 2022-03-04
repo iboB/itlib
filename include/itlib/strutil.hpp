@@ -1,4 +1,4 @@
-// itlib-strutil v1.00
+// itlib-strutil v1.01
 //
 // String utilities
 //
@@ -28,7 +28,8 @@
 //
 //                  VERSION HISTORY
 //
-//  1.00 (2022-10-24) Initial release
+//  1.01 (2022-03-04) Fixed potential UB in make_string_view
+//  1.00 (2022-03-03) Initial release
 //
 //
 //                  DOCUMENTATION
@@ -69,6 +70,7 @@ namespace itlib
 template <typename CI> // contiguous iterator
 inline constexpr std::string_view make_string_view(CI begin, CI end)
 {
+    if (begin == end) return {}; // avoid UB from dereferncing end if called with (end, end)
     return std::string_view(&(*begin), end - begin);
 }
 

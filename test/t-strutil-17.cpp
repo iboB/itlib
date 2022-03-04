@@ -17,6 +17,12 @@ TEST_CASE("make_string_view")
 
     s = make_string_view(s.begin() + 1, s.end() - 2);
     CHECK(s == "345");
+
+    auto e = make_string_view(s.begin(), s.begin());
+    CHECK(e.empty());
+
+    e = make_string_view(s.end(), s.end());
+    CHECK(e.empty());
 }
 
 TEST_CASE("starts/ends_with")
