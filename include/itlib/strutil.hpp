@@ -28,7 +28,8 @@
 //
 //                  VERSION HISTORY
 //
-//  1.01 (2022-03-04) Fixed potential UB in make_string_view
+//  1.01 (2022-03-04) Fixed potential UB in make_string_view.
+//                    Added missing noexcept
 //  1.00 (2022-03-03) Initial release
 //
 //
@@ -68,7 +69,7 @@ namespace itlib
 {
 
 template <typename CI> // contiguous iterator
-inline constexpr std::string_view make_string_view(CI begin, CI end)
+inline constexpr std::string_view make_string_view(CI begin, CI end) noexcept
 {
     if (begin == end) return {}; // avoid UB from dereferncing end if called with (end, end)
     return std::string_view(&(*begin), end - begin);
