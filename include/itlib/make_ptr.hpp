@@ -56,8 +56,8 @@
 // auto ptr = std::make_shared<my<complex, template, type>>(std::move(val));
 //
 // // nice
-// auto p1 = itlib::make_shaerd(val); // copy val into p1
-// auto p2 = itlib::make_shaerd(std::move(val)); // move val into p2
+// auto p1 = itlib::make_shared(val); // copy val into p1
+// auto p2 = itlib::make_shared(std::move(val)); // move val into p2
 //
 //
 //                  TESTS
