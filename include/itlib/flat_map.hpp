@@ -1,11 +1,11 @@
-// itlib-flat-map v1.02
+// itlib-flat-map v1.03
 //
 // std::map-like class with an underlying vector
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2016-2019 Chobolabs Inc.
-// Copyright(c) 2020-2021 Borislav Stanimirov
+// Copyright(c) 2020-2022 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -28,6 +28,8 @@
 //
 //
 //                  VERSION HISTORY
+//
+//  1.03 (2022-04-14) Noxcept move construct and assign
 //  1.02 (2021-09-28) Fixed construction from std::initializer_list which
 //                    allowed duplicate keys to find their wey in the map
 //  1.01 (2021-09-15) Constructors from std::initializer_list
@@ -161,20 +163,10 @@ public:
     {}
 
     flat_map(const flat_map& x) = default;
-    flat_map(flat_map&& x) = default;
+    flat_map& operator=(const flat_map& x) = default;
 
-    flat_map& operator=(const flat_map& x)
-    {
-        m_cmp = x.m_cmp;
-        m_container = x.m_container;
-        return *this;
-    }
-    flat_map& operator=(flat_map&& x)
-    {
-        m_cmp = std::move(x.m_cmp);
-        m_container = std::move(x.m_container);
-        return *this;
-    }
+    flat_map(flat_map&& x) noexcept = default;
+    flat_map& operator=(flat_map&& x) noexcept = default;
 
     iterator begin() noexcept { return m_container.begin(); }
     const_iterator begin() const noexcept { return m_container.begin(); }

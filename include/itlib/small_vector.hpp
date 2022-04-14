@@ -1,11 +1,11 @@
-// itlib-small-vector v1.03
+// itlib-small-vector v1.04
 //
 // std::vector-like class with a static buffer for initial capacity
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2016-2018 Chobolabs Inc.
-// Copyright(c) 2020-2021 Borislav Stanimirov
+// Copyright(c) 2020-2022 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.04 (2022-04-14) Noxcept move construct and assign
 //  1.03 (2021-10-05) Use allocator member instead of inheriting from allocator
 //                    Allow compare with small_vector of different static_size
 //                    Don't rely on operator!= from T. Use operator== instead
@@ -268,7 +269,7 @@ public:
         }
     }
 
-    small_vector(small_vector&& v)
+    small_vector(small_vector&& v) noexcept
         : m_alloc(std::move(v.get_alloc()))
         , m_capacity(v.m_capacity)
         , m_dynamic_capacity(v.m_dynamic_capacity)
@@ -330,7 +331,7 @@ public:
         return *this;
     }
 
-    small_vector& operator=(small_vector&& v)
+    small_vector& operator=(small_vector&& v) noexcept
     {
         clear();
 

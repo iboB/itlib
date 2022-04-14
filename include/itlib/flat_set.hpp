@@ -1,10 +1,10 @@
-// itlib-flat-set v1.02
+// itlib-flat-set v1.03
 //
 // std::set-like class with an underlying vector
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2021 Borislav Stanimirov
+// Copyright(c) 2021-2022 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.03 (2022-04-14) Noxcept move construct and assign
 //  1.02 (2021-09-28) Fixed construction from std::initializer_list which
 //                    allowed duplicate elements to find their wey in the set
 //  1.01 (2021-09-15) Constructors from std::initializer_list
@@ -146,10 +147,10 @@ public:
     {}
 
     flat_set(const flat_set& x) = default;
-    flat_set(flat_set&& x) = default;
-
     flat_set& operator=(const flat_set& x) = default;
-    flat_set& operator=(flat_set&& x) = default;
+
+    flat_set(flat_set&& x) noexcept = default;
+    flat_set& operator=(flat_set&& x) noexcept = default;
 
     iterator begin() noexcept { return m_container.begin(); }
     const_iterator begin() const noexcept { return m_container.begin(); }

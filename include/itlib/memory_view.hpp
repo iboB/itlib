@@ -1,4 +1,4 @@
-// itlib-memory-view v1.01
+// itlib-memory-view v1.02
 //
 // A view of a chunk of memory which makes it look as a std::vector sans
 // the size modifying functions
@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2016-2017 Chobolabs Inc.
-// Copyright(c) 2020-2021 Borislav Stanimirov
+// Copyright(c) 2020-2022 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -30,6 +30,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2022-04-14) Noxcept move construct and assign
 //  1.01 (2021-10-07) Added slicing functionalities
 //  1.00 (2020-10-14) Rebranded release from chobo-memory-view
 //
@@ -144,10 +145,10 @@ public:
     {}
 
     memory_view(const memory_view&) = default;
-    memory_view(memory_view&&) = default;
-
     memory_view& operator=(const memory_view&) = default;
-    memory_view& operator=(memory_view&&) = default;
+
+    memory_view(memory_view&&) noexcept = default;
+    memory_view& operator=(memory_view&&) noexcept = default;
 
     void reset(T* ptr = nullptr, size_t size = 0)
     {
