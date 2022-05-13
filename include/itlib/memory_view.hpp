@@ -117,11 +117,23 @@
 #   define I_ITLIB_MEMORY_VIEW_BOUNDS_CHECK(i) assert((i) < this->size())
 #endif
 
+#if !defined(ITLIB_DEPRECATED)
+#   if __cplusplus >= 201400
+#       define ITLIB_DEPRECATED(x) [[deprecated(x)]]
+#   elif defined(_MSC_VER)
+#       define ITLIB_DEPRECATED(x) __declspec(deprecated(x))
+#   elif defined(__GNUC__)
+#       define ITLIB_DEPRECATED(x) __attribute__((deprecated(x)))
+#   else
+#       define ITLIB_DEPRECATED(...)
+#   endif
+#endif
+
 namespace itlib
 {
 
 template <typename T>
-class memory_view
+class ITLIB_DEPRECATED("Use itlib::span instead") memory_view
 {
 public:
 
@@ -321,7 +333,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-class const_memory_view
+class ITLIB_DEPRECATED("Use itlib::span instead") const_memory_view
 {
 public:
 

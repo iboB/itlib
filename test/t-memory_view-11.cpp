@@ -1,5 +1,8 @@
 #include "doctest.hpp"
 
+// we know it's deprecated
+// no need to cause a bunch of warnings here
+#define ITLIB_DEPRECATED(...)
 #include <itlib/memory_view.hpp>
 
 #include <vector>
