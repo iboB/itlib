@@ -3,6 +3,7 @@
 #include <itlib/span.hpp>
 
 #include <vector>
+#include <cstring>
 
 TEST_CASE("[span] construction")
 {
@@ -12,6 +13,7 @@ TEST_CASE("[span] construction")
         span<int> e;
         CHECK(!e);
         CHECK(e.size() == 0);
+        CHECK(e.byte_size() == 0);
         CHECK(e.begin() == e.end());
         CHECK(e.rbegin() == e.rend());
         CHECK(e.empty());
@@ -23,6 +25,7 @@ TEST_CASE("[span] construction")
         span<int> ints(i);
         CHECK(ints);
         CHECK(ints.size() == 4);
+        CHECK(ints.byte_size() == 16);
         CHECK(ints.begin() + 4 == ints.end());
         CHECK(ints.rbegin() + 4 == ints.rend());
         CHECK(!ints.empty());
@@ -190,3 +193,38 @@ TEST_CASE("[span] slicing")
     span<const int> cs = s;
     test_slicing(cs);
 }
+
+TEST_CASE("[span] bytes")
+{
+    using namespace itlib;
+    {
+        std::vector<uint32_t> ivec = {0, 0xFFFFFFFF, 0x12345678};
+        auto vs = make_span(ivec);
+        auto bs = vs.as_bytes();
+        CHECK(bs.size() == 12);
+        CHECK(bs[0] == 0);
+        CHECK(bs[4] == 0xFF);
+        uint32_t lasti;
+        auto last4 = bs.last(4);
+        REQUIRE(sizeof(lasti) == last4.byte_size());
+        memcpy(&lasti, last4.data(), last4.byte_size());
+        CHECK(lasti == 0x12345678);
+
+        auto wbs = vs.as_writable_bytes();
+        CHECK(wbs.size() == 12);
+        uint32_t newi = 0xBAADF00D;
+        memcpy(wbs.first(4).data(), &newi, sizeof(newi));
+        CHECK(ivec.front() == 0xBAADF00D);
+    }
+
+    {
+        const std::vector<uint32_t> ivec = {0, 0xFFFFFFFF, 0x12345678};
+        auto vs = make_span(ivec);
+        auto bs = vs.as_bytes();
+        CHECK(bs.size() == 12);
+        auto wbs = vs.as_writable_bytes();
+        CHECK(wbs.size() == 12);
+        static_assert(std::is_same<span<const uint8_t>, decltype(wbs)>::value, "writable bytes of const must be const");
+    }
+}
+

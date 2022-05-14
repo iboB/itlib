@@ -50,8 +50,8 @@
 // By default bounds checks are made in debug mode (via an assert) when
 // accessing elements (with `[]`). Iterators are not checked (yet...)
 //
-// To disable them, you can define ITLIB_SPAN_NO_DEBUG_BOUNDS_CHECK before
-// including the header.
+// To disable them you can define ITLIB_SPAN_NO_DEBUG_BOUNDS_CHECK before
+// including this header.
 //
 //
 //                  TESTS
@@ -62,6 +62,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <type_traits>
 
@@ -91,6 +92,10 @@ public:
     using const_iterator = const T*;
     using reverse_iterator = std::reverse_iterator<iterator>;
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
+    // byte type with the same constness as T
+    // can't have std::byte here with no c++17 guaranteed, so use the next best thing
+    using byte_t = typename std::conditional<std::is_const<T>::value, const uint8_t, uint8_t>::type;
 
     span() noexcept = default;
 
@@ -237,6 +242,22 @@ public:
     size_t size() const noexcept
     {
         return m_end - m_begin;
+    }
+
+    // byte access
+    size_t byte_size() const noexcept
+    {
+        return size() * sizeof(T);
+    }
+
+    span<const uint8_t> as_bytes() const noexcept
+    {
+        return span<const uint8_t>(reinterpret_cast<const uint8_t*>(m_begin), byte_size());
+    }
+
+    span<byte_t> as_writable_bytes() noexcept
+    {
+        return span<byte_t>(reinterpret_cast<byte_t*>(m_begin), byte_size());
     }
 
     // slicing
