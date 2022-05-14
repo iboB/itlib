@@ -107,8 +107,8 @@ public:
     typename std::enable_if<std::is_same<typename std::remove_cv<T>::type, U>::value,
         stride_span&>::type operator=(const stride_span<U>& other) noexcept
     {
-        m_begin = other.begin();
-        m_end = other.end();
+        m_begin = other.data();
+        m_num_elements = other.size();
         m_stride = other.stride();
         return *this;
     }
@@ -161,6 +161,16 @@ public:
     T& back()
     {
         return at(size() - 1);
+    }
+
+    byte_t* data()
+    {
+        return m_begin;
+    }
+
+    const byte_t* data() const
+    {
+        return m_begin;
     }
 
     // iterators

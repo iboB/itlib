@@ -16,6 +16,6 @@ TEST_CASE("[stride_span] construction")
         CHECK(e.begin() == e.end());
         // CHECK(e.rbegin() == e.rend());
         CHECK(e.empty());
-        // CHECK(e.data() == nullptr);
+        CHECK(e.data() == nullptr);
     }
 }
