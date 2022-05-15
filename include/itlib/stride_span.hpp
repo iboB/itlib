@@ -29,7 +29,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.00 (2022-xx-xx) Initial release
+//  1.00 (2022-05-15) Initial release
 //
 //
 //                  DOCUMENTATION
@@ -44,7 +44,8 @@
 // elements. The stride is the number of bytes between two elements. Thus if
 // the stride equals sizeof(T) stride_span is equivalent to std::span.
 //
-// A different stride allows users to provide a partial vector-like view.
+// A different stride allows users to provide a partial vector-like view to
+// certain elements of an array or to members of a class or struct.
 //
 //                  Configuration
 //
