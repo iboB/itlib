@@ -29,7 +29,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.00 (2022-05-15) Initial release
+//  1.00 (2022-xx-xx) Initial release
 //
 //
 //                  DOCUMENTATION
@@ -68,7 +68,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <iterator>
 #include <type_traits>
 
 #if defined(ITLIB_STRIDE_SPAN_NO_DEBUG_BOUNDS_CHECK)
@@ -174,78 +173,86 @@ public:
     }
 
     // iterators
-    class iterator
+    template <typename CT>
+    class t_iterator
     {
         byte_t* p = 0;
         size_t stride = sizeof(T);
 
         friend class stride_span;
-        iterator(byte_t* p, size_t stride) : p(p), stride(stride) {}
+        t_iterator(byte_t* p, size_t stride) noexcept : p(p), stride(stride) {}
     public:
-        iterator() = default;
-
-        T& operator*() const
-        {
-            return *reinterpret_cast<T*>(p);
-        }
-        iterator& operator++()
-        {
-            p += stride;
-            return *this;
-        }
-        iterator operator+(const ptrdiff_t diff) const
-        {
-            return iterator(p + stride * diff, stride);
-        }
-        iterator operator-(const ptrdiff_t diff) const
-        {
-            return iterator(p - stride * diff, stride);
-        }
-        bool operator==(const iterator& other) const
-        {
-            return p == other.p;
-        }
+        t_iterator() noexcept = default;
+        CT& operator*() const noexcept { return *reinterpret_cast<T*>(p); }
+        t_iterator& operator++() noexcept { p += stride; return *this; }
+        t_iterator& operator--() noexcept { p -= stride; return *this; }
+        t_iterator operator+(const ptrdiff_t diff) const noexcept { return t_iterator(p + stride * diff, stride); }
+        t_iterator operator-(const ptrdiff_t diff) const noexcept { return t_iterator(p - stride * diff, stride); }
+        bool operator==(const t_iterator& other) const noexcept { return p == other.p; }
+        bool operator!=(const t_iterator& other) const noexcept { return p != other.p; }
+        bool operator<(const t_iterator& other) const noexcept { return p < other.p; }
+        bool operator>(const t_iterator& other) const noexcept { return p > other.p; }
+        bool operator<=(const t_iterator& other) const noexcept { return p <= other.p; }
+        bool operator>=(const t_iterator& other) const noexcept { return p >= other.p; }
     };
+
+    using iterator = t_iterator<T>;
+    using const_iterator = t_iterator<const T>;
+
+    template <typename Iter>
+    class t_rev_iterator
+    {
+        Iter iter;
+    public:
+        explicit t_rev_iterator(Iter i) noexcept : iter(i) {}
+        auto operator*() noexcept -> decltype(*std::declval<Iter>()) { return *(iter - 1); }
+        t_rev_iterator& operator++() noexcept { --iter; return *this; }
+        bool operator==(const t_rev_iterator& other) const noexcept { return iter == other.iter; }
+        bool operator!=(const t_rev_iterator& other) const noexcept { return iter != other.iter; }
+    };
+
+    using reverse_iterator = t_rev_iterator<iterator>;
+    using const_reverse_iterator = t_rev_iterator<const_iterator>;
 
     iterator begin() noexcept
     {
         return iterator(m_begin, m_stride);
     }
 
-    //const_iterator begin() const noexcept
-    //{
-    //    return m_begin;
-    //}
+    const_iterator begin() const noexcept
+    {
+        return m_begin;
+    }
 
     iterator end() noexcept
     {
         return iterator(m_begin + m_num_elements * m_stride, m_stride);
     }
 
-    //const_iterator end() const noexcept
-    //{
-    //    return m_end;
-    //}
+    const_iterator end() const noexcept
+    {
+        return m_end;
+    }
 
-    //reverse_iterator rbegin() noexcept
-    //{
-    //    return reverse_iterator(end());
-    //}
+    reverse_iterator rbegin() noexcept
+    {
+        return reverse_iterator(end());
+    }
 
-    //const_reverse_iterator rbegin() const noexcept
-    //{
-    //    return const_reverse_iterator(end());
-    //}
+    const_reverse_iterator rbegin() const noexcept
+    {
+        return const_reverse_iterator(end());
+    }
 
-    //reverse_iterator rend() noexcept
-    //{
-    //    return reverse_iterator(begin());
-    //}
+    reverse_iterator rend() noexcept
+    {
+        return reverse_iterator(begin());
+    }
 
-    //const_reverse_iterator rend() const noexcept
-    //{
-    //    return const_reverse_iterator(begin());
-    //}
+    const_reverse_iterator rend() const noexcept
+    {
+        return const_reverse_iterator(begin());
+    }
 
     // capacity
     bool empty() const noexcept
