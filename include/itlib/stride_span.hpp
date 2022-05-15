@@ -40,7 +40,7 @@
 // extent. For a reference of std::span see here:
 // https://en.cppreference.com/w/cpp/container/span
 //
-// The key difference is itlib::strde_span allows a stride between different
+// The key difference is itlib::stride_span allows a stride between different
 // elements. The stride is the number of bytes between two elements. Thus if
 // the stride equals sizeof(T) stride_span is equivalent to std::span.
 //
@@ -310,5 +310,43 @@ private:
     size_t m_stride = sizeof(T);
     size_t m_num_elements = 0;
 };
+
+template <typename T, typename B>
+stride_span<T> make_stride_span_from_buf(B* buf, size_t offset, size_t stride, size_t num_elements)
+{
+    return stride_span<T>(reinterpret_cast<typename stride_span<T>::byte_t*>(buf) + offset,
+        stride,
+        num_elements);
+}
+
+template <typename T>
+stride_span<T> make_stride_span_from_buf(T* buf, size_t stride, size_t num_elements)
+{
+    return stride_span<T>(reinterpret_cast<typename stride_span<T>::byte_t*>(buf),
+        stride,
+        num_elements);
+}
+
+template <typename T>
+stride_span<T> make_stride_span_from_array(T* ar, size_t ar_length, size_t noffset = 0, size_t nstride = 1)
+{
+    return make_stride_span_from_buf(ar + noffset,
+        sizeof(T) * nstride,
+        (ar_length - noffset + nstride - 1) / nstride); // divide rounding up
+}
+
+template <typename Struct, typename Field>
+auto make_stride_span_member_view(Struct* ar, size_t ar_length, Field (Struct::*member))
+{
+    auto begin = &(ar->*member);
+    return make_stride_span_from_buf(begin, sizeof(Struct), ar_length);
+}
+
+template <typename Struct, typename Field>
+auto make_stride_span_member_view(const Struct* ar, size_t ar_length, Field(Struct::* member))
+{
+    auto begin = &(ar->*member);
+    return make_stride_span_from_buf(begin, sizeof(Struct), ar_length);
+}
 
 }
