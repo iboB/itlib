@@ -99,6 +99,12 @@ public:
 
     stride_span() noexcept = default;
 
+    stride_span(byte_t* ptr, size_t stride, size_t num_elements)
+        : m_begin(ptr)
+        , m_stride(stride)
+        , m_num_elements(num_elements)
+    {}
+
     stride_span(const stride_span&) noexcept = default;
     stride_span& operator=(const stride_span&) noexcept = default;
 
@@ -107,8 +113,8 @@ public:
         stride_span&>::type operator=(const stride_span<U>& other) noexcept
     {
         m_begin = other.data();
-        m_num_elements = other.size();
         m_stride = other.stride();
+        m_num_elements = other.size();
         return *this;
     }
 
@@ -301,8 +307,8 @@ public:
 
 private:
     byte_t* m_begin = nullptr;
-    size_t m_num_elements = 0;
     size_t m_stride = sizeof(T);
+    size_t m_num_elements = 0;
 };
 
 }

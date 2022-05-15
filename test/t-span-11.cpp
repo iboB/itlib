@@ -20,6 +20,17 @@ TEST_CASE("[span] construction")
         CHECK(e.data() == nullptr);
     }
 
+    {
+        span<const int> e;
+        CHECK(!e);
+        CHECK(e.size() == 0);
+        CHECK(e.byte_size() == 0);
+        CHECK(e.begin() == e.end());
+        CHECK(e.rbegin() == e.rend());
+        CHECK(e.empty());
+        CHECK(e.data() == nullptr);
+    }
+
     int i[] = {0,2,3,4};
     {
         span<int> ints(i);
