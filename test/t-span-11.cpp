@@ -15,6 +15,7 @@ TEST_CASE("[span] construction")
         CHECK(e.size() == 0);
         CHECK(e.byte_size() == 0);
         CHECK(e.begin() == e.end());
+        CHECK(e.cbegin() == e.cend());
         CHECK(e.rbegin() == e.rend());
         CHECK(e.empty());
         CHECK(e.data() == nullptr);
@@ -26,6 +27,7 @@ TEST_CASE("[span] construction")
         CHECK(e.size() == 0);
         CHECK(e.byte_size() == 0);
         CHECK(e.begin() == e.end());
+        CHECK(e.cbegin() == e.cend());
         CHECK(e.rbegin() == e.rend());
         CHECK(e.empty());
         CHECK(e.data() == nullptr);
@@ -38,6 +40,7 @@ TEST_CASE("[span] construction")
         CHECK(ints.size() == 4);
         CHECK(ints.byte_size() == 16);
         CHECK(ints.begin() + 4 == ints.end());
+        CHECK(ints.cbegin() + 4 == ints.cend());
         CHECK(ints.rbegin() + 4 == ints.rend());
         CHECK(!ints.empty());
         CHECK(ints.data() == i);

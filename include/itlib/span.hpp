@@ -203,12 +203,22 @@ public:
         return m_begin;
     }
 
+    const_iterator cbegin() const noexcept
+    {
+        return m_begin;
+    }
+
     iterator end() noexcept
     {
         return m_end;
     }
 
     const_iterator end() const noexcept
+    {
+        return m_end;
+    }
+
+    const_iterator cend() const noexcept
     {
         return m_end;
     }
