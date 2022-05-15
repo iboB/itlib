@@ -103,13 +103,19 @@ struct foo
     char z;
 };
 
+template <typename T, size_t N>
+size_t countof(T (&)[N]) 
+{
+	return N;
+}
+
 TEST_CASE("[stride_span] make_stride_span")
 {
     using namespace itlib;
 
     {
         int i[] = {1,11,2,22,3,33,4,44};
-        auto ss = make_stride_span_from_array(i, std::size(i), 0, 2);
+        auto ss = make_stride_span_from_array(i, countof(i), 0, 2);
         static_assert(std::is_same<stride_span<int>, decltype(ss)>::value, "make_stride_span_from_array");
         CHECK(ss.size() == 4);
         CHECK(ss[0] == 1);
@@ -118,7 +124,7 @@ TEST_CASE("[stride_span] make_stride_span")
 
     {
         const int i[] = {1,11,2,22,3,33,4,44};
-        auto ss = make_stride_span_from_array(i, std::size(i), 1, 2);
+        auto ss = make_stride_span_from_array(i, countof(i), 1, 2);
         static_assert(std::is_same<stride_span<const int>, decltype(ss)>::value, "make_stride_span_from_array");
         CHECK(ss.size() == 4);
         CHECK(ss[0] == 11);
@@ -127,12 +133,12 @@ TEST_CASE("[stride_span] make_stride_span")
 
     {
         int i[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-        auto s03 = make_stride_span_from_array(i, std::size(i), 0, 3);
+        auto s03 = make_stride_span_from_array(i, countof(i), 0, 3);
         CHECK(s03.size() == 4);
         CHECK(s03[0] == 0);
         CHECK(s03.back() == 9);
 
-        auto s13 = make_stride_span_from_array(i, std::size(i), 1, 3);
+        auto s13 = make_stride_span_from_array(i, countof(i), 1, 3);
         CHECK(s13.size() == 3);
         CHECK(s13[0] == 1);
         CHECK(s13.back() == 7);
@@ -140,7 +146,7 @@ TEST_CASE("[stride_span] make_stride_span")
 
     {
         foo f[] = {{2.3f, 1, 'a'}, {3.14f, 2, 'b'}, {6.2f, 3, 'c'}};
-        auto ss = make_stride_span_member_view(f, std::size(f), &foo::y);
+        auto ss = make_stride_span_member_view(f, countof(f), &foo::y);
         static_assert(std::is_same<stride_span<int>, decltype(ss)>::value, "make_stride_span_member_view");
         CHECK(ss.size() == 3);
         CHECK(*ss.begin() == 1);
@@ -150,7 +156,7 @@ TEST_CASE("[stride_span] make_stride_span")
 
     {
         const foo f[] = {{2.3f, 1, 'a'}, {3.14f, 2, 'b'}, {6.2f, 3, 'c'}};
-        auto ss = make_stride_span_member_view(f, std::size(f), &foo::z);
+        auto ss = make_stride_span_member_view(f, countof(f), &foo::z);
         static_assert(std::is_same<stride_span<const char>, decltype(ss)>::value, "make_stride_span_member_view");
         CHECK(ss.size() == 3);
         CHECK(*ss.begin() == 'a');

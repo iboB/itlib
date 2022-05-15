@@ -237,7 +237,7 @@ public:
 
     const_iterator end() const noexcept
     {
-        return m_end;
+        return iterator(m_begin + m_num_elements * m_stride, m_stride);
     }
 
     reverse_iterator rbegin() noexcept
@@ -336,14 +336,14 @@ stride_span<T> make_stride_span_from_array(T* ar, size_t ar_length, size_t noffs
 }
 
 template <typename Struct, typename Field>
-auto make_stride_span_member_view(Struct* ar, size_t ar_length, Field (Struct::*member))
+stride_span<Field> make_stride_span_member_view(Struct* ar, size_t ar_length, Field (Struct::*member))
 {
     auto begin = &(ar->*member);
     return make_stride_span_from_buf(begin, sizeof(Struct), ar_length);
 }
 
 template <typename Struct, typename Field>
-auto make_stride_span_member_view(const Struct* ar, size_t ar_length, Field(Struct::* member))
+stride_span<const Field> make_stride_span_member_view(const Struct* ar, size_t ar_length, Field (Struct::*member))
 {
     auto begin = &(ar->*member);
     return make_stride_span_from_buf(begin, sizeof(Struct), ar_length);
