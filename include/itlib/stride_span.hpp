@@ -108,6 +108,11 @@ public:
     stride_span(const stride_span&) noexcept = default;
     stride_span& operator=(const stride_span&) noexcept = default;
 
+    template <typename U, typename = std::enable_if<std::is_same<typename std::remove_cv<T>::type, U>::value, int>::type>
+    stride_span(const stride_span<U>& other)
+        : m_begin(other.data()), m_stride(other.stride()), m_num_elements(other.size())
+    {}
+
     template <typename U>
     typename std::enable_if<std::is_same<typename std::remove_cv<T>::type, U>::value,
         stride_span&>::type operator=(const stride_span<U>& other) noexcept
@@ -227,7 +232,12 @@ public:
 
     const_iterator begin() const noexcept
     {
-        return m_begin;
+        return const_iterator(m_begin, m_stride);
+    }
+
+    const_iterator cbegin() const noexcept
+    {
+        return begin();
     }
 
     iterator end() noexcept
@@ -237,7 +247,12 @@ public:
 
     const_iterator end() const noexcept
     {
-        return iterator(m_begin + m_num_elements * m_stride, m_stride);
+        return const_iterator(m_begin + m_num_elements * m_stride, m_stride);
+    }
+
+    const_iterator cend() const noexcept
+    {
+        return end();
     }
 
     reverse_iterator rbegin() noexcept
@@ -277,33 +292,34 @@ public:
     }
 
     // slicing
-    //span subspan(size_t off, size_t count = size_t(-1)) const noexcept
-    //{
-    //    if (m_begin + off > m_end) return span(m_end, 0);
-    //    auto newSize = size() - off;
-    //    if (count > newSize) count = newSize;
-    //    return span(m_begin + off, count);
-    //}
+    stride_span subspan(size_t off, size_t count = size_t(-1)) const noexcept
+    {
+        if (off > m_num_elements) return stride_span(m_begin + m_num_elements * m_stride, m_stride, 0);
+        auto newSize = m_num_elements - off;
+        if (count > newSize) count = newSize;
+        return stride_span(m_begin + off * m_stride, m_stride, count);
+    }
 
-    //span first(size_t n) const noexcept
-    //{
-    //    return subspan(0, n);
-    //}
+    stride_span first(size_t n) const noexcept
+    {
+        return subspan(0, n);
+    }
 
-    //span last(size_t n) const noexcept
-    //{
-    //    return subspan(size() - n, n);
-    //}
+    stride_span last(size_t n) const noexcept
+    {
+        return subspan(size() - n, n);
+    }
 
-    //void remove_prefix(size_t n) noexcept
-    //{
-    //    m_begin += n;
-    //}
+    void remove_prefix(size_t n) noexcept
+    {
+        m_begin += n * m_stride;
+        m_num_elements -= n;
+    }
 
-    //void remove_suffix(size_t n) noexcept
-    //{
-    //    m_end -= n;
-    //}
+    void remove_suffix(size_t n) noexcept
+    {
+        m_num_elements -= n;
+    }
 
 private:
     byte_t* m_begin = nullptr;

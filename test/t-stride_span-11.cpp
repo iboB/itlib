@@ -104,7 +104,7 @@ struct foo
 };
 
 template <typename T, size_t N>
-size_t countof(T (&)[N]) 
+size_t countof(T (&)[N])
 {
 	return N;
 }
@@ -163,4 +163,54 @@ TEST_CASE("[stride_span] make_stride_span")
         CHECK(ss[1] == 'b');
         CHECK(ss.back() == 'c');
     }
+}
+
+template <typename SS>
+void test_slicing(const SS& span)
+{
+    {
+        auto s = span.subspan(10);
+        CHECK(!!s);
+        CHECK(s.empty());
+        s.cbegin() == span.end();
+    }
+    {
+        auto s = span.subspan(1);
+        CHECK(s.size() == 4);
+        CHECK(s.cbegin() == span.begin() + 1);
+    }
+    {
+        auto s = span.subspan(3, 1);
+        CHECK(s.size() == 1);
+        CHECK(s.cbegin() == span.begin() + 3);
+    }
+    {
+        auto s = span.first(3);
+        CHECK(s.size() == 3);
+        CHECK(s.cbegin() == span.begin());
+    }
+    {
+        auto s = span.last(2);
+        CHECK(s.size() == 2);
+        CHECK(s.cbegin() == span.begin() + 3);
+    }
+    {
+        auto cp = span;
+        cp.remove_prefix(2);
+        CHECK(cp.size() == 3);
+        CHECK(cp.cbegin() == span.begin() + 2);
+        cp.remove_suffix(2);
+        CHECK(cp.size() == 1);
+        CHECK(cp.cend() == span.begin() + 3);
+    }
+}
+
+TEST_CASE("[span] slicing")
+{
+    using namespace itlib;
+    std::vector<int> ivec = {6, 0, 7, 0, 8, 0, 9, 0, 10};
+    auto s = make_stride_span_from_array(ivec.data(), ivec.size(), 0, 2);
+    test_slicing(s);
+    stride_span<const int> cs = s;
+//    test_slicing(cs);
 }
