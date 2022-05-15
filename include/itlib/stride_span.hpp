@@ -109,7 +109,7 @@ public:
     stride_span(const stride_span&) noexcept = default;
     stride_span& operator=(const stride_span&) noexcept = default;
 
-    template <typename U, typename = std::enable_if<std::is_same<typename std::remove_cv<T>::type, U>::value, int>::type>
+    template <typename U, typename = typename std::enable_if<std::is_same<typename std::remove_cv<T>::type, U>::value, int>::type>
     stride_span(const stride_span<U>& other)
         : m_begin(other.data()), m_stride(other.stride()), m_num_elements(other.size())
     {}

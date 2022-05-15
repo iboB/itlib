@@ -212,5 +212,5 @@ TEST_CASE("[span] slicing")
     auto s = make_stride_span_from_array(ivec.data(), ivec.size(), 0, 2);
     test_slicing(s);
     stride_span<const int> cs = s;
-//    test_slicing(cs);
+    test_slicing(cs);
 }
