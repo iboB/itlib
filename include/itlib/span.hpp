@@ -28,7 +28,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.00 (2022-05-14) Initial release
+//  1.00 (2022-05-16) Initial release
 //
 //
 //                  DOCUMENTATION
@@ -39,7 +39,13 @@
 // witha a dynamic extent. For a reference of std::span see here:
 // https://en.cppreference.com/w/cpp/container/span
 //
-// itlib does not (yet) provide a static-extent span
+//              Differences from std::span
+//
+// * itlib does not (yet) provide a static-extent span
+// * no Iter-Iter range construction (no good way to safely implement without
+//   C++20)
+// * additional methods remove_prefix/suffix like in std::string_view
+// * additional method byte_size
 //
 //                  Configuration
 //
@@ -99,20 +105,30 @@ public:
 
     span() noexcept = default;
 
-    template <typename InputIterator, typename = decltype(*std::declval<InputIterator>())>
-    span(InputIterator begin, InputIterator end)
-        : m_begin(&(*begin))
-        , m_end(m_begin + (end - begin))
+    // from range
+    template <typename U, typename = typename std::enable_if<
+        std::is_same<T, U>::value ||
+        std::is_same<T, const U>::value, int>::type>
+    span(U* begin, U* end)
+        : m_begin(begin)
+        , m_end(end)
     {}
 
-    template <typename InputIterator, typename = decltype(*std::declval<InputIterator>())>
-    span(InputIterator begin, size_t size)
+    template <typename U, typename = typename std::enable_if<
+        std::is_same<T, U>::value ||
+        std::is_same<T, const U>::value, int>::type>
+    span(U* begin, size_t size)
         : span(begin, begin + size)
     {}
 
-    template <typename Container, typename = decltype(std::declval<Container>().data())>
+    // there is no good way to implement Iter-Iter ranges without C++20
+
+    // span from container (incl const span from non-const span)
+    template <typename Container, typename = typename std::enable_if<
+        std::is_same<T*, decltype(std::declval<Container>().data())>::value ||
+        std::is_same<T*, decltype(std::declval<const Container>().data())>::value, int>::type>
     span(Container& c)
-        : span(c.begin(), c.end())
+        : span(c.data(), c.size())
     {}
 
     template <size_t N>
@@ -123,6 +139,7 @@ public:
     span(const span&) noexcept = default;
     span& operator=(const span&) noexcept = default;
 
+    // assign non-const span to const
     template <typename U>
     typename std::enable_if<std::is_same<typename std::remove_cv<T>::type, U>::value,
         span&>::type operator=(const span<U>& other) noexcept

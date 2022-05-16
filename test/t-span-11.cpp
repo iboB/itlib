@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <cstring>
+#include <string>
 
 TEST_CASE("[span] construction")
 {
@@ -242,3 +243,18 @@ TEST_CASE("[span] bytes")
     }
 }
 
+class sview
+{
+public:
+    sview() = default;
+    sview(const std::string&) {}
+};
+
+int disambiguate_test(sview) { return 0; }
+int disambiguate_test(itlib::span<const int>) { return 1; }
+
+TEST_CASE("[span] disambiguate")
+{
+    std::string str;
+    CHECK(0 == disambiguate_test(str));
+}
