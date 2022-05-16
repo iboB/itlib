@@ -345,4 +345,10 @@ span<T> make_span(T(&ar)[N])
     return span<T>(ar);
 }
 
+#if __cplusplus >= 201700
+// provide constructor deduction
+template <typename T> span(T*, T*) -> span<T>;
+template <typename T> span(T*, size_t) -> span<T>;
+#endif
+
 }
