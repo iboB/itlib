@@ -1,5 +1,9 @@
 // itlib-memory-view v1.02
 //
+// DEPRECATED!
+// Use itlib::span instead:
+// https://github.com/iboB/itlib/blob/master/include/itlib/span.hpp
+//
 // A view of a chunk of memory which makes it look as a std::vector sans
 // the size modifying functions
 //
@@ -30,6 +34,7 @@
 //
 //                  VERSION HISTORY
 //
+//  xxxx (2022-05-14) Deprecated in favor of span
 //  1.02 (2022-04-14) Noxcept move construct and assign
 //  1.01 (2021-10-07) Added slicing functionalities
 //  1.00 (2020-10-14) Rebranded release from chobo-memory-view
