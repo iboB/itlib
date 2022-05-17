@@ -99,6 +99,13 @@ TEST_CASE("[span] make_span")
         static_assert(std::is_same<span<int>, decltype(s)>::value, "make_span(int*, int*)");
     }
 
+    {
+        // test that span of const can be safely constructed from temporary span of non-const
+        itlib::span<const int> s = make_span(vec);
+        CHECK(s.size() == 3);
+        CHECK(s.data() == vec.data());
+    }
+
     const std::vector<int> cvec = {5, 6, 7, 8};
 
     {

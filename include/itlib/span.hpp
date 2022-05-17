@@ -123,12 +123,21 @@ public:
 
     // there is no good way to implement Iter-Iter ranges without C++20
 
-    // span from container (incl const span from non-const span)
+    // span from container
+    // note the non-const container pointer. this is to avoid a dangling span from a temporary
     template <typename Container, typename = typename std::enable_if<
         std::is_same<T*, decltype(std::declval<Container>().data())>::value ||
         std::is_same<T*, decltype(std::declval<const Container>().data())>::value, int>::type>
     span(Container& c)
         : span(c.data(), c.size())
+    {}
+
+    // construct from non-const span
+    template <typename U, typename = typename std::enable_if<
+        std::is_same<T, U>::value ||
+        std::is_same<T, const U>::value, int>::type>
+    span(const span<U>& s)
+        : span(s.data(), s.size())
     {}
 
     template <size_t N>
