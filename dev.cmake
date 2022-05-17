@@ -7,7 +7,7 @@ option(ITLIB_CLANG_TIDY "itlib: use clang tidy" OFF)
 
 set(ITLIB_SAN_FLAGS "")
 if(MSVC)
-    set(ITLIB_WARNING_FLAGS "-D_CRT_SECURE_NO_WARNINGS /wd4251 /wd4275 /Zc:__cplusplus /w34100")
+    set(ITLIB_WARNING_FLAGS "-D_CRT_SECURE_NO_WARNINGS /wd4251 /wd4275 /Zc:__cplusplus /w34100 /permissive-")
 else()
     set(ITLIB_WARNING_FLAGS "-Wall -Wextra -Wno-type-limits")
     if(ITLIB_CLANG_TIDY)
