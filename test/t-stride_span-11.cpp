@@ -205,7 +205,7 @@ void test_slicing(const SS& span)
     }
 }
 
-TEST_CASE("[span] slicing")
+TEST_CASE("[stride_span] slicing")
 {
     using namespace itlib;
     std::vector<int> ivec = {6, 0, 7, 0, 8, 0, 9, 0, 10};
@@ -213,4 +213,59 @@ TEST_CASE("[span] slicing")
     test_slicing(s);
     stride_span<const int> cs = s;
     test_slicing(cs);
+}
+
+
+struct shape
+{
+    int form;
+    shape(int s) : form(s) {}
+    virtual ~shape() = default;
+    virtual int area() const = 0;
+};
+
+struct drawable
+{
+    int visage;
+    drawable(int d) : visage(d) {}
+    virtual ~drawable() = default;
+    virtual int draw() const = 0;
+};
+
+struct sprite : drawable, shape
+{
+    int sdata;
+    sprite(int d, int s, int m) : drawable(d), shape(s), sdata(m) {}
+    int area() const override { return sdata + form; }
+    int draw() const override { return sdata + visage; }
+};
+
+TEST_CASE("[stride_span] base view")
+{
+    using namespace itlib;
+    std::vector<sprite> sprites = {
+        {100, 10, 1},
+        {200, 20, 2},
+        {300, 30, 3},
+    };
+
+    auto ds = make_stride_span_base_view<drawable>(sprites.data(), sprites.size());
+    int visage_sum = 0, draw_sum = 0;
+    for (auto& d : ds)
+    {
+        visage_sum += d.visage;
+        draw_sum += d.draw();
+    }
+    CHECK(visage_sum == 600);
+    CHECK(draw_sum == 606);
+
+    auto ss = make_stride_span_base_view<const shape>(sprites.data(), sprites.size());
+    int form_sum = 0, area_sum = 0;
+    for (auto& s : ss)
+    {
+        form_sum += s.form;
+        area_sum += s.area();
+    }
+    CHECK(form_sum == 60);
+    CHECK(area_sum == 66);
 }

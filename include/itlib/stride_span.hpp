@@ -366,4 +366,12 @@ stride_span<const Field> make_stride_span_member_view(const Struct* ar, size_t a
     return make_stride_span_from_buf(begin, sizeof(Struct), ar_length);
 }
 
+template <typename Base, typename Derived>
+stride_span<Base> make_stride_span_base_view(Derived* ar, size_t ar_length)
+{
+    static_assert(std::is_base_of<Base, Derived>::value, "Argument is not derived from base");
+    Base* begin = ar;
+    return make_stride_span_from_buf(begin, sizeof(Derived), ar_length);
+}
+
 }
