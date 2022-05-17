@@ -132,7 +132,7 @@ public:
         : span(c.data(), c.size())
     {}
 
-    // construct from non-const span
+    // span of const from span of non-const
     template <typename U, typename = typename std::enable_if<
         std::is_same<T, U>::value ||
         std::is_same<T, const U>::value, int>::type>

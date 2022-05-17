@@ -101,7 +101,7 @@ TEST_CASE("[span] make_span")
 
     {
         // test that span of const can be safely constructed from temporary span of non-const
-        itlib::span<const int> s = make_span(vec);
+        span<const int> s = make_span(vec);
         CHECK(s.size() == 3);
         CHECK(s.data() == vec.data());
     }
