@@ -87,13 +87,14 @@ public:
     poly_span(poly_span&&) noexcept = default;
     poly_span& operator=(poly_span&&) noexcept = default;
 
-    template <typename U>
-    poly_span(U* begin, size_t num, RT(*func)(U&))
+    template <typename U, typename F,
+        typename = typename std::enable_if<std::is_convertible<F, RT(*)(U&)>::value, int>::type>
+    poly_span(U* begin, size_t num, F func)
         : poly_span(
             const_cast<byte_t*>(reinterpret_cast<const byte_t*>(begin)),
             sizeof(U),
             num,
-            reinterpret_cast<poly_func_t>(func))
+            reinterpret_cast<poly_func_t>((RT(*)(U&))func))
     {}
 
     explicit operator bool() const

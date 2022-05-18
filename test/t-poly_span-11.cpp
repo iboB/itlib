@@ -51,10 +51,33 @@ TEST_CASE("[poly_span] hierarchy")
 {
     using namespace itlib;
 
-    std::vector<std::unique_ptr<sprite>> m_sprites;
-    m_sprites.push_back(itlib::make_unique(sprite(100, 10, 1)));
-    m_sprites.push_back(itlib::make_unique(sprite(200, 20, 2)));
-    m_sprites.push_back(itlib::make_unique(sprite(300, 30, 3)));
+    std::vector<std::unique_ptr<sprite>> sprites;
+    sprites.push_back(itlib::make_unique(sprite(100, 10, 1)));
+    sprites.push_back(itlib::make_unique(sprite(200, 20, 2)));
+    sprites.push_back(itlib::make_unique(sprite(300, 30, 3)));
 
-    // poly_span<shape*>
+    poly_span<drawable*> ds(sprites.data(), sprites.size(), [](std::unique_ptr<sprite>& ptr) -> drawable* {
+        return ptr.get();
+    });
+    int visage_sum = 0, draw_sum = 0;
+    for (auto d : ds)
+    {
+        visage_sum += d->visage;
+        draw_sum += d->draw();
+    }
+    CHECK(visage_sum == 600);
+    CHECK(draw_sum == 606);
+
+    poly_span<shape*> ss(sprites.data(), sprites.size(), [](std::unique_ptr<sprite>& ptr) -> shape* {
+        return ptr.get();
+    });
+
+    int form_sum = 0, area_sum = 0;
+    for (auto s : ss)
+    {
+        form_sum += s->form;
+        area_sum += s->area();
+    }
+    CHECK(form_sum == 60);
+    CHECK(area_sum == 66);
 }
