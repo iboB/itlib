@@ -1,6 +1,7 @@
 #include "doctest.hpp"
 
 #include <itlib/poly_span.hpp>
+#include <itlib/make_ptr.hpp>
 
 #include <memory>
 #include <vector>
@@ -51,9 +52,9 @@ TEST_CASE("[poly_span] hierarchy")
     using namespace itlib;
 
     std::vector<std::unique_ptr<sprite>> m_sprites;
-    m_sprites.push_back(std::make_unique<sprite>(100, 10, 1));
-    m_sprites.push_back(std::make_unique<sprite>(200, 20, 2));
-    m_sprites.push_back(std::make_unique<sprite>(300, 30, 3));
+    m_sprites.push_back(itlib::make_unique(sprite(100, 10, 1)));
+    m_sprites.push_back(itlib::make_unique(sprite(200, 20, 2)));
+    m_sprites.push_back(itlib::make_unique(sprite(300, 30, 3)));
 
     // poly_span<shape*>
 }

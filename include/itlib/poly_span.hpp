@@ -158,8 +158,8 @@ public:
     class t_iterator
     {
         byte_t* p = 0;
-        size_t stride = sizeof(T);
-        poly_func_t poly_func;
+        size_t stride = 1;
+        poly_func_t poly_func = nullptr;
 
         friend class poly_span;
         t_iterator(byte_t* p, size_t stride, poly_func_t poly_func) noexcept : p(p), stride(stride), poly_func(poly_func) {}
