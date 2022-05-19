@@ -29,12 +29,39 @@
 //
 //                  VERSION HISTORY
 //
-//  1.00 (2022-xx-xx) Initial release
+//  1.00 (2022-05-19) Initial release
 //
 //
 //                  DOCUMENTATION
 //
 // Simply include this file wherever you need.
+//
+// poly_span is similar to C++20's std::span, as it can be constructed from a
+// contiguous block of data, but whereas std::span offers an identity view of
+// the block, poly_span offers a polymorphic one. By providing an access
+// function which is called upon dereferencing elements, one can access
+// different aspects of the elements of the original array.
+//
+// As opposed to std::span, itlib::span and itlib::stride_span, poly_span's
+// template argument is not a "value_type". It is instead what is returned
+// by dereferencing elements.
+//
+//                  Example
+//
+//  struct person { std::string& first_name, std::string& last_name, int age };
+//  std::vector<person> ps;
+//  ...
+//  poly_span<string&> names(ps.data(), ps.size(), [](person& p) -> std::string& {
+//      if (p.age < 18) return p.first_name;
+//      return p.last_name;
+//  });
+//
+//  for (auto& name : names) cout << "Hello, " << name << ".\n";
+//
+// Thus we greet young people by first name, and the rest by last name.
+// Note the template argument of poly_span there. It's string&. This allows us
+// to change the names from the point of view of the span. You can use
+// `const string&` if you want to disable that.
 //
 //
 //                  Configuration
