@@ -169,8 +169,8 @@ public:
         CRT operator*() const noexcept { return poly_func(p); }
         t_iterator& operator++() noexcept { p += stride; return *this; }
         t_iterator& operator--() noexcept { p -= stride; return *this; }
-        t_iterator operator+(const ptrdiff_t diff) const noexcept { return t_iterator(p + stride * diff, stride); }
-        t_iterator operator-(const ptrdiff_t diff) const noexcept { return t_iterator(p - stride * diff, stride); }
+        t_iterator operator+(const ptrdiff_t diff) const noexcept { return t_iterator(p + stride * diff, stride, poly_func); }
+        t_iterator operator-(const ptrdiff_t diff) const noexcept { return t_iterator(p - stride * diff, stride, poly_func); }
         bool operator==(const t_iterator& other) const noexcept { return p == other.p; }
         bool operator!=(const t_iterator& other) const noexcept { return p != other.p; }
         bool operator<(const t_iterator& other) const noexcept { return p < other.p; }

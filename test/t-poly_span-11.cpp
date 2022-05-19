@@ -23,6 +23,48 @@ TEST_CASE("[poly_span] empty")
     }
 }
 
+struct selectable
+{
+    int a;
+    int b;
+    bool use_a;
+};
+
+TEST_CASE("[poly_span] field")
+{
+    using namespace itlib;
+
+    std::vector<selectable> v = {{1, 2, true}, {3, 4, false}, {5, 6, false}, {7, 8, true}};
+
+    poly_span<int&> ss(v.data(), v.size(), [](selectable& s) -> int& {
+        if (s.use_a) return s.a;
+        return s.b;
+    });
+    REQUIRE(ss.size() == 4);
+
+    CHECK(ss);
+    CHECK(!ss.empty());
+    CHECK(ss.size() == 4);
+    CHECK(ss.begin() + 4 == ss.end());
+
+    CHECK(*ss.rbegin() == 7);
+
+    CHECK(ss.front() == 1);
+    CHECK(ss.back() == 7);
+
+    CHECK(ss[0] == 1);
+    CHECK(ss[1] == 4);
+    CHECK(ss[2] == 6);
+    CHECK(ss[3] == 7);
+
+    for (auto& i : ss) i = 8;
+
+    CHECK(v[0].a == 8);
+    CHECK(v[1].b == 8);
+    CHECK(v[2].b == 8);
+    CHECK(v[3].a == 8);
+}
+
 struct shape
 {
     int form;
@@ -80,4 +122,52 @@ TEST_CASE("[poly_span] hierarchy")
     }
     CHECK(form_sum == 60);
     CHECK(area_sum == 66);
+}
+
+TEST_CASE("[poly_span] slicing")
+{
+    using namespace itlib;
+
+    std::vector<selectable> v = {{6, 1, true}, {1, 7, false}, {1, 8, false}, {9, 1, true}, {10, 1, true}};
+
+    poly_span<int&> span(v.data(), v.size(), [](selectable& s) -> int& {
+        if (s.use_a) return s.a;
+        return s.b;
+    });
+
+    {
+        auto s = span.subspan(10);
+        CHECK(!!s);
+        CHECK(s.empty());
+        s.cbegin() == span.end();
+    }
+    {
+        auto s = span.subspan(1);
+        CHECK(s.size() == 4);
+        CHECK(s.cbegin() == span.begin() + 1);
+    }
+    {
+        auto s = span.subspan(3, 1);
+        CHECK(s.size() == 1);
+        CHECK(s.cbegin() == span.begin() + 3);
+    }
+    {
+        auto s = span.first(3);
+        CHECK(s.size() == 3);
+        CHECK(s.cbegin() == span.begin());
+    }
+    {
+        auto s = span.last(2);
+        CHECK(s.size() == 2);
+        CHECK(s.cbegin() == span.begin() + 3);
+    }
+    {
+        auto cp = span;
+        cp.remove_prefix(2);
+        CHECK(cp.size() == 3);
+        CHECK(cp.cbegin() == span.begin() + 2);
+        cp.remove_suffix(2);
+        CHECK(cp.size() == 1);
+        CHECK(cp.cend() == span.begin() + 3);
+    }
 }
