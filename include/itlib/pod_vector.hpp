@@ -1,11 +1,11 @@
-// itlib-pod-vector v1.04
+// itlib-pod-vector v1.05
 //
 // A vector of PODs. Similar to std::vector, but doesn't call constructors or
 // destructors and instead uses memcpy and memmove to manage the data
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2020-2021 Borislav Stanimirov
+// Copyright(c) 2020-2022 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -29,6 +29,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.05 (2022-08-05) Support for alignment of T.
+//                    Requires aloc_align from allocator implementations!
 //  1.04 (2021-08-05) Bugfix! Fixed return value of erase
 //  1.03 (2021-06-08) Prevent memcmp calls with nullptr
 //  1.02 (2021-06-08) Noexcept move ctor and move assignment operator
@@ -74,6 +76,7 @@
 // * size_type max_size(); - max available memory
 // * bool zero_fill_new(); - whether pod_vector should to zerofill new elements
 // * size_type realloc_wasteful_copy_size() - when to use reallocate on grows
+// * size_type alloc_align() - guaranteed min alignment of malloc and realloc
 //
 //                  TESTS
 //
@@ -87,6 +90,7 @@
 #include <cstdlib>
 #include <iterator>
 #include <cstring>
+#include <cstdint>
 
 namespace itlib
 {
@@ -103,6 +107,7 @@ public:
     static constexpr size_type max_size() { return ~size_type(0); }
     static constexpr bool zero_fill_new() { return true; }
     static constexpr size_type realloc_wasteful_copy_size() { return 4096; }
+    static constexpr size_type alloc_align() { return alignof(max_align_t); }
 };
 }
 
@@ -110,6 +115,7 @@ template<typename T, class Alloc = impl::pod_allocator>
 class pod_vector
 {
     static_assert(std::is_trivial<T>::value, "itlib::pod_vector with non-trivial type");
+    static_assert(alignof(T) <= 128, "alignment of T is too big"); // max supported alignment
 
     template<typename U, typename A>
     friend class pod_vector; // so we can move between types
@@ -185,7 +191,7 @@ public:
 
     ~pod_vector()
     {
-        m_alloc.free(m_begin);
+        afree(m_begin);
     }
 
     pod_vector& operator=(const pod_vector& other)
@@ -200,7 +206,7 @@ public:
     {
         if (this == &other) return *this; // prevent self usurp
 
-        m_alloc.free(m_begin);
+        afree(m_begin);
 
         m_alloc = std::move(other.m_alloc);
         m_capacity = other.m_capacity;
@@ -225,7 +231,7 @@ public:
     template <typename U, typename UAlloc>
     void recast_take_from(pod_vector<U, UAlloc>&& other)
     {
-        m_alloc.free(m_begin);
+        afree(m_begin);
 
         auto new_size = other.byte_size() / sizeof(T);
         auto cast = reinterpret_cast<T*>(other.data());
@@ -405,13 +411,13 @@ public:
         {
             // we decided that it would be more wasteful to use realloc and
             // copy more than needed than it would be to malloc and manually copy
-            new_buf = pointer(m_alloc.malloc(new_cap * sizeof(T)));
+            new_buf = pointer(amalloc(new_cap));
             if (s) memcpy(new_buf, m_begin, byte_size());
-            m_alloc.free(m_begin);
+            afree(m_begin);
         }
         else
         {
-            new_buf = pointer(m_alloc.realloc(m_begin, sizeof(value_type) * new_cap));
+            new_buf = pointer(arealloc(m_begin, new_cap));
         }
 
         m_begin = new_buf;
@@ -432,13 +438,13 @@ public:
 
         if (s == 0)
         {
-            m_alloc.free(m_begin);
+            afree(m_begin);
             m_capacity = 0;
             m_begin = m_end = nullptr;
             return;
         }
 
-        auto new_buf = pointer(m_alloc.realloc(m_begin, sizeof(value_type) * s));
+        auto new_buf = pointer(arealloc(m_begin, s));
 
         m_begin = new_buf;
         m_end = new_buf + s;
@@ -555,7 +561,7 @@ private:
         // however all observed compilers ended up recognizing this
         // and using memset with optimizations in such a case
         // that's enough for us
-        for (size_type i=0; i<count; ++i)
+        for (size_type i = 0; i < count; ++i)
         {
             *p++ = value;
         }
@@ -567,7 +573,7 @@ private:
         // much like above when InputIterator is const T* or bitwise equivalent to T*
         // (say int/unsinged)
         // compilers with optimizations end up recognizing the case and using memcpy
-        for (auto i = begin; i!=end; ++i)
+        for (auto i = begin; i != end; ++i)
         {
             *p++ = *i;
         }
@@ -626,15 +632,15 @@ private:
                 {
                     // we decided that it would be more wasteful to use realloc and
                     // copy more than needed than it would be to malloc and manually copy
-                    new_buf = pointer(m_alloc.malloc(new_cap * sizeof(T)));
+                    new_buf = pointer(amalloc(new_cap));
                     if (offset) memcpy(new_buf, m_begin, offset * sizeof(T));
                     if (m_alloc.zero_fill_new()) zero_fill(new_buf + offset, num);
                     memcpy(new_buf + offset + num, m_begin + offset, (s - offset) * sizeof(T));
-                    m_alloc.free(m_begin);
+                    afree(m_begin);
                 }
                 else
                 {
-                    new_buf = pointer(m_alloc.realloc(m_begin, sizeof(value_type) * new_cap));
+                    new_buf = pointer(arealloc(m_begin, new_cap));
                     std::memmove(new_buf + offset + num, new_buf + offset, (s - offset) * sizeof(T));
                     if (m_alloc.zero_fill_new()) zero_fill(new_buf + offset, num);
                 }
@@ -677,10 +683,10 @@ private:
     {
         if (capacity <= m_capacity) return;
 
-        m_alloc.free(m_begin);
+        afree(m_begin);
 
         m_capacity = get_new_capacity(capacity);
-        m_begin = m_end = pointer(m_alloc.malloc(sizeof(value_type) * m_capacity));
+        m_begin = m_end = pointer(amalloc(m_capacity));
     }
 
     // fill empty vector with given value
@@ -699,6 +705,76 @@ private:
         safe_grow(count);
         copy_not_aliased(m_begin, first, last);
         m_end = m_begin + count;
+    }
+
+    // allocator wrappers for aligned allocations
+    constexpr bool allocator_aligned() const
+    {
+        return m_alloc.alloc_align() >= alignof(value_type);
+    }
+
+    void* real_addr(void* ptr) const
+    {
+        if (allocator_aligned()) return ptr; // pointer was not changed
+
+        if (!ptr) return nullptr;
+
+        // byte before ptr is offset
+        // (we should use byte here, but we don't have c++17 guaranteed)
+        uint8_t* byte_buf = reinterpret_cast<uint8_t*>(ptr);
+        auto offset = *(byte_buf - 1);
+        return byte_buf - offset;
+    }
+
+    void* align_ptr(void* ptr) const
+    {
+        if (!ptr) return nullptr;
+
+        uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
+        auto offset = alignof(T) - addr % alignof(T);
+
+        uint8_t* fix = reinterpret_cast<uint8_t*>(ptr);
+        fix += offset;
+        *(fix - 1) = uint8_t(offset);
+        return fix;
+    }
+
+    void* amalloc(size_type num_elements)
+    {
+        if (allocator_aligned())
+        {
+            return m_alloc.malloc(sizeof(value_type) * num_elements);
+        }
+
+        // allocate 1 alignment more than needed,
+        // thus we can shift by at least one byte to get the appropriate one
+        // and have 1 byte before the pointer to show us how much we shifted
+        auto buf = m_alloc.malloc(sizeof(value_type) * num_elements + alignof(value_type));
+        return align_ptr(buf);
+    }
+
+    void* arealloc(void* old, size_type num_elements)
+    {
+        if (allocator_aligned())
+        {
+            return m_alloc.realloc(old, sizeof(value_type) * num_elements);
+        }
+
+        auto real_old = real_addr(old);
+        auto buf = m_alloc.realloc(real_old, sizeof(value_type) * num_elements + alignof(value_type));
+        return align_ptr(buf);
+    }
+
+    void afree(void* ptr)
+    {
+        if (allocator_aligned())
+        {
+            m_alloc.free(ptr);
+        }
+        else
+        {
+            m_alloc.free(real_addr(ptr));
+        }
     }
 
     pointer m_begin;

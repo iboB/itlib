@@ -42,6 +42,11 @@ struct counting_allocator
     {
         return wasteful_copy_size;
     }
+
+    constexpr size_type alloc_align() const
+    {
+        return alignof(max_align_t);
+    }
 };
 
 template <typename T>
@@ -477,3 +482,12 @@ TEST_CASE("recast")
 
     mallocs = frees = reallocs = 0;
 }
+
+struct alignas(64) avx_512 { double d[8]; };
+
+TEST_CASE("align")
+{
+    cpodvec<avx_512> vec;
+    vec.resize(2);
+}
+
