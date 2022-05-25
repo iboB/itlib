@@ -240,6 +240,8 @@ public:
 
         m_capacity = (sizeof(U) * other.capacity()) / sizeof(T);
 
+        // This needs to be a valid op for recasts to work
+        // it this line does not compile, you need to ensure allocator compatibility for it
         m_alloc = std::move(other.m_alloc);
 
         other.m_begin = other.m_end = nullptr;
