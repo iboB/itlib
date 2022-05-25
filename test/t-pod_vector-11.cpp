@@ -172,10 +172,10 @@ TEST_CASE("basic")
         CHECK(ivec.size() == 5);
         CHECK(eret == ivec.begin() + 1);
 
-        cpodvec<char> svec;
-        svec.assign({ 's', 'f' });
+        cpodvec<wchar_t> svec;
+        svec.assign({ L's', L'f' });
         CHECK(svec.size() == 2);
-        std::string s1 = "the quick brown fox jumped over the lazy dog 1234567890";
+        std::wstring s1 = L"the quick brown fox jumped over the lazy dog 1234567890";
         auto& esret = svec.emplace_back(s1[5]);
         CHECK(svec.back() == s1[5]);
         CHECK((&esret == &svec.back()));
@@ -225,26 +225,26 @@ TEST_CASE("basic")
             CHECK(s == 0);
         }
 
-        s1 = "asdf";
-        cpodvec<char> cvec(s1.begin(), s1.end());
+        s1 = L"asdf";
+        cpodvec<wchar_t> cvec(s1.begin(), s1.end());
         CHECK(cvec.size() == 4);
-        CHECK(cvec.front() == 'a');
-        CHECK(cvec.back() == 'f');
+        CHECK(cvec.front() == L'a');
+        CHECK(cvec.back() == L'f');
 
         cvec.clear();
         CHECK(cvec.size() == 0);
         CHECK(cvec.empty());
 
-        s1 = "baz";
+        s1 = L"baz";
         cvec.assign(s1.begin(), s1.end());
         CHECK(cvec.size() == 3);
-        CHECK(cvec.front() == 'b');
-        CHECK(cvec.back() == 'z');
+        CHECK(cvec.front() == L'b');
+        CHECK(cvec.back() == L'z');
 
         cvec.resize(1);
         CHECK(cvec.size() == 1);
-        CHECK(cvec.front() == 'b');
-        CHECK(cvec.back() == 'b');
+        CHECK(cvec.front() == L'b');
+        CHECK(cvec.back() == L'b');
 
         // 0 is implicitly castable to nullptr_t which can be an iterator in our case
         cpodvec<int32_t> nullptr_test(2, 0);
@@ -409,7 +409,7 @@ TEST_CASE("recast")
         CHECK(ivec.size() == 8);
         CHECK(ivec.size() == ivec.capacity());
 
-        cpodvec<char> itocvec;
+        cpodvec<uint8_t> itocvec;
         itocvec.recast_copy_from(ivec);
         CHECK(itocvec.size() == ivec.byte_size());
         for (auto i = 0u; i < ivec.size(); ++i) {
@@ -422,7 +422,7 @@ TEST_CASE("recast")
         ctoivec.recast_copy_from(itocvec);
         CHECK(ctoivec == ivec);
 
-        cpodvec<char> itocvec2;
+        cpodvec<uint8_t> itocvec2;
         itocvec2.recast_take_from(std::move(ctoivec));
         CHECK(itocvec2 == itocvec);
         CHECK(itocvec2.capacity() >= sizeof(ivec[0]) * ivec.size());
