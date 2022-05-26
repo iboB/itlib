@@ -104,7 +104,7 @@ public:
     static void* malloc(size_type size) { return std::malloc(size); }
     static void* realloc(void* old, size_type new_size) { return std::realloc(old, new_size); }
     static void free(void* mem) { std::free(mem); }
-    static constexpr size_type max_size() { return ~size_type(0); }
+    static size_type max_size() { return ~size_type(0); }
     static constexpr bool zero_fill_new() { return true; }
     static constexpr size_type realloc_wasteful_copy_size() { return 4096; }
     static constexpr size_type alloc_align() { return alignof(max_align_t); }

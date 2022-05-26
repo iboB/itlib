@@ -30,22 +30,21 @@ struct counting_allocator
         if (mem) ++frees;
         a.free(mem);
     }
-    constexpr size_type max_size() const
+    size_type max_size() const
     {
-        return ~size_type(0);
+        return a.max_size();
     }
     constexpr bool zero_fill_new() const
     {
-        return true;
+        return a.zero_fill_new();
     }
     constexpr size_type realloc_wasteful_copy_size() const
     {
         return wasteful_copy_size;
     }
-
     constexpr size_type alloc_align() const
     {
-        return alignof(max_align_t);
+        return a.alloc_align();
     }
 };
 
