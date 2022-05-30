@@ -4,57 +4,20 @@
 
 int32_t mallocs, frees, reallocs;
 
+void clear_alloc_counters()
+{
+    mallocs = frees = reallocs = 0;
+}
+
 constexpr size_t wasteful_copy_size = 32;
 
-struct counting_allocator
+template <typename Alloc>
+void basic_test()
 {
-    itlib::impl::pod_allocator a;
+    using namespace itlib;
 
-    using size_type = size_t;
-    void* malloc(size_type size)
     {
-        ++mallocs;
-        return a.malloc(size);
-    }
-
-    void* realloc(void* old, size_type new_size)
-    {
-        ++mallocs;
-        if (old) ++frees;
-        ++reallocs;
-        return a.realloc(old, new_size);
-    }
-
-    void free(void* mem)
-    {
-        if (mem) ++frees;
-        a.free(mem);
-    }
-    size_type max_size() const
-    {
-        return a.max_size();
-    }
-    constexpr bool zero_fill_new() const
-    {
-        return a.zero_fill_new();
-    }
-    constexpr size_type realloc_wasteful_copy_size() const
-    {
-        return wasteful_copy_size;
-    }
-    constexpr size_type alloc_align() const
-    {
-        return a.alloc_align();
-    }
-};
-
-template <typename T>
-using cpodvec = itlib::pod_vector<T, counting_allocator>;
-
-TEST_CASE("basic")
-{
-    {
-        cpodvec<int32_t> ivec;
+        pod_vector<int32_t, Alloc> ivec;
         CHECK(ivec.size() == 0);
         CHECK(ivec.capacity() == 0);
         CHECK(!ivec.begin());
@@ -148,7 +111,7 @@ TEST_CASE("basic")
         ints[7] = 0;
         CHECK(memcmp(ivec.data(), ints, sizeof(ints)) == 0);
 
-        const cpodvec<int32_t> ivec2 = { 1, 2, 3, 4 };
+        const pod_vector<int32_t, Alloc> ivec2 = { 1, 2, 3, 4 };
         CHECK(ivec2.size() == 4);
         CHECK(*ivec2.begin() == 1);
         CHECK(ivec2[1] == 2);
@@ -171,7 +134,7 @@ TEST_CASE("basic")
         CHECK(ivec.size() == 5);
         CHECK(eret == ivec.begin() + 1);
 
-        cpodvec<wchar_t> svec;
+        pod_vector<wchar_t, Alloc> svec;
         svec.assign({ L's', L'f' });
         CHECK(svec.size() == 2);
         std::wstring s1 = L"the quick brown fox jumped over the lazy dog 1234567890";
@@ -225,7 +188,7 @@ TEST_CASE("basic")
         }
 
         s1 = L"asdf";
-        cpodvec<wchar_t> cvec(s1.begin(), s1.end());
+        pod_vector<wchar_t, Alloc> cvec(s1.begin(), s1.end());
         CHECK(cvec.size() == 4);
         CHECK(cvec.front() == L'a');
         CHECK(cvec.back() == L'f');
@@ -246,7 +209,7 @@ TEST_CASE("basic")
         CHECK(cvec.back() == L'b');
 
         // 0 is implicitly castable to nullptr_t which can be an iterator in our case
-        cpodvec<int32_t> nullptr_test(2, 0);
+        pod_vector<int32_t, Alloc> nullptr_test(2, 0);
         CHECK(nullptr_test.size() == 2);
         CHECK(nullptr_test.front() == 0);
         CHECK(nullptr_test.back() == 0);
@@ -262,8 +225,205 @@ TEST_CASE("basic")
     }
 
     CHECK(mallocs == frees);
-    mallocs = frees = reallocs = 0;
+    clear_alloc_counters();
 }
+
+template <typename Alloc>
+void swap_test()
+{
+    using namespace itlib;
+    {
+        pod_vector<int32_t, Alloc>
+            a = { 1, 2, 3 },
+            b = { 5, 6 };
+        CHECK(a.size() == 3);
+        CHECK(b.size() == 2);
+
+        CHECK(mallocs == 2);
+        a.swap(b);
+        CHECK(mallocs == 2);
+
+        CHECK(a.size() == 2);
+        CHECK(a.front() == 5);
+        CHECK(b.size() == 3);
+        CHECK(b.front() == 1);
+
+        std::swap(a, b);
+
+        CHECK(mallocs == 2);
+        CHECK(b.size() == 2);
+        CHECK(b.front() == 5);
+        CHECK(a.size() == 3);
+        CHECK(a.front() == 1);
+    }
+
+    CHECK(mallocs == frees);
+    clear_alloc_counters();
+}
+
+template <typename Alloc>
+void empty_test()
+{
+    using namespace itlib;
+
+    {
+        pod_vector<int32_t, Alloc> foo = { 1, 2, 3, 4 };
+        foo = pod_vector<int32_t, Alloc>();
+        CHECK(foo.empty());
+        CHECK(foo.capacity() == 0);
+        CHECK(foo.data() == nullptr);
+
+        foo = { 1, 2, 3, 4 };
+        pod_vector<int32_t, Alloc> empty;
+
+        foo = empty;
+        CHECK(foo.empty());
+        CHECK(foo.capacity() == 4);
+        CHECK(foo.data() != nullptr);
+
+        foo.shrink_to_fit();
+        CHECK(foo.capacity() == 0);
+        CHECK(foo.data() == nullptr);
+    }
+
+    CHECK(mallocs == frees);
+    clear_alloc_counters();
+}
+
+template <typename Alloc>
+void realloc_test()
+{
+    using namespace itlib;
+
+    using ii_t = uint16_t;
+    constexpr size_t wcs = wasteful_copy_size / sizeof(ii_t);
+
+    // reserve
+    {
+        pod_vector<ii_t, Alloc> bv(wcs - 5);
+        CHECK(bv.capacity() == wcs - 5);
+        bv.clear();
+        CHECK(bv.capacity() == wcs - 5);
+
+        reallocs = 0;
+
+        bv.reserve(wcs);
+
+        CHECK(reallocs == 1);
+
+        bv.reserve(bv.capacity() + wcs + 1);
+
+        CHECK(reallocs == 1);
+    }
+
+    clear_alloc_counters();
+
+    // insert
+    {
+        pod_vector<ii_t, Alloc> bv(5);
+        pod_vector<ii_t, Alloc> bv2(wcs, 10);
+
+        reallocs = 0;
+        bv.insert(bv.begin(), bv2.begin(), bv2.end());
+        CHECK(reallocs == 1);
+    }
+
+    {
+        pod_vector<ii_t, Alloc> bv(50);
+        pod_vector<ii_t, Alloc> bv2(wcs + 1, 10);
+
+        reallocs = 0;
+        bv.insert(bv.begin(), bv2.begin(), bv2.end());
+        CHECK(reallocs == 0);
+    }
+
+    CHECK(mallocs == frees);
+    clear_alloc_counters();
+}
+
+struct counting_allocator
+{
+    itlib::impl::pod_allocator a;
+
+    using size_type = size_t;
+    void* malloc(size_type size)
+    {
+        ++mallocs;
+        return a.malloc(size);
+    }
+
+    void* realloc(void* old, size_type new_size)
+    {
+        ++mallocs;
+        if (old) ++frees;
+        ++reallocs;
+        return a.realloc(old, new_size);
+    }
+
+    void free(void* mem)
+    {
+        if (mem) ++frees;
+        a.free(mem);
+    }
+    size_type max_size() const
+    {
+        return a.max_size();
+    }
+    constexpr bool zero_fill_new() const
+    {
+        return a.zero_fill_new();
+    }
+    constexpr size_type realloc_wasteful_copy_size() const
+    {
+        return wasteful_copy_size;
+    }
+    static constexpr size_type alloc_align()
+    {
+        return itlib::impl::pod_allocator::alloc_align();
+    }
+};
+
+TEST_CASE("basic")
+{
+    basic_test<counting_allocator>();
+}
+
+TEST_CASE("swap")
+{
+    swap_test<counting_allocator>();
+}
+
+TEST_CASE("empty")
+{
+    empty_test<counting_allocator>();
+}
+
+TEST_CASE("reallocs reserve")
+{
+    realloc_test<counting_allocator>();
+}
+
+template <typename T, typename Alloc>
+void align_test()
+{
+    using namespace itlib;
+    {
+        pod_vector<T, Alloc> x;
+        x.resize(2);
+    }
+    clear_alloc_counters();
+}
+
+struct alignas(64) avx_512 { double d[8]; };
+
+TEST_CASE("align")
+{
+    align_test<avx_512, counting_allocator>();
+}
+
+template <typename T>
+using cpodvec = itlib::pod_vector<T, counting_allocator>;
+
 
 TEST_CASE("compare")
 {
@@ -291,115 +451,11 @@ TEST_CASE("compare")
         CHECK(a != b);
     }
     CHECK(mallocs == frees);
-    mallocs = frees = reallocs = 0;
-}
-
-TEST_CASE("swap")
-{
-    using namespace itlib;
-    {
-        cpodvec<int32_t>
-            a = { 1, 2, 3 },
-            b = { 5, 6 };
-        CHECK(a.size() == 3);
-        CHECK(b.size() == 2);
-
-        CHECK(mallocs == 2);
-        a.swap(b);
-        CHECK(mallocs == 2);
-
-        CHECK(a.size() == 2);
-        CHECK(a.front() == 5);
-        CHECK(b.size() == 3);
-        CHECK(b.front() == 1);
-
-        std::swap(a, b);
-
-        CHECK(mallocs == 2);
-        CHECK(b.size() == 2);
-        CHECK(b.front() == 5);
-        CHECK(a.size() == 3);
-        CHECK(a.front() == 1);
-    }
-
-    CHECK(mallocs == frees);
-    mallocs = frees = reallocs = 0;
-}
-
-TEST_CASE("empty")
-{
-    {
-        cpodvec<int32_t> foo = {1, 2, 3, 4};
-        foo = cpodvec<int32_t>();
-        CHECK(foo.empty());
-        CHECK(foo.capacity() == 0);
-        CHECK(foo.data() == nullptr);
-
-        foo = {1, 2, 3, 4};
-        cpodvec<int32_t> empty;
-
-        foo = empty;
-        CHECK(foo.empty());
-        CHECK(foo.capacity() == 4);
-        CHECK(foo.data() != nullptr);
-
-        foo.shrink_to_fit();
-        CHECK(foo.capacity() == 0);
-        CHECK(foo.data() == nullptr);
-    }
-
-    CHECK(mallocs == frees);
-    mallocs = frees = reallocs = 0;
+    clear_alloc_counters();
 }
 
 struct three { uint8_t x, y, z; };
 struct two { uint16_t a; };
-
-TEST_CASE("reallocs reserve")
-{
-    {
-        cpodvec<uint8_t> bv(wasteful_copy_size - 5);
-        CHECK(bv.capacity() == wasteful_copy_size - 5);
-        bv.clear();
-        CHECK(bv.capacity() == wasteful_copy_size - 5);
-
-        reallocs = 0;
-
-        bv.reserve(wasteful_copy_size);
-
-        CHECK(reallocs == 1);
-
-        bv.reserve(bv.capacity() + wasteful_copy_size + 1);
-
-        CHECK(reallocs == 1);
-    }
-
-    mallocs = frees = reallocs = 0;
-}
-
-TEST_CASE("reallocs insert")
-{
-    {
-        cpodvec<uint8_t> bv(5);
-        cpodvec<uint8_t> bv2(wasteful_copy_size, 10);
-
-        reallocs = 0;
-        bv.insert(bv.begin(), bv2.begin(), bv2.end());
-        CHECK(reallocs == 1);
-    }
-
-    {
-        cpodvec<uint8_t> bv(50);
-        cpodvec<uint8_t> bv2(wasteful_copy_size + 1, 10);
-
-        reallocs = 0;
-        bv.insert(bv.begin(), bv2.begin(), bv2.end());
-        CHECK(reallocs == 0);
-    }
-
-    CHECK(mallocs == frees);
-    mallocs = frees = reallocs = 0;
-}
 
 TEST_CASE("recast")
 {
@@ -479,14 +535,6 @@ TEST_CASE("recast")
 
     CHECK(mallocs == frees);
 
-    mallocs = frees = reallocs = 0;
-}
-
-struct alignas(64) avx_512 { double d[8]; };
-
-TEST_CASE("align")
-{
-    cpodvec<avx_512> vec;
-    vec.resize(2);
+    clear_alloc_counters();
 }
 

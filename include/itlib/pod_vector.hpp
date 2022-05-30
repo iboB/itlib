@@ -29,7 +29,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.05 (2022-08-05) Support for alignment of T.
+//  1.05 (2022-xx-xx) Support for alignment of T.
 //                    Requires aloc_align from allocator implementations!
 //  1.04 (2021-08-05) Bugfix! Fixed return value of erase
 //  1.03 (2021-06-08) Prevent memcmp calls with nullptr
@@ -77,6 +77,7 @@
 // * bool zero_fill_new(); - whether pod_vector should to zerofill new elements
 // * size_type realloc_wasteful_copy_size() - when to use reallocate on grows
 // * size_type alloc_align() - guaranteed min alignment of malloc and realloc
+//                             MUST BE static constexpr
 //
 //                  TESTS
 //
@@ -231,6 +232,8 @@ public:
     template <typename U, typename UAlloc>
     void recast_take_from(pod_vector<U, UAlloc>&& other)
     {
+        static_assert(allocator_aligned() == pod_vector<U, UAlloc>::allocator_aligned(), "taking buffers can only happen with the same relative allocation alignment");
+
         afree(m_begin);
 
         auto new_size = other.byte_size() / sizeof(T);
@@ -409,7 +412,7 @@ public:
         auto s = size();
 
         T* new_buf;
-        if (m_capacity - s > m_alloc.realloc_wasteful_copy_size())
+        if ((m_capacity - s) * sizeof(T) > m_alloc.realloc_wasteful_copy_size())
         {
             // we decided that it would be more wasteful to use realloc and
             // copy more than needed than it would be to malloc and manually copy
@@ -630,7 +633,7 @@ private:
             {
                 auto new_cap = get_new_capacity(s + num);
                 T* new_buf;
-                if (m_capacity - offset > m_alloc.realloc_wasteful_copy_size())
+                if ((m_capacity - offset) * sizeof(T) > m_alloc.realloc_wasteful_copy_size())
                 {
                     // we decided that it would be more wasteful to use realloc and
                     // copy more than needed than it would be to malloc and manually copy
@@ -710,9 +713,9 @@ private:
     }
 
     // allocator wrappers for aligned allocations
-    constexpr bool allocator_aligned() const
+    static constexpr bool allocator_aligned()
     {
-        return m_alloc.alloc_align() >= alignof(value_type);
+        return Alloc::alloc_align() >= alignof(value_type);
     }
 
     void* real_addr(void* ptr) const
