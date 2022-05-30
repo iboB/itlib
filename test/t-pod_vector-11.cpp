@@ -329,7 +329,7 @@ void realloc_test()
     }
 
     {
-        pod_vector<ii_t, Alloc> bv(50);
+        pod_vector<ii_t, Alloc> bv(25);
         pod_vector<ii_t, Alloc> bv2(wcs + 1, 10);
 
         reallocs = 0;
