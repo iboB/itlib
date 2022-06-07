@@ -71,13 +71,19 @@
 // The allocator must provide the following interface:
 // * using size_type = ...; - size type for allocator and vector
 // * void* malloc(size_type size); - allocate memory
-// * void* realloc(void* old, size_type new_size); - allocate/reallocate memory
 // * void free(void* mem); - free memory which was allocated here
 // * size_type max_size(); - max available memory
 // * bool zero_fill_new(); - whether pod_vector should to zerofill new elements
-// * size_type realloc_wasteful_copy_size() - when to use reallocate on grows
 // * size_type alloc_align() - guaranteed min alignment of malloc and realloc
 //                             MUST BE static constexpr
+// * bool has_expand() - whether to use the expand or realloc interface
+//                       MUST BE static constexpr
+// * void* realloc(void* old, size_type new_size) - allocate/reallocate memory
+//                                                  ONLY IF has_expand is false
+// * size_type realloc_wasteful_copy_size() - when to use reallocate on grows
+//                                            ONLY IF has_expand is false
+// * bool expand(void* ptr, size_type new_size) - try to expand buf
+//                                                ONLY IF has_expand is true
 //
 //                  TESTS
 //
@@ -103,12 +109,23 @@ class pod_allocator
 public:
     using size_type = size_t;
     static void* malloc(size_type size) { return std::malloc(size); }
-    static void* realloc(void* old, size_type new_size) { return std::realloc(old, new_size); }
     static void free(void* mem) { std::free(mem); }
-    static size_type max_size() { return ~size_type(0); }
+
+    static constexpr size_type max_size() { return ~size_type(0); }
     static constexpr bool zero_fill_new() { return true; }
-    static constexpr size_type realloc_wasteful_copy_size() { return 4096; }
     static constexpr size_type alloc_align() { return alignof(max_align_t); }
+
+#if defined(_WIN32)
+    static constexpr bool has_expand() { return true; }
+    static bool expand(void* mem, size_t new_size) { return !!::_expand(mem, new_size); }
+    static void* realloc(void*, size_type) { return nullptr; }
+    static constexpr size_type realloc_wasteful_copy_size() { return max_size(); }
+#else
+    static constexpr bool has_expand() { return false; }
+    static bool expand(void*, size_t) { return false; }
+    static void* realloc(void* old, size_type new_size) { return std::realloc(old, new_size); }
+    static constexpr size_type realloc_wasteful_copy_size() { return 4096; }
+#endif
 };
 }
 
@@ -411,19 +428,38 @@ public:
         auto new_cap = get_new_capacity(desired_capacity);
         auto s = size();
 
-        if ((m_capacity - s) * sizeof(T) > m_alloc.realloc_wasteful_copy_size())
-        {
-            // we decided that it would be more wasteful to use realloc and
-            // copy more than needed than it would be to malloc and manually copy
+        auto malloc_copy = [&]() {
             auto new_buf = pointer(a_malloc(new_cap));
             if (s) memcpy(new_buf, m_begin, byte_size());
             a_free_begin();
             m_begin = new_buf;
             m_capacity = new_cap;
+        };
+
+        if (m_alloc.has_expand())
+        {
+            if (s == 0)
+            {
+                m_begin = pointer(a_malloc(new_cap));
+                m_capacity = new_cap;
+            }
+            else if (!a_expand_begin(new_cap))
+            {
+                malloc_copy();
+            }
         }
         else
         {
-            a_realloc_begin(new_cap);
+            if ((m_capacity - s) * sizeof(T) > m_alloc.realloc_wasteful_copy_size())
+            {
+                // we decided that it would be more wasteful to use realloc and
+                // copy more than needed than it would be to malloc and manually copy
+                malloc_copy();
+            }
+            else
+            {
+                a_realloc_begin(new_cap);
+            }
         }
 
         m_end = m_begin + s;
@@ -448,7 +484,22 @@ public:
             return;
         }
 
-        a_realloc_begin(s);
+        if (m_alloc.has_expand())
+        {
+            if (!a_expand_begin(s))
+            {
+                // uh-oh expand-shrink failed?
+                auto new_buf = a_malloc(s);
+                std::memcpy(new_buf, m_begin, s);
+                a_free_begin();
+                m_begin = pointer(new_buf);
+            }
+        }
+        else
+        {
+            a_realloc_begin(s);
+        }
+
         m_end = m_begin + s;
     }
 
@@ -628,8 +679,8 @@ private:
             if (s + num > m_capacity)
             {
                 auto new_cap = get_new_capacity(s + num);
-                if ((m_capacity - offset) * sizeof(T) > m_alloc.realloc_wasteful_copy_size())
-                {
+
+                auto malloc_copy = [&]() {
                     // we decided that it would be more wasteful to use realloc and
                     // copy more than needed than it would be to malloc and manually copy
                     auto new_buf = pointer(a_malloc(new_cap));
@@ -639,12 +690,27 @@ private:
                     a_free_begin();
                     m_begin = new_buf;
                     m_capacity = new_cap;
+                };
+
+                if (m_alloc.has_expand())
+                {
+                    if (a_expand_begin(new_cap))
+                    {
+                        malloc_copy();
+                    }
                 }
                 else
                 {
-                    a_realloc_begin(new_cap);
-                    std::memmove(m_begin + offset + num, m_begin + offset, (s - offset) * sizeof(T));
-                    if (m_alloc.zero_fill_new()) zero_fill(m_begin + offset, num);
+                    if ((m_capacity - offset) * sizeof(T) > m_alloc.realloc_wasteful_copy_size())
+                    {
+                        malloc_copy();
+                    }
+                    else
+                    {
+                        a_realloc_begin(new_cap);
+                        std::memmove(m_begin + offset + num, m_begin + offset, (s - offset) * sizeof(T));
+                        if (m_alloc.zero_fill_new()) zero_fill(m_begin + offset, num);
+                    }
                 }
             }
             else
@@ -776,6 +842,22 @@ private:
         }
 
         m_capacity = num_elements;
+    }
+
+    bool a_expand_begin(size_type num_elements)
+    {
+        if (allocator_aligned())
+        {
+            if (!m_alloc.expand(m_begin, sizeof(value_type) * num_elements)) return false;
+        }
+        else
+        {
+            auto ptr = real_addr(m_begin);
+            if (!m_alloc.expand(ptr, sizeof(value_type) * num_elements + alignof(value_type))) return false;
+        }
+
+        m_capacity = num_elements;
+        return true;
     }
 
     void a_free_begin()

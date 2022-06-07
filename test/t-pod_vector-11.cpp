@@ -344,7 +344,15 @@ void realloc_test()
 
 std::vector<std::vector<uint8_t>> n_bufs;
 
-template <size_t N, bool FailRealloc>
+enum class align_alloc_type
+{
+    expand,
+    fail_expand,
+    realloc,
+    fail_realloc
+};
+
+template <size_t N, align_alloc_type Type>
 struct n_align_allocator
 {
     static_assert((N & (N - 1)) == 0, "must be pow2 align");
@@ -393,13 +401,18 @@ struct n_align_allocator
         buf.clear();
     }
 
+    static constexpr bool has_expand()
+    {
+        return Type == align_alloc_type::expand || Type == align_alloc_type::fail_expand;
+    }
+
     static void* realloc(void* old, size_type new_size)
     {
         if (!old) return malloc(new_size);
 
         auto& buf = find_buf(old);
         auto off = reinterpret_cast<uint8_t*>(old) - buf.data();
-        if (!FailRealloc && buf.capacity() - off > new_size)
+        if (Type == align_alloc_type::realloc && buf.capacity() - off > new_size)
         {
             buf.resize(buf.capacity());
             return old;
@@ -410,6 +423,20 @@ struct n_align_allocator
         memcpy(ret, old, buf.size() - off);
         std::swap(nb, buf);
         return ret;
+    }
+
+    static bool expand(void* ptr, size_type new_size)
+    {
+        REQUIRE(ptr);
+
+        auto& buf = find_buf(ptr);
+        auto off = reinterpret_cast<uint8_t*>(ptr) - buf.data();
+        if (Type == align_alloc_type::expand && buf.capacity() - off > new_size)
+        {
+            buf.resize(buf.capacity());
+            return true;
+        }
+        return false;
     }
 
     static constexpr size_type max_size() { return ~size_type(0); }
@@ -441,6 +468,23 @@ struct counting_allocator_wrapper
         return a.realloc(old, new_size);
     }
 
+    static constexpr bool has_expand()
+    {
+        return Alloc::has_expand();
+    }
+
+    bool expand(void* ptr, size_type new_size)
+    {
+        if (a.expand(ptr, new_size))
+        {
+            ++mallocs;
+            if (ptr) ++frees;
+            ++reallocs;
+            return true;
+        }
+        return false;
+    }
+
     void free(void* mem)
     {
         if (mem) ++frees;
@@ -468,9 +512,9 @@ struct counting_allocator_wrapper
 };
 
 using default_allocator = counting_allocator_wrapper<itlib::impl::pod_allocator>;
-using one_alloc = counting_allocator_wrapper<n_align_allocator<1, false>>;
-using one_alloc_fail = counting_allocator_wrapper<n_align_allocator<1, true>>;
-using two_alloc = counting_allocator_wrapper<n_align_allocator<2, false>>;
+using one_alloc = counting_allocator_wrapper<n_align_allocator<1, align_alloc_type::realloc>>;
+using one_alloc_fail = counting_allocator_wrapper<n_align_allocator<1, align_alloc_type::fail_realloc>>;
+using two_alloc = counting_allocator_wrapper<n_align_allocator<2, align_alloc_type::realloc>>;
 
 TEST_CASE("basic")
 {
@@ -496,9 +540,8 @@ TEST_CASE("empty")
     empty_test<two_alloc>();
 }
 
-TEST_CASE("reallocs reserve")
+TEST_CASE("reallocs")
 {
-    realloc_test<default_allocator>();
     realloc_test<two_alloc>();
 }
 
