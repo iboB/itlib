@@ -1,6 +1,7 @@
 #include "doctest.hpp"
 
 #include <itlib/pod_vector.hpp>
+#include <vector>
 
 int32_t mallocs, frees, reallocs;
 
@@ -341,11 +342,91 @@ void realloc_test()
     clear_alloc_counters();
 }
 
-struct counting_allocator
-{
-    itlib::impl::pod_allocator a;
+std::vector<std::vector<uint8_t>> n_bufs;
 
+template <size_t N, bool FailRealloc>
+struct n_align_allocator
+{
+    static_assert((N & (N - 1)) == 0, "must be pow2 align");
     using size_type = size_t;
+
+    static void* malloc_at(std::vector<uint8_t>& buf, size_type size)
+    {
+        REQUIRE(buf.empty());
+        buf.resize(size + N + 8*N);
+        auto addr = reinterpret_cast<uintptr_t>(buf.data());
+        auto offset = N - addr % N;
+        auto fixed = addr + offset;
+        auto ret = fixed + (rand() % 8) * N;
+        return reinterpret_cast<void*>(ret);
+    }
+
+    static void* malloc(size_type size)
+    {
+        REQUIRE(size != 0);
+        for (auto& b : n_bufs)
+        {
+            if (!b.empty()) continue;
+            return malloc_at(b, size);
+        }
+
+        n_bufs.emplace_back();
+        return malloc_at(n_bufs.back(), size);
+    }
+
+    static std::vector<uint8_t>& find_buf(void* ptr)
+    {
+        for (auto& b : n_bufs)
+        {
+            if (ptr >= b.data() && ptr < b.data() + b.size()) return b;
+        }
+
+        REQUIRE(false);
+        return n_bufs.front();
+    }
+
+    static void free(void* ptr)
+    {
+        if (!ptr) return;
+
+        auto& buf = find_buf(ptr);
+        buf.clear();
+    }
+
+    static void* realloc(void* old, size_type new_size)
+    {
+        if (!old) return malloc(new_size);
+
+        auto& buf = find_buf(old);
+        auto off = reinterpret_cast<uint8_t*>(old) - buf.data();
+        if (!FailRealloc && buf.capacity() - off > new_size)
+        {
+            buf.resize(buf.capacity());
+            return old;
+        }
+
+        std::vector<uint8_t> nb;
+        auto ret = malloc_at(nb, new_size);
+        memcpy(ret, old, buf.size() - off);
+        std::swap(nb, buf);
+        return ret;
+    }
+
+    static constexpr size_type max_size() { return ~size_type(0); }
+    static constexpr bool zero_fill_new() { return true; }
+
+    static constexpr size_type alloc_align()
+    {
+        return N;
+    }
+};
+
+template <typename Alloc>
+struct counting_allocator_wrapper
+{
+    Alloc a;
+    using size_type = size_t;
+
     void* malloc(size_type size)
     {
         ++mallocs;
@@ -369,38 +450,56 @@ struct counting_allocator
     {
         return a.max_size();
     }
+
     constexpr bool zero_fill_new() const
     {
         return a.zero_fill_new();
     }
+
     constexpr size_type realloc_wasteful_copy_size() const
     {
         return wasteful_copy_size;
     }
+
     static constexpr size_type alloc_align()
     {
-        return itlib::impl::pod_allocator::alloc_align();
+        return Alloc::alloc_align();
     }
 };
 
+using default_allocator = counting_allocator_wrapper<itlib::impl::pod_allocator>;
+using one_alloc = counting_allocator_wrapper<n_align_allocator<1, false>>;
+using one_alloc_fail = counting_allocator_wrapper<n_align_allocator<1, true>>;
+using two_alloc = counting_allocator_wrapper<n_align_allocator<2, false>>;
+
 TEST_CASE("basic")
 {
-    basic_test<counting_allocator>();
+    basic_test<default_allocator>();
+    basic_test<one_alloc>();
+    basic_test<one_alloc_fail>();
+    basic_test<two_alloc>();
 }
 
 TEST_CASE("swap")
 {
-    swap_test<counting_allocator>();
+    swap_test<default_allocator>();
+    swap_test<one_alloc>();
+    swap_test<one_alloc_fail>();
+    swap_test<two_alloc>();
 }
 
 TEST_CASE("empty")
 {
-    empty_test<counting_allocator>();
+    empty_test<default_allocator>();
+    empty_test<one_alloc>();
+    empty_test<one_alloc_fail>();
+    empty_test<two_alloc>();
 }
 
 TEST_CASE("reallocs reserve")
 {
-    realloc_test<counting_allocator>();
+    realloc_test<default_allocator>();
+    realloc_test<two_alloc>();
 }
 
 template <typename T, typename Alloc>
@@ -408,8 +507,16 @@ void align_test()
 {
     using namespace itlib;
     {
+        auto ptrval = [](void* ptr) -> uintptr_t { return reinterpret_cast<uintptr_t>(ptr); };
+
         pod_vector<T, Alloc> x;
+        CHECK(x.data() == nullptr);
         x.resize(2);
+        CHECK(ptrval(x.data()) % alignof(T) == 0);
+        x.reserve(10);
+        CHECK(ptrval(x.data()) % alignof(T) == 0);
+        x.insert(x.begin(), 1, {});
+        CHECK(x.size() == 3);
     }
     clear_alloc_counters();
 }
@@ -418,12 +525,13 @@ struct alignas(64) avx_512 { double d[8]; };
 
 TEST_CASE("align")
 {
-    align_test<avx_512, counting_allocator>();
+    align_test<avx_512, default_allocator>();
+    align_test<double, one_alloc>();
+    align_test<avx_512, one_alloc>();
 }
 
 template <typename T>
-using cpodvec = itlib::pod_vector<T, counting_allocator>;
-
+using cpodvec = itlib::pod_vector<T, default_allocator>;
 
 TEST_CASE("compare")
 {

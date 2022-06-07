@@ -192,7 +192,7 @@ public:
 
     ~pod_vector()
     {
-        afree(m_begin);
+        a_free_begin();
     }
 
     pod_vector& operator=(const pod_vector& other)
@@ -207,7 +207,7 @@ public:
     {
         if (this == &other) return *this; // prevent self usurp
 
-        afree(m_begin);
+        a_free_begin();
 
         m_alloc = std::move(other.m_alloc);
         m_capacity = other.m_capacity;
@@ -234,7 +234,7 @@ public:
     {
         static_assert(allocator_aligned() == pod_vector<U, UAlloc>::allocator_aligned(), "taking buffers can only happen with the same relative allocation alignment");
 
-        afree(m_begin);
+        a_free_begin();
 
         auto new_size = other.byte_size() / sizeof(T);
         auto cast = reinterpret_cast<T*>(other.data());
@@ -411,23 +411,22 @@ public:
         auto new_cap = get_new_capacity(desired_capacity);
         auto s = size();
 
-        T* new_buf;
         if ((m_capacity - s) * sizeof(T) > m_alloc.realloc_wasteful_copy_size())
         {
             // we decided that it would be more wasteful to use realloc and
             // copy more than needed than it would be to malloc and manually copy
-            new_buf = pointer(amalloc(new_cap));
+            auto new_buf = pointer(a_malloc(new_cap));
             if (s) memcpy(new_buf, m_begin, byte_size());
-            afree(m_begin);
+            a_free_begin();
+            m_begin = new_buf;
+            m_capacity = new_cap;
         }
         else
         {
-            new_buf = pointer(arealloc(m_begin, new_cap));
+            a_realloc_begin(new_cap);
         }
 
-        m_begin = new_buf;
-        m_end = new_buf + s;
-        m_capacity = new_cap;
+        m_end = m_begin + s;
     }
 
     size_t capacity() const noexcept
@@ -443,17 +442,14 @@ public:
 
         if (s == 0)
         {
-            afree(m_begin);
+            a_free_begin();
             m_capacity = 0;
             m_begin = m_end = nullptr;
             return;
         }
 
-        auto new_buf = pointer(arealloc(m_begin, s));
-
-        m_begin = new_buf;
-        m_end = new_buf + s;
-        m_capacity = s;
+        a_realloc_begin(s);
+        m_end = m_begin + s;
     }
 
     // modifiers
@@ -632,25 +628,24 @@ private:
             if (s + num > m_capacity)
             {
                 auto new_cap = get_new_capacity(s + num);
-                T* new_buf;
                 if ((m_capacity - offset) * sizeof(T) > m_alloc.realloc_wasteful_copy_size())
                 {
                     // we decided that it would be more wasteful to use realloc and
                     // copy more than needed than it would be to malloc and manually copy
-                    new_buf = pointer(amalloc(new_cap));
+                    auto new_buf = pointer(a_malloc(new_cap));
                     if (offset) memcpy(new_buf, m_begin, offset * sizeof(T));
                     if (m_alloc.zero_fill_new()) zero_fill(new_buf + offset, num);
                     memcpy(new_buf + offset + num, m_begin + offset, (s - offset) * sizeof(T));
-                    afree(m_begin);
+                    a_free_begin();
+                    m_begin = new_buf;
+                    m_capacity = new_cap;
                 }
                 else
                 {
-                    new_buf = pointer(arealloc(m_begin, new_cap));
-                    std::memmove(new_buf + offset + num, new_buf + offset, (s - offset) * sizeof(T));
-                    if (m_alloc.zero_fill_new()) zero_fill(new_buf + offset, num);
+                    a_realloc_begin(new_cap);
+                    std::memmove(m_begin + offset + num, m_begin + offset, (s - offset) * sizeof(T));
+                    if (m_alloc.zero_fill_new()) zero_fill(m_begin + offset, num);
                 }
-                m_begin = new_buf;
-                m_capacity = new_cap;
             }
             else
             {
@@ -688,10 +683,10 @@ private:
     {
         if (capacity <= m_capacity) return;
 
-        afree(m_begin);
+        a_free_begin();
 
         m_capacity = get_new_capacity(capacity);
-        m_begin = m_end = pointer(amalloc(m_capacity));
+        m_begin = m_end = pointer(a_malloc(m_capacity));
     }
 
     // fill empty vector with given value
@@ -744,7 +739,7 @@ private:
         return fix;
     }
 
-    void* amalloc(size_type num_elements)
+    void* a_malloc(size_type num_elements)
     {
         if (allocator_aligned())
         {
@@ -758,27 +753,40 @@ private:
         return align_ptr(buf);
     }
 
-    void* arealloc(void* old, size_type num_elements)
+    void a_realloc_begin(size_type num_elements)
     {
         if (allocator_aligned())
         {
-            return m_alloc.realloc(old, sizeof(value_type) * num_elements);
-        }
-
-        auto real_old = real_addr(old);
-        auto buf = m_alloc.realloc(real_old, sizeof(value_type) * num_elements + alignof(value_type));
-        return align_ptr(buf);
-    }
-
-    void afree(void* ptr)
-    {
-        if (allocator_aligned())
-        {
-            m_alloc.free(ptr);
+            m_begin = pointer(m_alloc.realloc(m_begin, sizeof(value_type) * num_elements));
         }
         else
         {
-            m_alloc.free(real_addr(ptr));
+            // allocator alignment doesn't match out required one
+            // sadly, we can't use realloc
+            // if it ends up returning a different address it may be such that the data copied by the
+            // allocator's realloc has a different alignment than what's needed
+            // we could memmove if this is the case, but for now we will just malloc-copy
+            // it should be rare anyway
+            auto new_buf = a_malloc(num_elements);
+            auto s = size();
+            auto min = s < num_elements ? s : num_elements;
+            std::memcpy(new_buf, m_begin, s * sizeof(T));
+            a_free_begin();
+            m_begin = pointer(new_buf);
+        }
+
+        m_capacity = num_elements;
+    }
+
+    void a_free_begin()
+    {
+        if (allocator_aligned())
+        {
+            m_alloc.free(m_begin);
+        }
+        else
+        {
+            m_alloc.free(real_addr(m_begin));
         }
     }
 
