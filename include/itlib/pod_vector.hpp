@@ -31,6 +31,9 @@
 //
 //  1.05 (2022-xx-xx) Support for alignment of T.
 //                    Requires aloc_align from allocator implementations!
+//                    Support for expand allocator func
+//                    Requires has_expand from allocator implementations!
+//                    Other minor internal cleanups
 //  1.04 (2021-08-05) Bugfix! Fixed return value of erase
 //  1.03 (2021-06-08) Prevent memcmp calls with nullptr
 //  1.02 (2021-06-08) Noexcept move ctor and move assignment operator
@@ -418,7 +421,7 @@ public:
 
     size_t byte_size() const noexcept
     {
-        return sizeof(value_type) * size();
+        return e2b(size());
     }
 
     void reserve(size_t desired_capacity)
@@ -450,7 +453,7 @@ public:
         }
         else
         {
-            if ((m_capacity - s) * sizeof(T) > m_alloc.realloc_wasteful_copy_size())
+            if (e2b(m_capacity - s) > m_alloc.realloc_wasteful_copy_size())
             {
                 // we decided that it would be more wasteful to use realloc and
                 // copy more than needed than it would be to malloc and manually copy
@@ -490,7 +493,7 @@ public:
             {
                 // uh-oh expand-shrink failed?
                 auto new_buf = a_malloc(s);
-                std::memcpy(new_buf, m_begin, s * sizeof(T));
+                std::memcpy(new_buf, m_begin, e2b(s));
                 a_free_begin();
                 m_begin = pointer(new_buf);
                 m_capacity = s;
@@ -589,7 +592,10 @@ public:
     void resize(size_type n)
     {
         reserve(n);
-        if (n > size() && m_alloc.zero_fill_new()) zero_fill(m_end, n - size());
+        if (n > size() && m_alloc.zero_fill_new())
+        {
+            std::memset(m_end, 0, e2b(n - size()));
+        }
         m_end = m_begin + n;
     }
 
@@ -601,11 +607,6 @@ public:
     }
 
 private:
-    static void zero_fill(T* p, size_type s)
-    {
-        std::memset(p, 0, s * sizeof(T));
-    }
-
     // fill count elements from p with value
     static void fill(T* p, size_type count, const T& value)
     {
@@ -635,7 +636,7 @@ private:
     // still for extra help, we can provide this (alsto it will be faster in debug)
     static void copy_not_aliased(T* p, const T* begin, const T* end)
     {
-        auto s = size_t(end - begin) * sizeof(T);
+        auto s = e2b(size_t(end - begin));
         if (s == 0) return;
         std::memcpy(p, begin, s);
     }
@@ -678,7 +679,7 @@ private:
         else
         {
             auto make_gap = [&]() {
-                std::memmove(m_begin + offset + num, m_begin + offset, (s - offset) * sizeof(T));
+                std::memmove(m_begin + offset + num, m_begin + offset, e2b(s - offset));
             };
 
             if (s + num > m_capacity)
@@ -689,8 +690,8 @@ private:
                     // we decided that it would be more wasteful to use realloc and
                     // copy more than needed than it would be to malloc and manually copy
                     auto new_buf = pointer(a_malloc(new_cap));
-                    if (offset) memcpy(new_buf, m_begin, offset * sizeof(T));
-                    memcpy(new_buf + offset + num, m_begin + offset, (s - offset) * sizeof(T));
+                    if (offset) memcpy(new_buf, m_begin, e2b(offset));
+                    memcpy(new_buf + offset + num, m_begin + offset, e2b(s - offset));
                     a_free_begin();
                     m_begin = new_buf;
                     m_capacity = new_cap;
@@ -709,7 +710,7 @@ private:
                 }
                 else
                 {
-                    if ((m_capacity - offset) * sizeof(T) > m_alloc.realloc_wasteful_copy_size())
+                    if (e2b(m_capacity - offset) > m_alloc.realloc_wasteful_copy_size())
                     {
                         malloc_copy();
                     }
@@ -743,7 +744,7 @@ private:
 
         auto position = const_cast<T*>(cp);
 
-        std::memmove(position, position + num, size_t(m_end - position - num) * sizeof(T));
+        std::memmove(position, position + num, e2b(size_t(m_end - position - num)));
 
         m_end -= num;
 
@@ -815,13 +816,13 @@ private:
     {
         if (allocator_aligned())
         {
-            return m_alloc.malloc(sizeof(value_type) * num_elements);
+            return m_alloc.malloc(e2b(num_elements));
         }
 
         // allocate 1 alignment more than needed,
         // thus we can shift by at least one byte to get the appropriate one
         // and have 1 byte before the pointer to show us how much we shifted
-        auto buf = m_alloc.malloc(sizeof(value_type) * num_elements + alignof(value_type));
+        auto buf = m_alloc.malloc(e2b(num_elements) + alignof(value_type));
         return align_ptr(buf);
     }
 
@@ -829,7 +830,7 @@ private:
     {
         if (allocator_aligned())
         {
-            m_begin = pointer(m_alloc.realloc(m_begin, sizeof(value_type) * num_elements));
+            m_begin = pointer(m_alloc.realloc(m_begin, e2b(num_elements)));
         }
         else
         {
@@ -842,7 +843,7 @@ private:
             auto new_buf = a_malloc(num_elements);
             auto s = size();
             auto min = s < num_elements ? s : num_elements;
-            std::memcpy(new_buf, m_begin, s * sizeof(T));
+            std::memcpy(new_buf, m_begin, e2b(s));
             a_free_begin();
             m_begin = pointer(new_buf);
         }
@@ -854,12 +855,12 @@ private:
     {
         if (allocator_aligned())
         {
-            if (!m_alloc.expand(m_begin, sizeof(value_type) * num_elements)) return false;
+            if (!m_alloc.expand(m_begin, e2b(num_elements))) return false;
         }
         else
         {
             auto ptr = real_addr(m_begin);
-            if (!m_alloc.expand(ptr, sizeof(value_type) * num_elements + alignof(value_type))) return false;
+            if (!m_alloc.expand(ptr, e2b(num_elements) + alignof(value_type))) return false;
         }
 
         m_capacity = num_elements;
@@ -876,6 +877,12 @@ private:
         {
             m_alloc.free(real_addr(m_begin));
         }
+    }
+
+
+    static constexpr size_t e2b(size_t num_elements)
+    {
+        return num_elements * sizeof(T);
     }
 
     pointer m_begin;
