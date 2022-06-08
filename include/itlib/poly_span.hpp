@@ -114,6 +114,10 @@ public:
     poly_span(poly_span&&) noexcept = default;
     poly_span& operator=(poly_span&&) noexcept = default;
 
+#if defined(__GNUC__)
+#	pragma GCC diagnostic push
+#	pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
     template <typename U, typename F,
         typename = typename std::enable_if<std::is_convertible<F, RT(*)(U&)>::value, int>::type>
     poly_span(U* begin, size_t num, F func)
@@ -123,6 +127,9 @@ public:
             num,
             reinterpret_cast<poly_func_t>((RT(*)(U&))func))
     {}
+#if defined(__GNUC__)
+#	pragma GCC diagnostic pop
+#endif
 
     explicit operator bool() const
     {
