@@ -842,8 +842,8 @@ private:
             // it should be rare anyway
             auto new_buf = a_malloc(num_elements);
             auto s = size();
-            auto min = s < num_elements ? s : num_elements;
-            std::memcpy(new_buf, m_begin, e2b(s));
+            auto mins = s < num_elements ? s : num_elements;
+            std::memcpy(new_buf, m_begin, e2b(mins));
             a_free_begin();
             m_begin = pointer(new_buf);
         }
