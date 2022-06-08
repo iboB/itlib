@@ -420,7 +420,9 @@ struct n_align_allocator
 
         std::vector<uint8_t> nb;
         auto ret = malloc_at(nb, new_size);
-        memcpy(ret, old, buf.size() - off);
+        auto nbytes = buf.size() - off;
+        if (nbytes > new_size) nbytes = new_size;
+        memcpy(ret, old, new_size);
         std::swap(nb, buf);
         return ret;
     }
@@ -475,10 +477,11 @@ struct counting_allocator_wrapper
 
     bool expand(void* ptr, size_type new_size)
     {
+        REQUIRE(ptr);
         if (a.expand(ptr, new_size))
         {
+            ++frees;
             ++mallocs;
-            if (ptr) ++frees;
             ++reallocs;
             return true;
         }
@@ -512,37 +515,68 @@ struct counting_allocator_wrapper
 };
 
 using default_allocator = counting_allocator_wrapper<itlib::impl::pod_allocator>;
-using one_alloc = counting_allocator_wrapper<n_align_allocator<1, align_alloc_type::realloc>>;
-using one_alloc_fail = counting_allocator_wrapper<n_align_allocator<1, align_alloc_type::fail_realloc>>;
-using two_alloc = counting_allocator_wrapper<n_align_allocator<2, align_alloc_type::realloc>>;
+
+using one_alloc_r = counting_allocator_wrapper<n_align_allocator<1, align_alloc_type::realloc>>;
+using one_alloc_fr = counting_allocator_wrapper<n_align_allocator<1, align_alloc_type::fail_realloc>>;
+using two_alloc_r = counting_allocator_wrapper<n_align_allocator<2, align_alloc_type::realloc>>;
+using m_alloc_r = counting_allocator_wrapper<n_align_allocator<alignof(max_align_t), align_alloc_type::realloc>>;
+using m_alloc_fr = counting_allocator_wrapper<n_align_allocator<alignof(max_align_t), align_alloc_type::fail_realloc>>;
+
+using one_alloc_e = counting_allocator_wrapper<n_align_allocator<1, align_alloc_type::expand>>;
+using one_alloc_fe = counting_allocator_wrapper<n_align_allocator<1, align_alloc_type::fail_expand>>;
+using two_alloc_e = counting_allocator_wrapper<n_align_allocator<2, align_alloc_type::expand>>;
+using m_alloc_e = counting_allocator_wrapper<n_align_allocator<alignof(max_align_t), align_alloc_type::expand>>;
+using m_alloc_fe = counting_allocator_wrapper<n_align_allocator<alignof(max_align_t), align_alloc_type::fail_expand>>;
+
 
 TEST_CASE("basic")
 {
     basic_test<default_allocator>();
-    basic_test<one_alloc>();
-    basic_test<one_alloc_fail>();
-    basic_test<two_alloc>();
+    basic_test<one_alloc_r>();
+    basic_test<one_alloc_fr>();
+    basic_test<two_alloc_r>();
+    basic_test<m_alloc_r>();
+    basic_test<m_alloc_fr>();
+    basic_test<one_alloc_e>();
+    basic_test<one_alloc_fe>();
+    basic_test<two_alloc_e>();
+    basic_test<m_alloc_e>();
+    basic_test<m_alloc_fe>();
 }
 
 TEST_CASE("swap")
 {
     swap_test<default_allocator>();
-    swap_test<one_alloc>();
-    swap_test<one_alloc_fail>();
-    swap_test<two_alloc>();
+    swap_test<one_alloc_r>();
+    swap_test<one_alloc_fr>();
+    swap_test<two_alloc_r>();
+    swap_test<m_alloc_r>();
+    swap_test<m_alloc_fr>();
+    swap_test<one_alloc_e>();
+    swap_test<one_alloc_fe>();
+    swap_test<two_alloc_e>();
+    swap_test<m_alloc_e>();
+    swap_test<m_alloc_fe>();
 }
 
 TEST_CASE("empty")
 {
     empty_test<default_allocator>();
-    empty_test<one_alloc>();
-    empty_test<one_alloc_fail>();
-    empty_test<two_alloc>();
+    empty_test<one_alloc_r>();
+    empty_test<one_alloc_fr>();
+    empty_test<two_alloc_r>();
+    empty_test<m_alloc_r>();
+    empty_test<m_alloc_fr>();
+    empty_test<one_alloc_e>();
+    empty_test<one_alloc_fe>();
+    empty_test<two_alloc_e>();
+    empty_test<m_alloc_e>();
+    empty_test<m_alloc_fe>();
 }
 
 TEST_CASE("reallocs")
 {
-    realloc_test<two_alloc>();
+    realloc_test<two_alloc_r>();
 }
 
 template <typename T, typename Alloc>
@@ -569,8 +603,11 @@ struct alignas(64) avx_512 { double d[8]; };
 TEST_CASE("align")
 {
     align_test<avx_512, default_allocator>();
-    align_test<double, one_alloc>();
-    align_test<avx_512, one_alloc>();
+    align_test<double, one_alloc_r>();
+    align_test<avx_512, one_alloc_r>();
+    align_test<avx_512, one_alloc_fr>();
+    align_test<avx_512, one_alloc_e>();
+    align_test<avx_512, one_alloc_fe>();
 }
 
 template <typename T>

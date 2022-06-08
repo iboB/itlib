@@ -438,7 +438,7 @@ public:
 
         if (m_alloc.has_expand())
         {
-            if (s == 0)
+            if (!m_begin)
             {
                 m_begin = pointer(a_malloc(new_cap));
                 m_capacity = new_cap;
@@ -490,9 +490,10 @@ public:
             {
                 // uh-oh expand-shrink failed?
                 auto new_buf = a_malloc(s);
-                std::memcpy(new_buf, m_begin, s);
+                std::memcpy(new_buf, m_begin, s * sizeof(T));
                 a_free_begin();
                 m_begin = pointer(new_buf);
+                m_capacity = s;
             }
         }
         else
@@ -676,6 +677,10 @@ private:
         }
         else
         {
+            auto make_gap = [&]() {
+                std::memmove(m_begin + offset + num, m_begin + offset, (s - offset) * sizeof(T));
+            };
+
             if (s + num > m_capacity)
             {
                 auto new_cap = get_new_capacity(s + num);
@@ -685,7 +690,6 @@ private:
                     // copy more than needed than it would be to malloc and manually copy
                     auto new_buf = pointer(a_malloc(new_cap));
                     if (offset) memcpy(new_buf, m_begin, offset * sizeof(T));
-                    if (m_alloc.zero_fill_new()) zero_fill(new_buf + offset, num);
                     memcpy(new_buf + offset + num, m_begin + offset, (s - offset) * sizeof(T));
                     a_free_begin();
                     m_begin = new_buf;
@@ -695,6 +699,10 @@ private:
                 if (m_alloc.has_expand())
                 {
                     if (a_expand_begin(new_cap))
+                    {
+                        make_gap();
+                    }
+                    else
                     {
                         malloc_copy();
                     }
@@ -708,15 +716,13 @@ private:
                     else
                     {
                         a_realloc_begin(new_cap);
-                        std::memmove(m_begin + offset + num, m_begin + offset, (s - offset) * sizeof(T));
-                        if (m_alloc.zero_fill_new()) zero_fill(m_begin + offset, num);
+                        make_gap();
                     }
                 }
             }
             else
             {
-                std::memmove(m_begin + offset + num, m_begin + offset, (s - offset) * sizeof(T));
-                if (m_alloc.zero_fill_new()) zero_fill(m_begin + offset, num);
+                make_gap();
             }
         }
 
