@@ -29,7 +29,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.05 (2022-xx-xx) Support for alignment of T.
+//  1.05 (2022-06-09) Support for alignment of T.
 //                    Requires aloc_align from allocator implementations!
 //                    Support for expand allocator func
 //                    Requires has_expand from allocator implementations!
