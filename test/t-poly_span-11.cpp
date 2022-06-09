@@ -139,7 +139,7 @@ TEST_CASE("[poly_span] slicing")
         auto s = span.subspan(10);
         CHECK(!!s);
         CHECK(s.empty());
-        s.cbegin() == span.end();
+        CHECK(s.cbegin() == span.end());
     }
     {
         auto s = span.subspan(1);

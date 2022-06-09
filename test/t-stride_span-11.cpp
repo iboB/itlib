@@ -172,7 +172,7 @@ void test_slicing(const SS& span)
         auto s = span.subspan(10);
         CHECK(!!s);
         CHECK(s.empty());
-        s.cbegin() == span.end();
+        CHECK(s.cbegin() == span.end());
     }
     {
         auto s = span.subspan(1);
