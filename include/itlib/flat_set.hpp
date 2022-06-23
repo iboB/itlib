@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.04 (2022-06-23) Transparent lookups (C++14 style)
 //  1.03 (2022-04-14) Noxcept move construct and assign
 //  1.02 (2021-09-28) Fixed construction from std::initializer_list which
 //                    allowed duplicate elements to find their wey in the set
@@ -68,21 +69,6 @@
 //  > myset
 //
 //
-//                  Configuration
-//
-// itlib::flat_set has a single configurable setting:
-//
-// const char* overloads
-// By default itlib::flat_set provides overloads for the access methods
-// (find, lower_bound, count) for const char* for cases when
-// std::string is the key, so that no allocations happen when accessing with
-// a C-string of a string literal.
-// However if const char* or any other class with implicit conversion from
-// const char* is the key, they won't compile.
-// If you plan on using flat_set with such keys, you'll need to define
-// ITLIB_FLAT_SET_NO_CONST_CHAR_OVERLOADS before including the header
-//
-//
 //                  TESTS
 //
 // You can find unit tests for static_vector in its official repo:
@@ -94,14 +80,22 @@
 #include <algorithm>
 #include <type_traits>
 
-#if !defined(ITLIB_FLAT_SET_NO_CONST_CHAR_OVERLOADS)
-#include <cstring>
-#endif
-
 namespace itlib
 {
 
-template <typename Key, typename Compare = std::less<Key>, typename Container = std::vector<Key>>
+namespace impl
+{
+struct less
+{
+    template <typename T, typename U>
+    auto operator()(const T& t, const U& u) const -> decltype(t < u)
+    {
+        return t < u;
+    }
+};
+}
+
+template <typename Key, typename Compare = impl::less, typename Container = std::vector<Key>>
 class flat_set
 {
 public:
@@ -172,17 +166,20 @@ public:
 
     void clear() noexcept { m_container.clear(); }
 
-    iterator lower_bound(const key_type& k)
+    template <typename F>
+    iterator lower_bound(const F& k)
     {
         return std::lower_bound(m_container.begin(), m_container.end(), k, m_cmp);
     }
 
-    const_iterator lower_bound(const key_type& k) const
+    template <typename F>
+    const_iterator lower_bound(const F& k) const
     {
         return std::lower_bound(m_container.begin(), m_container.end(), k, m_cmp);
     }
 
-    iterator find(const key_type& k)
+    template <typename F>
+    iterator find(const F& k)
     {
         auto i = lower_bound(k);
         if (i != end() && !m_cmp(k, *i))
@@ -191,7 +188,8 @@ public:
         return end();
     }
 
-    const_iterator find(const key_type& k) const
+    template <typename F>
+    const_iterator find(const F& k) const
     {
         auto i = lower_bound(k);
         if (i != end() && !m_cmp(k, *i))
@@ -200,7 +198,8 @@ public:
         return end();
     }
 
-    size_t count(const key_type& k) const
+    template <typename F>
+    size_t count(const F& k) const
     {
         return find(k) == end() ? 0 : 1;
     }
@@ -240,7 +239,13 @@ public:
         return m_container.erase(pos);
     }
 
-    size_type erase(const key_type& k)
+    iterator erase(iterator pos)
+    {
+        return erase(const_iterator(pos));
+    }
+
+    template <typename F>
+    size_type erase(const F& k)
     {
         auto i = find(k);
         if (i == end())
@@ -268,54 +273,6 @@ public:
     {
         return m_container;
     }
-
-#if !defined(ITLIB_FLAT_SET_NO_CONST_CHAR_OVERLOADS)
-    ///////////////////////////////////////////////////////////////////////////////////
-    // const char* overloads for sets with an std::string key to avoid allocs
-    iterator lower_bound(const char* k)
-    {
-        static_assert(std::is_same<std::string, key_type>::value, "flat_set::lower_bound(const char*) works only for std::strings");
-        static_assert(std::is_same<std::less<std::string>, key_compare>::value, "flat_set::lower_bound(const char*) works only for std::string-s, compared with std::less<std::string>");
-        return std::lower_bound(m_container.begin(), m_container.end(), k, [](const value_type& a, const char* b) -> bool
-        {
-            return strcmp(a.c_str(), b) < 0;
-        });
-    }
-
-    const_iterator lower_bound(const char* k) const
-    {
-        static_assert(std::is_same<std::string, key_type>::value, "flat_set::lower_bound(const char*) works only for std::strings");
-        static_assert(std::is_same<std::less<std::string>, key_compare>::value, "flat_set::lower_bound(const char*) works only for std::string-s, compared with std::less<std::string>");
-        return std::lower_bound(m_container.begin(), m_container.end(), k, [](const value_type& a, const char* b) -> bool
-        {
-            return strcmp(a.c_str(), b) < 0;
-        });
-    }
-
-    iterator find(const char* k)
-    {
-        auto i = lower_bound(k);
-        if (i != end() && *i == k)
-            return i;
-
-        return end();
-    }
-
-    const_iterator find(const char* k) const
-    {
-        auto i = lower_bound(k);
-        if (i != end() && *i == k)
-            return i;
-
-        return end();
-    }
-
-    size_t count(const char* k) const
-    {
-        return find(k) == end() ? 0 : 1;
-    }
-
-#endif // !defined(ITLIB_FLAT_SET_NO_CONST_CHAR_OVERLOADS)
 
 private:
     key_compare m_cmp;

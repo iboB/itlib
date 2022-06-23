@@ -166,7 +166,7 @@ TEST_CASE("[flat_set] test")
     CHECK(m2.capacity() == m1c);
 }
 
-TEST_CASE("[flat_map] initialize")
+TEST_CASE("[flat_set] initialize")
 {
     using namespace itlib;
     flat_set<int> m1 = {5, 3, 23};
