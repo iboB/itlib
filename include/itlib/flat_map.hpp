@@ -1,4 +1,4 @@
-// itlib-flat-map v1.03
+// itlib-flat-map v1.04
 //
 // std::map-like class with an underlying vector
 //
@@ -29,6 +29,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.04 (2022-07-07) Transparent lookups (C++14 style)
+//                    Transparent construction
 //  1.03 (2022-04-14) Noxcept move construct and assign
 //  1.02 (2021-09-28) Fixed construction from std::initializer_list which
 //                    allowed duplicate keys to find their wey in the map
@@ -73,23 +75,11 @@
 //
 //                  Configuration
 //
-// itlib::flat_map has two configurable settings:
-//
-// 1. Throw
+// Throw
 // Whether to throw exceptions: when `at` is called with a non-existent key.
 // By default, like std::map, it throws an std::out_of_range exception. If you define
 // ITLIB_FLAT_MAP_NO_THROW before including this header, the exception will
 // be substituted by an assertion.
-//
-// 2. const char* overloads
-// By default itlib::flat_map provides overloads for the access methods
-// (at, operator[], find, lower_bound, count) for const char* for cases when
-// std::string is the key, so that no allocations happen when accessing with
-// a C-string of a string literal.
-// However if const char* or any other class with implicit conversion from
-// const char* is the key, they won't compile.
-// If you plan on using flat_map with such keys, you'll need to define
-// ITLIB_FLAT_MAP_NO_CONST_CHAR_OVERLOADS before including the header
 //
 //
 //                  TESTS
@@ -103,10 +93,6 @@
 #include <algorithm>
 #include <type_traits>
 
-#if !defined(ITLIB_FLAT_MAP_NO_CONST_CHAR_OVERLOADS)
-#include <cstring>
-#endif
-
 #if !defined(ITLIB_FLAT_MAP_NO_THROW)
 #   include <stdexcept>
 #   define I_ITLIB_THROW_FLAT_MAP_OUT_OF_RANGE() throw std::out_of_range("itlib::flat_map out of range")
@@ -118,7 +104,19 @@
 namespace itlib
 {
 
-template <typename Key, typename T, typename Compare = std::less<Key>, typename Container = std::vector<std::pair<Key, T>>>
+namespace fmimpl
+{
+struct less
+{
+    template <typename T, typename U>
+    auto operator()(const T& t, const U& u) const -> decltype(t < u)
+    {
+        return t < u;
+    }
+};
+}
+
+template <typename Key, typename T, typename Compare = fmimpl::less, typename Container = std::vector<std::pair<Key, T>>>
 class flat_map
 {
 public:
@@ -188,17 +186,20 @@ public:
 
     void clear() noexcept { m_container.clear(); }
 
-    iterator lower_bound(const key_type& k)
+    template <typename K>
+    iterator lower_bound(const K& k)
     {
         return std::lower_bound(m_container.begin(), m_container.end(), k, m_cmp);
     }
 
-    const_iterator lower_bound(const key_type& k) const
+    template <typename K>
+    const_iterator lower_bound(const K& k) const
     {
         return std::lower_bound(m_container.begin(), m_container.end(), k, m_cmp);
     }
 
-    iterator find(const key_type& k)
+    template <typename K>
+    iterator find(const K& k)
     {
         auto i = lower_bound(k);
         if (i != end() && !m_cmp(k, *i))
@@ -207,7 +208,8 @@ public:
         return end();
     }
 
-    const_iterator find(const key_type& k) const
+    template <typename K>
+    const_iterator find(const K& k) const
     {
         auto i = lower_bound(k);
         if (i != end() && !m_cmp(k, *i))
@@ -216,7 +218,8 @@ public:
         return end();
     }
 
-    size_t count(const key_type& k) const
+    template <typename K>
+    size_t count(const K& k) const
     {
         return find(k) == end() ? 0 : 1;
     }
@@ -256,7 +259,13 @@ public:
         return m_container.erase(pos);
     }
 
-    size_type erase(const key_type& k)
+    iterator erase(iterator pos)
+    {
+        return m_container.erase(const_iterator(pos));
+    }
+
+    template <typename K>
+    size_type erase(const K& k)
     {
         auto i = find(k);
         if (i == end())
@@ -268,7 +277,9 @@ public:
         return 1;
     }
 
-    mapped_type& operator[](const key_type& k)
+    template <typename K>
+    typename std::enable_if<std::is_convertible<K, key_type>::value,
+    mapped_type&>::type operator[](K&& k)
     {
         auto i = lower_bound(k);
         if (i != end() && !m_cmp(k, *i))
@@ -276,19 +287,7 @@ public:
             return i->second;
         }
 
-        i = m_container.emplace(i, k, mapped_type());
-        return i->second;
-    }
-
-    mapped_type& operator[](key_type&& k)
-    {
-        auto i = lower_bound(k);
-        if (i != end() && !m_cmp(k, *i))
-        {
-            return i->second;
-        }
-
-        i = m_container.emplace(i, std::forward<key_type>(k), mapped_type());
+        i = m_container.emplace(i, std::forward<K>(k), mapped_type());
         return i->second;
     }
 
@@ -331,96 +330,14 @@ public:
         return m_container;
     }
 
-#if !defined(ITLIB_FLAT_MAP_NO_CONST_CHAR_OVERLOADS)
-    ///////////////////////////////////////////////////////////////////////////////////
-    // const char* overloads for maps with an std::string key to avoid allocs
-    iterator lower_bound(const char* k)
-    {
-        static_assert(std::is_same<std::string, key_type>::value, "flat_map::lower_bound(const char*) works only for std::strings");
-        static_assert(std::is_same<std::less<std::string>, key_compare>::value, "flat_map::lower_bound(const char*) works only for std::string-s, compared with std::less<std::string>");
-        return std::lower_bound(m_container.begin(), m_container.end(), k, [](const value_type& a, const char* b) -> bool
-        {
-            return strcmp(a.first.c_str(), b) < 0;
-        });
-    }
-
-    const_iterator lower_bound(const char* k) const
-    {
-        static_assert(std::is_same<std::string, key_type>::value, "flat_map::lower_bound(const char*) works only for std::strings");
-        static_assert(std::is_same<std::less<std::string>, key_compare>::value, "flat_map::lower_bound(const char*) works only for std::string-s, compared with std::less<std::string>");
-        return std::lower_bound(m_container.begin(), m_container.end(), k, [](const value_type& a, const char* b) -> bool
-        {
-            return strcmp(a.first.c_str(), b) < 0;
-        });
-    }
-
-    mapped_type& operator[](const char* k)
-    {
-        auto i = lower_bound(k);
-        if (i != end() && i->first == k)
-        {
-            return i->second;
-        }
-
-        i = m_container.emplace(i, k, mapped_type());
-        return i->second;
-    }
-
-    mapped_type& at(const char* k)
-    {
-        auto i = lower_bound(k);
-        if (i == end() || i->first != k)
-        {
-            I_ITLIB_THROW_FLAT_MAP_OUT_OF_RANGE();
-        }
-
-        return i->second;
-    }
-
-    const mapped_type& at(const char* k) const
-    {
-        auto i = lower_bound(k);
-        if (i == end() || i->first != k)
-        {
-            I_ITLIB_THROW_FLAT_MAP_OUT_OF_RANGE();
-        }
-
-        return i->second;
-    }
-
-    iterator find(const char* k)
-    {
-        auto i = lower_bound(k);
-        if (i != end() && i->first == k)
-            return i;
-
-        return end();
-    }
-
-    const_iterator find(const char* k) const
-    {
-        auto i = lower_bound(k);
-        if (i != end() && i->first == k)
-            return i;
-
-        return end();
-    }
-
-    size_t count(const char* k) const
-    {
-        return find(k) == end() ? 0 : 1;
-    }
-
-#endif // !defined(ITLIB_FLAT_MAP_NO_CONST_CHAR_OVERLOADS)
-
 private:
     struct pair_compare
     {
         pair_compare() = default;
         pair_compare(const key_compare& kc) : kcmp(kc) {}
         bool operator()(const value_type& a, const value_type& b) const { return kcmp(a.first, b.first); }
-        bool operator()(const value_type& a, const key_type& b) const { return kcmp(a.first, b); }
-        bool operator()(const key_type& a, const value_type& b) const { return kcmp(a, b.first); }
+        template <typename K> bool operator()(const value_type& a, const K& b) const { return kcmp(a.first, b); }
+        template <typename K> bool operator()(const K& a, const value_type& b) const { return kcmp(a, b.first); }
 
         key_compare kcmp;
     };

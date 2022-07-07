@@ -65,7 +65,7 @@
 // itlib::flat_set<
 //      string,
 //      less<string>,
-//      std::vector<string>, MyAllocator<string>>
+//      std::vector<string, MyAllocator<string>>
 //  > myset
 //
 //
@@ -83,9 +83,9 @@
 namespace itlib
 {
 
-namespace impl
+namespace fsimpl
 {
-struct less
+struct less // so as not to clash with map_less
 {
     template <typename T, typename U>
     auto operator()(const T& t, const U& u) const -> decltype(t < u)
@@ -95,7 +95,7 @@ struct less
 };
 }
 
-template <typename Key, typename Compare = impl::less, typename Container = std::vector<Key>>
+template <typename Key, typename Compare = fsimpl::less, typename Container = std::vector<Key>>
 class flat_set
 {
 public:
