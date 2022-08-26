@@ -472,64 +472,65 @@ TEST_CASE("[small_vector] static-dynamic")
 
     {
         small_vector<int, 5, 3, counting_allocator<int>> ivec;
-        auto d = ivec.data();
-        ivec.reserve(20);
-        CHECK(ivec.data() == d);
+        const auto static_data = ivec.data();
 
         ivec.push_back(1);
         ivec.push_back(2);
         ivec.push_back(3);
 
-        CHECK(ivec.data() == d);
+        CHECK(ivec.is_static());
+        CHECK(ivec.data() == static_data);
 
         auto lastsize = ivec.size();
         auto iret = ivec.insert(ivec.end(), 3u, 8);
         CHECK(iret == ivec.begin() + lastsize);
 
         CHECK(ivec.size() == 6);
-        CHECK(ivec.capacity() == 20);
+        CHECK(ivec.data() != static_data);
 
-        auto dd = ivec.data();
+        ivec.reserve(20);
+
+        auto dyn_data = ivec.data();
+        CHECK(dyn_data != static_data);
 
         ivec.erase(ivec.begin(), ivec.begin() + 6);
-        CHECK(ivec.data() == d);
+        CHECK(ivec.data() == static_data);
         CHECK(ivec.empty());
 
         ivec.resize(19, 11);
         CHECK(ivec.size() == 19);
-        CHECK(ivec.capacity() == 20);
-        CHECK(ivec.data() == dd);
+        CHECK(ivec.data() == dyn_data);
 
         ivec.resize(4);
         CHECK(ivec.size() == 4);
-        CHECK(ivec.capacity() == 20);
-        CHECK(ivec.data() == dd);
+        CHECK(ivec.data() == dyn_data);
 
         ivec.revert_to_static();
         CHECK(ivec.size() == 4);
         CHECK(ivec.capacity() == 5);
-        CHECK(ivec.data() == d);
+        CHECK(ivec.data() == static_data);
 
         ivec.reserve(10);
+        dyn_data = ivec.data();
+        CHECK(dyn_data != static_data);
         CHECK(ivec.size() == 4);
-        CHECK(ivec.capacity() == 20);
-        CHECK(ivec.data() == dd);
+        CHECK(ivec.capacity() == 10);
 
         ivec.shrink_to_fit();
         CHECK(ivec.size() == 4);
         CHECK(ivec.capacity() == 5);
-        CHECK(ivec.data() == d);
+        CHECK(ivec.data() == static_data);
 
         ivec.reserve(10);
         CHECK(ivec.size() == 4);
         CHECK(ivec.capacity() == 10);
-        CHECK(ivec.data() != d);
+        dyn_data = ivec.data();
+        CHECK(dyn_data != static_data);
 
-        dd = ivec.data();
         iret = ivec.insert(ivec.begin() + 3, 5u, 88);
         CHECK(ivec.size() == 9);
         CHECK(ivec.capacity() == 10);
-        CHECK(ivec.data() == dd);
+        CHECK(ivec.data() == dyn_data);
         CHECK(ivec[2] == 11);
         CHECK(ivec[7] == 88);
         CHECK(ivec[8] == 11);
@@ -550,7 +551,7 @@ TEST_CASE("[small_vector] static-dynamic")
         eret = ivec.erase(ivec.end() - 1);
         CHECK(ivec.size() == 2);
         CHECK(ivec.capacity() == 5);
-        CHECK(ivec.data() == d);
+        CHECK(ivec.data() == static_data);
         CHECK(eret == ivec.end());
 
         eret = ivec2.erase(ivec2.begin() + 1, ivec2.end() - 2);
@@ -563,18 +564,8 @@ TEST_CASE("[small_vector] static-dynamic")
         small_vector<int, 4, 3, counting_allocator<int>> ivec(50);
         ivec.resize(2);
         CHECK(ivec.size() == 2);
-        CHECK(ivec.capacity() == 4);
-    }
-
-    {
-        small_vector<int, 4, 3, counting_allocator<int>> ivec(150);
-        ivec.resize(2, 53);
-        CHECK(ivec.size() == 2);
-        CHECK(ivec.capacity() == 4);
-        ivec.resize(15, 24);
-        CHECK(ivec.size() == 15);
-        CHECK(ivec.capacity() == 150); // reusing old buffer
-        CHECK(ivec[11] == 24);
+        CHECK(ivec.capacity() == 50);
+        CHECK_FALSE(ivec.is_static());
     }
 
     CHECK(allocations == deallocations);
