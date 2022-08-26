@@ -181,7 +181,7 @@ namespace itlib
 {
 
 template<typename T, size_t StaticCapacity = 16, size_t RevertToStaticSize = 0, class Alloc = std::allocator<T>>
-struct small_vector
+struct small_vector : private Alloc
 {
     static_assert(RevertToStaticSize <= StaticCapacity + 1, "itlib::small_vector: the revert-to-static size shouldn't exceed the static capacity by more than one");
 
@@ -208,7 +208,7 @@ public:
     {}
 
     small_vector(const Alloc& alloc)
-        : m_alloc(alloc)
+        : Alloc(alloc)
         , m_capacity(StaticCapacity)
         , m_dynamic_capacity(0)
         , m_dynamic_data(nullptr)
@@ -246,7 +246,7 @@ public:
     {}
 
     small_vector(const small_vector& v, const Alloc& alloc)
-        : m_alloc(alloc)
+        : Alloc(alloc)
         , m_dynamic_capacity(0)
         , m_dynamic_data(nullptr)
     {
@@ -270,7 +270,7 @@ public:
     }
 
     small_vector(small_vector&& v) noexcept
-        : m_alloc(std::move(v.get_alloc()))
+        : Alloc(std::move(v.get_alloc()))
         , m_capacity(v.m_capacity)
         , m_dynamic_capacity(v.m_dynamic_capacity)
         , m_dynamic_data(v.m_dynamic_data)
@@ -1111,10 +1111,8 @@ private:
         }
     }
 
-    allocator_type& get_alloc() { return m_alloc; }
-    const allocator_type& get_alloc() const { return m_alloc; }
-
-    allocator_type m_alloc;
+    allocator_type& get_alloc() { return *this; }
+    const allocator_type& get_alloc() const { return *this; }
 
     pointer m_begin;
     pointer m_end;
