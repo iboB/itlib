@@ -498,8 +498,10 @@ TEST_CASE("[small_vector] static-dynamic")
         CHECK(ivec.empty());
 
         ivec.resize(19, 11);
+        dyn_data = ivec.data();
+        CHECK(dyn_data != static_data);
+        CHECK(ivec.capacity() == 19);
         CHECK(ivec.size() == 19);
-        CHECK(ivec.data() == dyn_data);
 
         ivec.resize(4);
         CHECK(ivec.size() == 4);
