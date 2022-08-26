@@ -1,4 +1,4 @@
-// itlib-pod-vector v1.05
+// itlib-pod-vector v1.06
 //
 // A vector of PODs. Similar to std::vector, but doesn't call constructors or
 // destructors and instead uses memcpy and memmove to manage the data
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.06 (2022-08-26) Inherit from allocator to make use of EBO
 //  1.05 (2022-06-09) Support for alignment of T.
 //                    Requires aloc_align from allocator implementations!
 //                    Support for expand allocator func
@@ -133,7 +134,7 @@ public:
 }
 
 template<typename T, class Alloc = impl::pod_allocator>
-class pod_vector
+class pod_vector : private Alloc
 {
     static_assert(std::is_trivial<T>::value, "itlib::pod_vector with non-trivial type");
     static_assert(alignof(T) <= 128, "alignment of T is too big"); // max supported alignment
@@ -159,8 +160,8 @@ public:
     {}
 
     explicit pod_vector(const Alloc& alloc)
-        : m_capacity(0)
-        , m_alloc(alloc)
+        : Alloc(alloc)
+        , m_capacity(0)
     {
         m_begin = m_end = nullptr;
     }
@@ -201,10 +202,10 @@ public:
     }
 
     pod_vector(pod_vector&& other) noexcept
-        : m_begin(other.m_begin)
+        : Alloc(std::move(other.get_alloc()))
+        , m_begin(other.m_begin)
         , m_end(other.m_end)
         , m_capacity(other.m_capacity)
-        , m_alloc(std::move(other.m_alloc))
     {
         other.m_begin = other.m_end = nullptr;
         other.m_capacity = 0;
@@ -229,7 +230,7 @@ public:
 
         a_free_begin();
 
-        m_alloc = std::move(other.m_alloc);
+        get_alloc() = std::move(other.get_alloc());
         m_capacity = other.m_capacity;
         m_begin = other.m_begin;
         m_end = other.m_end;
@@ -265,7 +266,7 @@ public:
 
         // This needs to be a valid op for recasts to work
         // it this line does not compile, you need to ensure allocator compatibility for it
-        m_alloc = std::move(other.m_alloc);
+        get_alloc() = std::move(other.get_alloc());
 
         other.m_begin = other.m_end = nullptr;
         other.m_capacity = 0;
@@ -287,9 +288,9 @@ public:
         assign_copy(ilist.begin(), ilist.end());
     }
 
-    allocator_type get_allocator() const noexcept
+    const allocator_type& get_allocator() const noexcept
     {
-        return m_alloc;
+        return get_alloc();
     }
 
     const_reference at(size_type i) const
@@ -414,9 +415,9 @@ public:
         return m_end - m_begin;
     }
 
-    size_type max_size() const noexcept
+    size_t max_size() const noexcept
     {
-        return m_alloc.max_size();
+        return Alloc::max_size();
     }
 
     size_t byte_size() const noexcept
@@ -439,7 +440,7 @@ public:
             m_capacity = new_cap;
         };
 
-        if (m_alloc.has_expand())
+        if (Alloc::has_expand())
         {
             if (!m_begin)
             {
@@ -453,7 +454,7 @@ public:
         }
         else
         {
-            if (e2b(m_capacity - s) > m_alloc.realloc_wasteful_copy_size())
+            if (e2b(m_capacity - s) > Alloc::realloc_wasteful_copy_size())
             {
                 // we decided that it would be more wasteful to use realloc and
                 // copy more than needed than it would be to malloc and manually copy
@@ -487,7 +488,7 @@ public:
             return;
         }
 
-        if (m_alloc.has_expand())
+        if (Alloc::has_expand())
         {
             if (!a_expand_begin(s))
             {
@@ -592,7 +593,7 @@ public:
     void resize(size_type n)
     {
         reserve(n);
-        if (n > size() && m_alloc.zero_fill_new())
+        if (n > size() && Alloc::zero_fill_new())
         {
             std::memset(m_end, 0, e2b(n - size()));
         }
@@ -697,7 +698,7 @@ private:
                     m_capacity = new_cap;
                 };
 
-                if (m_alloc.has_expand())
+                if (Alloc::has_expand())
                 {
                     if (a_expand_begin(new_cap))
                     {
@@ -710,7 +711,7 @@ private:
                 }
                 else
                 {
-                    if (e2b(m_capacity - offset) > m_alloc.realloc_wasteful_copy_size())
+                    if (e2b(m_capacity - offset) > Alloc::realloc_wasteful_copy_size())
                     {
                         malloc_copy();
                     }
@@ -816,13 +817,13 @@ private:
     {
         if (allocator_aligned())
         {
-            return m_alloc.malloc(e2b(num_elements));
+            return Alloc::malloc(e2b(num_elements));
         }
 
         // allocate 1 alignment more than needed,
         // thus we can shift by at least one byte to get the appropriate one
         // and have 1 byte before the pointer to show us how much we shifted
-        auto buf = m_alloc.malloc(e2b(num_elements) + alignof(value_type));
+        auto buf = Alloc::malloc(e2b(num_elements) + alignof(value_type));
         return align_ptr(buf);
     }
 
@@ -830,7 +831,7 @@ private:
     {
         if (allocator_aligned())
         {
-            m_begin = pointer(m_alloc.realloc(m_begin, e2b(num_elements)));
+            m_begin = pointer(Alloc::realloc(m_begin, e2b(num_elements)));
         }
         else
         {
@@ -856,12 +857,12 @@ private:
     {
         if (allocator_aligned())
         {
-            if (!m_alloc.expand(m_begin, e2b(num_elements))) return false;
+            if (!Alloc::expand(m_begin, e2b(num_elements))) return false;
         }
         else
         {
             auto ptr = real_addr(m_begin);
-            if (!m_alloc.expand(ptr, e2b(num_elements) + alignof(value_type))) return false;
+            if (!Alloc::expand(ptr, e2b(num_elements) + alignof(value_type))) return false;
         }
 
         m_capacity = num_elements;
@@ -872,11 +873,11 @@ private:
     {
         if (allocator_aligned())
         {
-            m_alloc.free(m_begin);
+            Alloc::free(m_begin);
         }
         else
         {
-            m_alloc.free(real_addr(m_begin));
+            Alloc::free(real_addr(m_begin));
         }
     }
 
@@ -886,12 +887,14 @@ private:
         return num_elements * sizeof(T);
     }
 
+    // ref getters for easier usage
+    allocator_type& get_alloc() { return *this; }
+    const allocator_type& get_alloc() const { return *this; }
+
     pointer m_begin;
     pointer m_end;
 
     size_t m_capacity;
-
-    Alloc m_alloc;
 };
 
 template<typename T, class Alloc>
