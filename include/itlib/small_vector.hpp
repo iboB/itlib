@@ -1,4 +1,4 @@
-// itlib-small-vector v2.00
+// itlib-small-vector v2.01
 //
 // std::vector-like class with a static buffer for initial capacity
 //
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  2.01 (2022-08-26) Minor: renames, doc
 //  2.00 (2022-08-26) Redesign
 //                    * Smaller size
 //                    * Inherit from allocator to make use of EBO
@@ -54,7 +55,7 @@
 // When the size exceeds the capacity, the vector allocates memory via the provided
 // allocator, falling back to classic std::vector behavior.
 //
-// The second size_t template argument, RevertToStaticSize, is used when a
+// The second size_t template argument, RevertToStaticBelow, is used when a
 // small_vector which has already switched to dynamically allocated size reduces
 // its size to a number smaller than that. In this case the vector's buffer
 // switches back to the staticallly allocated one
@@ -64,7 +65,7 @@
 //
 // Example:
 //
-// itlib::small_vector<int, 4, 5> myvec; // a small_vector of size 0, initial capacity 4, and revert size 4 (smaller than 5)
+// itlib::small_vector<int, 4, 5> myvec; // a small_vector of size 0, initial capacity 4, and revert size 4 (below 5)
 // myvec.resize(2); // vector is {0,0} in static buffer
 // myvec[1] = 11; // vector is {0,11} in static buffer
 // myvec.push_back(7); // vector is {0,11,7}  in static buffer
@@ -79,21 +80,21 @@
 // itlib::small_vector is fully compatible with std::vector with
 // the following exceptions:
 // * when reducing the size with erase or resize the new size may fall below
-//   RevertToStaticSize (if it is not 0). In such a case the vector will
+//   RevertToStaticBelow (if it is not 0). In such a case the vector will
 //   revert to using its static buffer, invalidating all iterators (contrary
 //   to the standard)
 // * a method is added `revert_to_static()` which reverts to the static buffer
-//   if possible, but doesn't free the dynamically allocated one
+//   if possible and does nothing if the size doesn't allow it
 //
 // Other notes:
 //
-// * the default value for RevertToStaticSize is zero. This means that once a dynamic
+// * the default value for RevertToStaticBelow is zero. This means that once a dynamic
 //   buffer is allocated the data will never be put into the static one, even if the
 //   size allows it. Even if clear() is called. The only way to do so is to call
 //   shrink_to_fit() or revert_to_static()
 // * shrink_to_fit will free and reallocate if size != capacity and the data
 //   doesn't fit into the static buffer. It also will revert to the static buffer
-//   whenever possible regardless of the RevertToStaticSize value
+//   whenever possible regardless of the RevertToStaticBelow value
 //
 //
 //                  Configuration
@@ -183,10 +184,10 @@
 namespace itlib
 {
 
-template<typename T, size_t StaticCapacity = 16, size_t RevertToStaticSize = 0, class Alloc = std::allocator<T>>
+template<typename T, size_t StaticCapacity = 16, size_t RevertToStaticBelow = 0, class Alloc = std::allocator<T>>
 struct small_vector : private Alloc
 {
-    static_assert(RevertToStaticSize <= StaticCapacity + 1, "itlib::small_vector: the revert-to-static size shouldn't exceed the static capacity by more than one");
+    static_assert(RevertToStaticBelow <= StaticCapacity + 1, "itlib::small_vector: the RevertToStaticBelow shouldn't exceed the static capacity by more than one");
 
     using atraits = std::allocator_traits<Alloc>;
 public:
@@ -204,7 +205,7 @@ public:
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
     static constexpr size_t static_capacity = StaticCapacity;
-    static constexpr intptr_t revert_to_static_size = RevertToStaticSize;
+    static constexpr intptr_t revert_to_static_below = RevertToStaticBelow;
 
     small_vector()
         : small_vector(Alloc())
@@ -549,7 +550,7 @@ public:
     {
         destroy_all();
 
-        if (RevertToStaticSize > 0 && !is_static())
+        if (RevertToStaticBelow > 0 && !is_static())
         {
             atraits::deallocate(get_alloc(), m_begin, m_capacity);
             m_begin = m_end = static_begin_ptr();
@@ -955,7 +956,7 @@ private:
 
                 ret.ptr = atraits::allocate(get_alloc(), ret.cap);
             }
-            else if (desired_capacity < RevertToStaticSize)
+            else if (desired_capacity < RevertToStaticBelow)
             {
                 // we're reverting to the static buffer
                 ret.ptr = static_begin_ptr();
@@ -989,11 +990,11 @@ private:
 };
 
 template<typename T,
-    size_t StaticCapacityA, size_t RevertToStaticSizeA, class AllocA,
-    size_t StaticCapacityB, size_t RevertToStaticSizeB, class AllocB
+    size_t StaticCapacityA, size_t RevertToStaticBelowA, class AllocA,
+    size_t StaticCapacityB, size_t RevertToStaticBelowB, class AllocB
 >
-bool operator==(const small_vector<T, StaticCapacityA, RevertToStaticSizeA, AllocA>& a,
-    const small_vector<T, StaticCapacityB, RevertToStaticSizeB, AllocB>& b)
+bool operator==(const small_vector<T, StaticCapacityA, RevertToStaticBelowA, AllocA>& a,
+    const small_vector<T, StaticCapacityB, RevertToStaticBelowB, AllocB>& b)
 {
     if (a.size() != b.size())
     {
@@ -1010,11 +1011,11 @@ bool operator==(const small_vector<T, StaticCapacityA, RevertToStaticSizeA, Allo
 }
 
 template<typename T,
-    size_t StaticCapacityA, size_t RevertToStaticSizeA, class AllocA,
-    size_t StaticCapacityB, size_t RevertToStaticSizeB, class AllocB
+    size_t StaticCapacityA, size_t RevertToStaticBelowA, class AllocA,
+    size_t StaticCapacityB, size_t RevertToStaticBelowB, class AllocB
 >
-bool operator!=(const small_vector<T, StaticCapacityA, RevertToStaticSizeA, AllocA>& a,
-    const small_vector<T, StaticCapacityB, RevertToStaticSizeB, AllocB>& b)
+bool operator!=(const small_vector<T, StaticCapacityA, RevertToStaticBelowA, AllocA>& a,
+    const small_vector<T, StaticCapacityB, RevertToStaticBelowB, AllocB>& b)
 
 {
     return !operator==(a, b);
