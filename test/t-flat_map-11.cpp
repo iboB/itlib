@@ -1,4 +1,4 @@
-#include "doctest.hpp"
+#include <doctest/doctest.h>
 
 #include <itlib/flat_map.hpp>
 
@@ -89,7 +89,7 @@ TEST_CASE("[flat_map] test")
 
     CHECK(simap["123"] == 0);
 
-    CHECK(simap.begin()->first.c_str() == "123");
+    CHECK(simap.begin()->first == "123");
 
     ++simap["asd"];
 

@@ -1,4 +1,4 @@
-#include "doctest.hpp"
+#include <doctest/doctest.h>
 
 #include <itlib/flat_set.hpp>
 
@@ -81,7 +81,7 @@ TEST_CASE("[flat_set] test")
 
     sset.emplace("123");
 
-    CHECK(sset.begin()->c_str() == "123");
+    CHECK(*sset.begin() == "123");
 
     sset.insert("asd");
 

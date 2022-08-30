@@ -1,4 +1,4 @@
-#include "doctest.hpp"
+#include <doctest/doctest.h>
 
 #include <itlib/small_vector.hpp>
 

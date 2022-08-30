@@ -1,4 +1,4 @@
-#include "doctest.hpp"
+#include <doctest/doctest.h>
 
 // we know it's deprecated
 // no need to cause a bunch of warnings here

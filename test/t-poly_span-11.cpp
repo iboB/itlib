@@ -1,4 +1,4 @@
-#include "doctest.hpp"
+#include <doctest/doctest.h>
 
 #include <itlib/poly_span.hpp>
 #include <itlib/make_ptr.hpp>

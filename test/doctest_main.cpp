@@ -1,3 +1,3 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include "doctest.hpp"
-#include "doctest/doctest.cpp"
+#include "doctest/doctest.h"
+#include "doctest/impl.h"

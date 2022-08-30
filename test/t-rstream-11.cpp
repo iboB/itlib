@@ -1,4 +1,4 @@
-#include "doctest.hpp"
+#include <doctest/doctest.h>
 
 #include <itlib/rstream.hpp>
 
@@ -15,16 +15,16 @@ TEST_CASE("no rebase")
     char data[6] = "-----";
     const char* str = data;
     sin.read(data, 5);
-    CHECK(str == "12345");
+    CHECK(std::string(str) == "12345");
 
     {
         itlib::rstream rin(sin);
         rin.read(data, 5);
-        CHECK(str == "67890");
+        CHECK(std::string(str) == "67890");
     }
 
     sin.read(data, 5);
-    CHECK(str == "abcde");
+    CHECK(std::string(str) == "abcde");
 
     //{
     //    itlib::rstream rin(sin);
@@ -44,7 +44,7 @@ TEST_CASE("yes rebase")
     {
         itlib::redirect_rstream rin(sin, 5);
         rin.read(data, 5);
-        CHECK(str == "67890");
+        CHECK(std::string(str) == "67890");
 
         //char c;
         //rin >> c;
@@ -52,5 +52,5 @@ TEST_CASE("yes rebase")
     }
 
     sin.read(data, 5);
-    CHECK(str == "12345");
+    CHECK(std::string(str) == "12345");
 }

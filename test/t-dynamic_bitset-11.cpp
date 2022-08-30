@@ -1,4 +1,4 @@
-#include "doctest.hpp"
+#include <doctest/doctest.h>
 
 #include <itlib/dynamic_bitset.hpp>
 using vec32 = std::vector<uint32_t>;

@@ -6,4 +6,4 @@ Most tests are for C++11, but if a library offers extra features for other stand
 
 The "itlib" tests check that the compiler meets the requirements for the libraries and tests to run adequately.
 
-The `doctest` directory contains copy of [doctest](https://github.com/onqtam/doctest)
+Using [doctest](https://github.com/onqtam/doctest) through [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake)

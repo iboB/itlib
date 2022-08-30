@@ -1,9 +1,10 @@
-#include "doctest.hpp"
+#include <doctest/doctest.h>
 
 #include <itlib/mem_streambuf.hpp>
 
 #include <ostream>
 #include <istream>
+#include <string>
 
 #include <vector>
 

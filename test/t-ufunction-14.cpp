@@ -1,4 +1,4 @@
-#include "doctest.hpp"
+#include <doctest/doctest.h>
 
 #include <type_traits>
 #include <itlib/ufunction.hpp>

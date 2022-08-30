@@ -1,9 +1,18 @@
-add_library(doctest-11 STATIC doctest_main.cpp)
-set_target_properties(doctest-11 PROPERTIES CXX_STANDARD 11)
-add_library(doctest-14 STATIC doctest_main.cpp)
-set_target_properties(doctest-14 PROPERTIES CXX_STANDARD 14)
-add_library(doctest-17 STATIC doctest_main.cpp)
-set_target_properties(doctest-17 PROPERTIES CXX_STANDARD 17)
+cmake_minimum_required(VERSION 3.14)
+
+include(./get_cpm.cmake)
+
+CPMAddPackage(gh:iboB/doctest-util@0.0.2)
+
+macro(define_doctest_lib std)
+    add_library(doctest-${std} STATIC doctest_main.cpp)
+    set_target_properties(doctest-${std} PROPERTIES CXX_STANDARD ${std})
+    target_link_libraries(doctest-${std} PUBLIC doctest-headers)
+endmacro()
+
+define_doctest_lib(11)
+define_doctest_lib(14)
+define_doctest_lib(17)
 
 macro(add_test_for_std test std)
     set(fname t-${test}-${std}.cpp)
