@@ -21,7 +21,7 @@ macro(add_test_for_std test std)
     set_target_properties(${tname} PROPERTIES
         CXX_STANDARD ${std}
     )
-    target_link_libraries(${tname} doctest-${std} itlib ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(${tname} doctest-${std} doctest-util itlib ${CMAKE_THREAD_LIBS_INIT})
 
     add_test(NAME itlib-${test}-${std} COMMAND ${tname})
 endmacro()
