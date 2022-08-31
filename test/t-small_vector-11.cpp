@@ -6,6 +6,7 @@
 
 #include <utility>
 #include <string>
+#include <cstring>
 
 using itlib::small_vector;
 
