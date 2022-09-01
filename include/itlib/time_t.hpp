@@ -29,8 +29,8 @@
 //
 //                  VERSION HISTORY
 //
-//  1.00 (2020-10-36) Initial release
 //  1.01 (2021-04-29) Added named ctors: now, from_gmtime, from_localtime
+//  1.00 (2020-10-36) Initial release
 //
 //
 //                  DOCUMENTATION
