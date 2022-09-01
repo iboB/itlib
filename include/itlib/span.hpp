@@ -358,6 +358,7 @@ span<T> make_span(T(&ar)[N])
 // provide constructor deduction
 template <typename T> span(T*, T*) -> span<T>;
 template <typename T> span(T*, size_t) -> span<T>;
+template <typename C> span(C& c)->span<std::remove_pointer_t<decltype(c.data())>>;
 #endif
 
 }
