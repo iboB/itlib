@@ -2,6 +2,7 @@
 //
 // Unique Function
 // Non-copyable and noexcept move-constructible replacement for std::function
+// Similar to C++23's move_only_function
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
@@ -47,6 +48,8 @@
 //
 // You can use itlib::ufunction in most places where you would use
 // std::function as long as you don't copy it
+//
+// ufunction is essentially equivalent to std::move_only_function from C++23
 //
 // Example:
 //
