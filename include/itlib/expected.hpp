@@ -1,4 +1,4 @@
-// itlib-expected v1.01
+// itlib-expected v1.02
 //
 // A union-type of a value and an error
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2022-09-02) Specializations for ref and void values
 //  1.01 (2021-09-27) Fixed value_or which could return a ref to temporary
 //  1.00 (2021-09-26) Initial release
 //
@@ -38,7 +39,7 @@
 // It defines the class itlib::expected, which is a union type of a value and
 // an error. It is similar to C++23's std::expected
 //
-// It is somewhat similar to std::optional. In a way you can think of
+// It is also somewhat similar to std::optional. In a way you can think of
 // std::optional<T> as an itlib::expected<T, bool> WITH THE NOTABLE DIFFERENCE
 // that a default-constructed expected is truthy (it invokes the default
 // contstructor) of T
@@ -296,6 +297,195 @@ private:
     union
     {
         value_type m_value;
+        error_type m_error;
+    };
+    bool m_has_value;
+};
+
+template <typename T, typename E>
+class expected<T&, E> {
+public:
+    using value_type = T;
+    using error_type = E;
+
+    expected(T& t) : m_value(&t) {}
+
+    template <typename E2>
+    expected(unexpected_t<E2>&& u) : m_error(std::move(u.m_error)), m_value(nullptr) {}
+
+    expected(unexpected_t<void>) : m_error(), m_value(nullptr) {}
+
+    // do not copy
+    expected(const expected&) = delete;
+    expected& operator=(const expected&) = delete;
+
+    // do move
+    expected(expected&& other) noexcept
+        : m_value(other.m_value)
+    {
+        if (!m_value)
+        {
+            new (&m_error) E(std::move(other.m_error));
+        }
+    }
+
+    expected& operator=(expected&& other) noexcept
+    {
+        if (m_value && other.m_value)
+        {
+            m_value = other.m_value;
+        }
+        else if (m_value && !other.m_value)
+        {
+            m_value = nullptr;
+            ::new (&m_error) E(std::move(other.m_error));
+        }
+        else if (!m_value && other.m_value)
+        {
+            m_value = other.m_value;
+            m_error.~E();
+        }
+        else
+        {
+            m_error = std::move(other.m_error);
+        }
+        return *this;
+    }
+
+    ~expected()
+    {
+        if (!m_value)
+        {
+            m_error.~E();
+        }
+    }
+
+    // bool interface
+    bool has_value() const { return !!m_value; }
+    bool has_error() const { return !m_value; }
+    explicit operator bool() const { return !!m_value; }
+
+    // value getters (pointer semantics)
+    T& value() const
+    {
+        assert(has_value());
+        return *m_value;
+    }
+    T& operator*() const { return value(); }
+    T& value_or(T& v) const { return has_value() ? value() : v; }
+    T* operator->() const { return &value(); }
+
+    // error getters
+
+    E& error()&
+    {
+        assert(has_error());
+        return m_error;
+    }
+
+    const E& error() const&
+    {
+        assert(has_error());
+        return m_error;
+    }
+
+    E&& error()&&
+    {
+        assert(has_error());
+        return std::move(m_error);
+    }
+
+private:
+    value_type* m_value;
+    union {
+        error_type m_error;
+    };
+};
+
+template <typename E>
+class expected<void, E> {
+public:
+    using value_type = void;
+    using error_type = E;
+
+    expected() : m_has_value(true) {}
+
+    template <typename E2>
+    expected(unexpected_t<E2>&& u) : m_error(std::move(u.m_error)), m_has_value(false) {}
+
+    expected(unexpected_t<void>) : m_error(), m_has_value(false) {}
+
+    // do not copy
+    expected(const expected&) = delete;
+    expected& operator=(const expected&) = delete;
+
+    // do move
+    expected(expected&& other) noexcept
+        : m_has_value(other.has_value())
+    {
+        if (!m_has_value)
+        {
+            new (&m_error) E(std::move(other.m_error));
+        }
+    }
+
+    expected& operator=(expected&& other) noexcept
+    {
+        if (m_has_value && !other.has_value())
+        {
+            m_has_value = false;
+            ::new (&m_error) E(std::move(other.m_error));
+        }
+        else if (!m_has_value && other.has_value())
+        {
+            m_has_value = true;
+            m_error.~E();
+        }
+        else
+        {
+            m_error = std::move(other.m_error);
+        }
+        return *this;
+    }
+
+    ~expected()
+    {
+        if (!m_has_value)
+        {
+            m_error.~E();
+        }
+    }
+
+    // bool interface
+    bool has_value() const { return m_has_value; }
+    bool has_error() const { return !m_has_value; }
+    explicit operator bool() const { return m_has_value; }
+
+    // value getters: none
+
+    // error getters
+
+    E& error()&
+    {
+        assert(has_error());
+        return m_error;
+    }
+
+    const E& error() const&
+    {
+        assert(has_error());
+        return m_error;
+    }
+
+    E&& error()&&
+    {
+        assert(has_error());
+        return std::move(m_error);
+    }
+
+
+private:
+    union {
         error_type m_error;
     };
     bool m_has_value;

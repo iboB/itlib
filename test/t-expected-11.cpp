@@ -102,8 +102,16 @@ TEST_CASE("string")
     CHECK(sie("xyz").value_or("mnp") == "xyz");
 }
 
-struct value : doctest::util::lifetime_counter<value> {};
-struct error : doctest::util::lifetime_counter<error> {};
+struct value : doctest::util::lifetime_counter<value>
+{
+    value() = default;
+    explicit value(int i) : val(i) {}
+    int val = 0;
+};
+struct error : doctest::util::lifetime_counter<error>
+{
+    int err = 1;
+};
 
 using vee = expected<value, error>;
 static_assert(std::is_same<vee::value_type, value>::value, "is_same");
@@ -153,6 +161,7 @@ TEST_CASE("lifetime")
         auto x = func(false);
         x = func(false);
         REQUIRE(x.has_error());
+        CHECK(x.error().err == 1);
         CHECK(es.d_ctr == 2);
         CHECK(es.m_ctr == 0);
         CHECK(es.m_asgn == 1);
@@ -175,6 +184,7 @@ TEST_CASE("lifetime")
         auto x = func(true);
         x = func(true);
         REQUIRE(x.has_value());
+        REQUIRE(x->val == 0);
         CHECK(vs.d_ctr == 2);
         CHECK(vs.m_ctr == 0);
         CHECK(vs.m_asgn == 1);
@@ -217,6 +227,259 @@ TEST_CASE("lifetime")
         CHECK(vs.d_ctr == 1);
         CHECK(vs.total == 1);
         CHECK(vs.living == 0);
+        CHECK(es.d_ctr == 1);
+        CHECK(es.m_ctr == 1);
+        CHECK(es.total == 2);
+        CHECK(es.living == 1);
+    }
+}
+
+struct obj {
+    expected<value&, error> iv() { return v; }
+    expected<value&, error> ie() { return unexpected(error()); }
+    expected<const value&, error> iv() const { return v; }
+    expected<const value&, error> ie() const { return itlib::unexpected(); }
+
+    value v{5};
+};
+
+TEST_CASE("ref basic")
+{
+    {
+        obj o;
+        auto v = o.iv();
+        CHECK(!!v);
+        CHECK(v.has_value());
+        CHECK_FALSE(v.has_error());
+        CHECK(v->val == 5);
+        value x{45};
+        CHECK(v.value_or(x).val == 5);
+
+        v->val = 28;
+        CHECK(o.v.val == 28);
+        CHECK(v.value_or(x).val == 28);
+
+        v = o.ie();
+        CHECK_FALSE(v);
+        CHECK_FALSE(v.has_value());
+        REQUIRE(v.has_error());
+        CHECK(v.error().err == 1);
+        CHECK(v.value_or(x).val == 45);
+    }
+
+    {
+        const obj o;
+        auto v = o.iv();
+        CHECK(!!v);
+        CHECK(v->val == 5);
+        CHECK(v.value_or(value(542)).val == 5);
+
+        v = o.ie();
+        CHECK(!v);
+        CHECK(v.value_or(value(45)).val == 45);
+    }
+}
+
+TEST_CASE("ref lifetime")
+{
+    using namespace doctest::util;
+
+    lifetime_counter_sentry vsentry(value::root_lifetime_stats()), esentry(error::root_lifetime_stats());
+
+    impl::lifetime_stats empty;
+    {
+        value::lifetime_stats vs;
+        error::lifetime_stats es;
+        obj o;
+
+        const auto x = o.ie();
+        CHECK(!x);
+        CHECK(vs.total == 1);
+        CHECK(vs.living == 1);
+        CHECK(es.d_ctr == 1);
+        CHECK(es.living == 1);
+        CHECK(es.total == 3);
+    }
+
+
+    {
+        value::lifetime_stats vs;
+        error::lifetime_stats es;
+        const obj o;
+
+        const auto x = o.iv();
+        CHECK(es == empty);
+        CHECK(vs.living == 1);
+        CHECK(vs.total == 1);
+    }
+
+    {
+        value::lifetime_stats vs;
+        error::lifetime_stats es;
+        const obj o;
+
+        auto x = o.ie();
+        x = o.ie();
+        REQUIRE(x.has_error());
+        CHECK(x.error().err == 1);
+        CHECK(es.d_ctr == 2);
+        CHECK(es.m_ctr == 0);
+        CHECK(es.m_asgn == 1);
+        CHECK(es.living == 1);
+
+        auto e = o.ie().error();
+        CHECK(es.d_ctr == 3);
+        CHECK(es.m_ctr == 1);
+        CHECK(es.m_asgn == 1);
+        CHECK(es.living == 2);
+        CHECK(es.total == 4);
+
+        CHECK(vs.living == 1);
+        CHECK(vs.total == 1);
+    }
+
+    {
+        value::lifetime_stats vs;
+        error::lifetime_stats es;
+        obj o;
+
+        auto x = o.iv();
+        x = o.iv();
+        REQUIRE(x.has_value());
+        CHECK(x->val == 5);
+        CHECK(vs.living == 1);
+        CHECK(vs.total == 1);
+
+        CHECK(es == empty);
+    }
+
+
+    // error to value
+    {
+        value::lifetime_stats vs;
+        error::lifetime_stats es;
+        const obj o;
+
+        auto x = o.ie();
+        x = o.iv();
+
+        CHECK(x.has_value());
+        CHECK(es.d_ctr == 1);
+        CHECK(es.total == 1);
+        CHECK(es.living == 0);
+        CHECK(vs.total == 1);
+        CHECK(vs.living == 1);
+    }
+
+    // value to error
+    {
+        value::lifetime_stats vs;
+        error::lifetime_stats es;
+        const obj o;
+
+        auto x = o.iv();
+        x = o.ie();
+        CHECK(x.has_error());
+        CHECK(vs.d_ctr == 1);
+        CHECK(vs.total == 1);
+        CHECK(vs.living == 1);
+        CHECK(es.d_ctr == 1);
+        CHECK(es.m_ctr == 1);
+        CHECK(es.total == 2);
+        CHECK(es.living == 1);
+    }
+}
+
+itlib::expected<void, error> vfunc(bool b)
+{
+    if (b) return {};
+    else return itlib::unexpected();
+}
+
+TEST_CASE("void basic")
+{
+    auto v = vfunc(true);
+    CHECK(v.has_value());
+    CHECK(!v.has_error());
+    CHECK(!!v);
+
+    v = vfunc(false);
+    CHECK(!v);
+    REQUIRE(v.has_error());
+    CHECK(v.error().err == 1);
+}
+
+TEST_CASE("void lifetime")
+{
+    using namespace doctest::util;
+
+    lifetime_counter_sentry esentry(error::root_lifetime_stats());
+
+    impl::lifetime_stats empty;
+    {
+        error::lifetime_stats es;
+
+        const auto x = vfunc(false);
+        CHECK(!x);
+        CHECK(es.d_ctr == 1);
+        CHECK(es.living == 1);
+        CHECK(es.total == 1);
+    }
+
+
+    {
+        error::lifetime_stats es;
+
+        const auto x = func(true);
+        CHECK(es == empty);
+    }
+
+    {
+        error::lifetime_stats es;
+
+        auto x = func(false);
+        x = func(false);
+        REQUIRE(x.has_error());
+        CHECK(x.error().err == 1);
+        CHECK(es.d_ctr == 2);
+        CHECK(es.m_ctr == 0);
+        CHECK(es.m_asgn == 1);
+        CHECK(es.living == 1);
+
+        auto e = func(false).error();
+        CHECK(es.d_ctr == 3);
+        CHECK(es.m_ctr == 1);
+        CHECK(es.m_asgn == 1);
+        CHECK(es.living == 2);
+        CHECK(es.total == 4);
+    }
+
+    {
+        error::lifetime_stats es;
+
+        auto x = func(true);
+        x = func(true);
+        CHECK(es == empty);
+    }
+
+
+    // error to value
+    {
+        error::lifetime_stats es;
+        auto x = func(false);
+        x = func(true);
+        CHECK(x.has_value());
+        CHECK(es.d_ctr == 1);
+        CHECK(es.total == 1);
+        CHECK(es.living == 0);
+    }
+
+    // value to error
+    {
+        error::lifetime_stats es;
+        auto x = func(true);
+        x = func(false);
+        CHECK(x.has_error());
         CHECK(es.d_ctr == 1);
         CHECK(es.m_ctr == 1);
         CHECK(es.total == 2);
