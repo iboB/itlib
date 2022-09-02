@@ -28,7 +28,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.02 (2022-09-02) Specializations for ref and void values
+//  1.02 (2022-09-02) Specializations for ref and void values and void errors
 //  1.01 (2021-09-27) Fixed value_or which could return a ref to temporary
 //  1.00 (2021-09-26) Initial release
 //
@@ -55,6 +55,11 @@
 //
 // In most cases one would return an itlib::expected from a function and the
 // lifetime of the object will span only the caller's scope.
+//
+// expected defines specializations for ref and void values and void errors.
+// A void error essentially makes the class equivalent to std::optional, but
+// again WITH THE NOTABLE DIFFERENCE that default-constructed expected<T, void>
+// is truthy.
 //
 //                  Basics
 //
@@ -490,5 +495,213 @@ private:
     };
     bool m_has_value;
 };
+
+template <typename T>
+class expected<T, void>
+{
+public:
+    using value_type = T;
+    using error_type = void;
+
+    expected() : m_value() {}
+    expected(T&& t) : m_value(std::forward<T>(t)), m_has_value(true) {}
+    expected(unexpected_t<void>) : m_has_value(false) {}
+
+    expected(const expected& other)
+        : m_has_value(other.m_has_value)
+    {
+        if (m_has_value)
+        {
+            new (&m_value) T(other.m_value);
+        }
+    }
+    expected& operator=(const expected& other)
+    {
+        if (m_has_value && other.has_value())
+        {
+            m_value = other.m_value;
+        }
+        else if (m_has_value && !other.has_value())
+        {
+            m_has_value = false;
+            m_value.~T();
+        }
+        else if (!m_has_value && other.has_value())
+        {
+            m_has_value = true;
+            ::new (&m_value) T(other.m_value);
+        }
+        return *this;
+    }
+
+    expected(expected&& other) noexcept
+        : m_has_value(other.has_value())
+    {
+        if (m_has_value)
+        {
+            new (&m_value) T(std::move(other.m_value));
+        }
+    }
+
+    expected& operator=(expected&& other) noexcept
+    {
+        if (m_has_value && other.has_value())
+        {
+            m_value = std::move(other.m_value);
+        }
+        else if (m_has_value && !other.has_value())
+        {
+            m_has_value = false;
+            m_value.~T();
+        }
+        else if (!m_has_value && other.has_value())
+        {
+            m_has_value = true;
+            ::new (&m_value) T(std::move(other.m_value));
+        }
+        return *this;
+    }
+
+    ~expected()
+    {
+        if (m_has_value)
+        {
+            m_value.~T();
+        }
+    }
+
+    // bool interface
+    bool has_value() const { return m_has_value; }
+    bool has_error() const { return !m_has_value; }
+    explicit operator bool() const { return m_has_value; }
+
+    // optional interface
+    void clear()
+    {
+        if (!m_has_value) return;
+        m_value.~T();
+        m_has_value = false;
+    }
+    template <typename... Args>
+    void emplace(Args&&... args)
+    {
+        clear();
+        ::new (&m_value) T(std::forward<Args>(args)...);
+        m_has_value = true;
+    }
+
+    // value getters
+    T& value()&
+    {
+        assert(has_value());
+        return m_value;
+    }
+
+    const T& value() const&
+    {
+        assert(has_value());
+        return m_value;
+    }
+
+    T&& value()&&
+    {
+        assert(has_value());
+        return std::move(m_value);
+    }
+
+    T& operator*()& { return value(); }
+    const T& operator*() const& { return value(); }
+    T&& operator*()&& { return std::move(value()); }
+
+    template <typename U>
+    T value_or(U&& v) const& { return has_value() ? value() : std::forward<U>(v); }
+    template <typename U>
+    T value_or(U&& v)&& { return has_value() ? std::move(value()) : std::forward<U>(v); }
+
+    T* operator->() { return &value(); }
+    const T* operator->() const { return &value(); }
+
+    // error getters: none
+
+private:
+    union
+    {
+        value_type m_value;
+    };
+    bool m_has_value;
+};
+
+template <typename T>
+class expected<T&, void> {
+public:
+    using value_type = T;
+    using error_type = void;
+
+    expected(T& t) : m_value(&t) {}
+    expected(unexpected_t<void>) : m_value(nullptr) {}
+
+    expected(const expected&) = default;
+    expected& operator=(const expected&) = default;
+    expected(expected&& other) noexcept = default;
+    expected& operator=(expected&& other) noexcept = default;
+
+    // bool interface
+    bool has_value() const { return !!m_value; }
+    bool has_error() const { return !m_value; }
+    explicit operator bool() const { return !!m_value; }
+
+    // optional interface
+    void clear() { m_value = nullptr; }
+    void emplace(T& t) { m_value = &t; }
+
+    // value getters (pointer semantics)
+    T& value() const
+    {
+        assert(has_value());
+        return *m_value;
+    }
+    T& operator*() const { return value(); }
+    T& value_or(T& v) const { return has_value() ? value() : v; }
+    T* operator->() const { return &value(); }
+
+    // error getters: none
+
+private:
+    value_type* m_value;
+};
+
+template <>
+class expected<void, void> {
+public:
+    using value_type = void;
+    using error_type = void;
+
+    expected() : m_has_value(true) {}
+    expected(unexpected_t<void>) : m_has_value(false) {}
+
+    expected(const expected&) = default;
+    expected& operator=(const expected&) = default;
+    expected(expected&& other) noexcept = default;
+    expected& operator=(expected&& other) noexcept = default;
+
+    // bool interface
+    bool has_value() const { return m_has_value; }
+    bool has_error() const { return !m_has_value; }
+    explicit operator bool() const { return m_has_value; }
+
+    // optional interface
+    void clear() { m_has_value = false; }
+    void emplace() { m_has_value = true; }
+
+    // value getters: none
+
+    // error getters: none
+
+private:
+    bool m_has_value;
+};
+
+template <typename T>
+using eoptional = expected<T, void>;
 
 }

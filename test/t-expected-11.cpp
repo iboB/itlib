@@ -398,6 +398,15 @@ itlib::expected<void, error> vfunc(bool b)
 
 TEST_CASE("void basic")
 {
+    itlib::expected<void, int> x = itlib::unexpected(5);
+    CHECK_FALSE(x);
+    CHECK(x.has_error());
+    CHECK(x.error() == 5);
+
+    itlib::expected<void, int> y;
+    CHECK(y);
+    CHECK(y.has_value());
+
     auto v = vfunc(true);
     CHECK(v.has_value());
     CHECK(!v.has_error());
@@ -485,4 +494,97 @@ TEST_CASE("void lifetime")
         CHECK(es.total == 2);
         CHECK(es.living == 1);
     }
+}
+
+TEST_CASE("eoptional")
+{
+    itlib::eoptional<std::string> so;
+    CHECK(so);
+    CHECK(so.has_value());
+    CHECK(!so.has_error());
+
+    *so = "xx";
+    CHECK(so->length() == 2);
+
+    auto cp = so;
+    CHECK(cp);
+    CHECK(cp.value_or("yy") == "xx");
+
+    *so = "very long string which is guaranteed to exceed small buf";
+    auto ptr = so->data();
+    auto mv = std::move(so);
+    CHECK(mv->data() == (const void*)ptr);
+
+    so.clear();
+    CHECK_FALSE(so);
+    CHECK(so.has_error());
+    CHECK(so.value_or("asd") == "asd");
+
+    itlib::eoptional<int> io = itlib::unexpected();
+    CHECK_FALSE(io);
+    CHECK(io.has_error());
+    CHECK(io.value_or(44) == 44);
+
+    io.emplace(5);
+    CHECK(io);
+    CHECK(*io == 5);
+    CHECK(io.value_or(44) == 5);
+}
+
+TEST_CASE("eoptional ref")
+{
+    std::string str;
+    itlib::eoptional<std::string&> so(str);
+    CHECK(so);
+    CHECK(so.has_value());
+    CHECK(!so.has_error());
+
+    *so = "xx";
+    CHECK(so->length() == 2);
+    CHECK(str == "xx");
+
+    auto cp = so;
+    CHECK(cp);
+    cp.value() = "yyy";
+    CHECK(so->length() == 3);
+    CHECK(str == "yyy");
+
+    so.clear();
+    CHECK_FALSE(so);
+    CHECK(so.has_error());
+
+    itlib::eoptional<const int&> io = itlib::unexpected();
+    CHECK_FALSE(io);
+    CHECK(io.has_error());
+    CHECK(io.value_or(44) == 44);
+
+    int i = 34;
+    io.emplace(i);
+    CHECK(io);
+    CHECK(*io == 34);
+    CHECK(&io.value() == &i);
+}
+
+TEST_CASE("eoptional void")
+{
+    itlib::eoptional<void> vo;
+    CHECK(vo);
+    CHECK(vo.has_value());
+    CHECK(!vo.has_error());
+
+    vo.clear();
+    CHECK_FALSE(vo);
+    CHECK(vo.has_error());
+
+    itlib::eoptional<void> vo2 = itlib::unexpected();
+    CHECK_FALSE(vo2);
+    CHECK(vo2.has_error());
+
+    auto cp = vo2;
+    CHECK_FALSE(cp);
+
+    vo2.emplace();
+    CHECK(vo2);
+
+    CHECK_FALSE(cp);
 }
