@@ -503,7 +503,7 @@ public:
     using value_type = T;
     using error_type = void;
 
-    expected() : m_value() {}
+    expected() : m_value(), m_has_value(true) {}
     expected(T&& t) : m_value(std::forward<T>(t)), m_has_value(true) {}
     expected(unexpected_t<void>) : m_has_value(false) {}
 
