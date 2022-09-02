@@ -1,6 +1,7 @@
 #include <doctest/doctest.h>
 
 #include <itlib/expected.hpp>
+#include <doctest/util/lifetime_counter.hpp>
 
 #include <type_traits>
 #include <string>
@@ -101,46 +102,8 @@ TEST_CASE("string")
     CHECK(sie("xyz").value_or("mnp") == "xyz");
 }
 
-
-// tracks lifetime
-template <typename C>
-struct track_base
-{
-    track_base() { ++def_constructions; }
-    track_base(const track_base&) { ++copy_constructions; }
-    track_base(track_base&&) { ++move_constructions; }
-    track_base& operator=(const track_base&) { ++copy_assignments; return *this; }
-    track_base& operator=(track_base&&) { ++move_assignments; return *this; }
-    ~track_base() { ++destructions; }
-    static void reset_counters()
-    {
-        def_constructions = 0;
-        move_constructions = 0;
-        move_assignments = 0;
-        destructions = 0;
-
-        // explicitly not cleared
-        // should always be zero
-        // copy_constructions = 0;
-        // copy_assignments = 0;
-    }
-
-    static int def_constructions;
-    static int copy_constructions;
-    static int move_constructions;
-    static int copy_assignments;
-    static int move_assignments;
-    static int destructions;
-};
-template <typename C> int track_base<C>::def_constructions;
-template <typename C> int track_base<C>::copy_constructions;
-template <typename C> int track_base<C>::move_constructions;
-template <typename C> int track_base<C>::copy_assignments;
-template <typename C> int track_base<C>::move_assignments;
-template <typename C> int track_base<C>::destructions;
-
-struct value : track_base<value> {};
-struct error : track_base<error> {};
+struct value : doctest::util::lifetime_counter<value> {};
+struct error : doctest::util::lifetime_counter<error> {};
 
 using vee = expected<value, error>;
 static_assert(std::is_same<vee::value_type, value>::value, "is_same");
@@ -148,128 +111,115 @@ static_assert(std::is_same<vee::error_type, error>::value, "is_same");
 
 vee func(bool b)
 {
-    if(b) return {};
+    if (b) return {};
     else return itlib::unexpected();
 }
 
 TEST_CASE("lifetime")
 {
+    using namespace doctest::util;
+
+    lifetime_counter_sentry vsentry(value::root_lifetime_stats()), esentry(error::root_lifetime_stats());
+
+    impl::lifetime_stats empty;
     {
+        value::lifetime_stats vs;
+        error::lifetime_stats es;
+
         const auto x = func(false);
         CHECK(!x);
+        CHECK(vs == empty);
+        CHECK(es.d_ctr == 1);
+        CHECK(es.living == 1);
+        CHECK(es.total == 1);
     }
-    CHECK(error::def_constructions == 1);
-    CHECK(error::move_constructions == 0);
-    CHECK(error::destructions == 1);
-    CHECK(value::def_constructions == 0);
-    CHECK(value::move_constructions == 0);
-    CHECK(value::destructions == 0);
+
 
     {
+        value::lifetime_stats vs;
+        error::lifetime_stats es;
+
         const auto x = func(true);
-        CHECK(!!x);
+        CHECK(es == empty);
+        CHECK(vs.d_ctr == 1);
+        CHECK(vs.living == 1);
+        CHECK(vs.total == 1);
     }
 
-    CHECK(error::def_constructions == 1);
-    CHECK(error::move_constructions == 0);
-    CHECK(error::destructions == 1);
-    CHECK(value::def_constructions == 1);
-    CHECK(value::move_constructions == 0);
-    CHECK(value::destructions == 1);
-
-    value::reset_counters();
-    error::reset_counters();
-
     {
+        value::lifetime_stats vs;
+        error::lifetime_stats es;
+
         auto x = func(false);
         x = func(false);
         REQUIRE(x.has_error());
-        CHECK(error::def_constructions == 2);
-        CHECK(error::move_constructions == 0);
-        CHECK(error::move_assignments == 1);
-        CHECK(error::destructions == 1);
+        CHECK(es.d_ctr == 2);
+        CHECK(es.m_ctr == 0);
+        CHECK(es.m_asgn == 1);
+        CHECK(es.living == 1);
 
         auto e = func(false).error();
-        CHECK(error::def_constructions == 3);
-        CHECK(error::move_constructions == 1);
-        CHECK(error::move_assignments == 1);
-        CHECK(error::destructions == 2);
+        CHECK(es.d_ctr == 3);
+        CHECK(es.m_ctr == 1);
+        CHECK(es.m_asgn == 1);
+        CHECK(es.living == 2);
+        CHECK(es.total == 4);
+
+        CHECK(vs == empty);
     }
 
-    CHECK(error::destructions == 4);
-
-    CHECK(value::def_constructions == 0);
-    CHECK(value::move_constructions == 0);
-    CHECK(value::move_assignments == 0);
-    CHECK(value::destructions == 0);
-
-    error::reset_counters();
-
     {
+        value::lifetime_stats vs;
+        error::lifetime_stats es;
+
         auto x = func(true);
         x = func(true);
         REQUIRE(x.has_value());
-        CHECK(value::def_constructions == 2);
-        CHECK(value::move_constructions == 0);
-        CHECK(value::move_assignments == 1);
-        CHECK(value::destructions == 1);
+        CHECK(vs.d_ctr == 2);
+        CHECK(vs.m_ctr == 0);
+        CHECK(vs.m_asgn == 1);
+        CHECK(vs.living == 1);
 
-        auto e = func(true).value();
-        CHECK(value::def_constructions == 3);
-        CHECK(value::move_constructions == 1);
-        CHECK(value::move_assignments == 1);
-        CHECK(value::destructions == 2);
+        auto v = func(true).value();
+        CHECK(vs.d_ctr == 3);
+        CHECK(vs.m_ctr == 1);
+        CHECK(vs.m_asgn == 1);
+        CHECK(vs.living == 2);
+        CHECK(vs.total == 4);
+
+        CHECK(es == empty);
     }
 
-    CHECK(value::destructions == 4);
-
-    CHECK(error::def_constructions == 0);
-    CHECK(error::move_constructions == 0);
-    CHECK(error::move_assignments == 0);
-    CHECK(error::destructions == 0);
-
-    value::reset_counters();
-
-    // value to error
-    {
-        auto x = func(false);
-        x = func(true);
-        CHECK(x.has_value());
-    }
-
-    CHECK(error::def_constructions == 1);
-    CHECK(error::move_constructions == 0);
-    CHECK(error::move_assignments == 0);
-    CHECK(error::destructions == 1);
-    CHECK(value::def_constructions == 1);
-    CHECK(value::move_constructions == 1);
-    CHECK(value::move_assignments == 0);
-    CHECK(value::destructions == 2);
-
-    value::reset_counters();
-    error::reset_counters();
 
     // error to value
     {
+        value::lifetime_stats vs;
+        error::lifetime_stats es;
+        auto x = func(false);
+        x = func(true);
+        CHECK(x.has_value());
+        CHECK(es.d_ctr == 1);
+        CHECK(es.total == 1);
+        CHECK(es.living == 0);
+        CHECK(vs.d_ctr == 1);
+        CHECK(vs.m_ctr == 1);
+        CHECK(vs.total == 2);
+        CHECK(vs.living == 1);
+    }
+
+    // value to error
+    {
+        value::lifetime_stats vs;
+        error::lifetime_stats es;
         auto x = func(true);
         x = func(false);
         CHECK(x.has_error());
+        CHECK(vs.d_ctr == 1);
+        CHECK(vs.total == 1);
+        CHECK(vs.living == 0);
+        CHECK(es.d_ctr == 1);
+        CHECK(es.m_ctr == 1);
+        CHECK(es.total == 2);
+        CHECK(es.living == 1);
     }
-
-    CHECK(error::def_constructions == 1);
-    CHECK(error::move_constructions == 1);
-    CHECK(error::move_assignments == 0);
-    CHECK(error::destructions == 2);
-    CHECK(value::def_constructions == 1);
-    CHECK(value::move_constructions == 0);
-    CHECK(value::move_assignments == 0);
-    CHECK(value::destructions == 1);
-
-    value::reset_counters();
-    error::reset_counters();
-
-    CHECK(value::copy_constructions == 0);
-    CHECK(value::copy_assignments == 0);
-    CHECK(error::copy_constructions == 0);
-    CHECK(error::copy_assignments == 0);
 }

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 
 include(./get_cpm.cmake)
 
-CPMAddPackage(gh:iboB/doctest-util@0.0.3)
+CPMAddPackage(gh:iboB/doctest-util@0.0.4)
 
 macro(define_doctest_lib std)
     add_library(doctest-${std} STATIC doctest_main.cpp)

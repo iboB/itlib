@@ -4,7 +4,7 @@
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2021 Borislav Stanimirov
+// Copyright(c) 2021-2022 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -36,7 +36,7 @@
 //
 // Simply include this file wherever you need.
 // It defines the class itlib::expected, which is a union type of a value and
-// an error.
+// an error. It is similar to C++23's std::expected
 //
 // It is somewhat similar to std::optional. In a way you can think of
 // std::optional<T> as an itlib::expected<T, bool> WITH THE NOTABLE DIFFERENCE
