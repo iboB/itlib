@@ -316,9 +316,9 @@ public:
     expected(T& t) : m_value(&t) {}
 
     template <typename E2>
-    expected(unexpected_t<E2>&& u) : m_error(std::move(u.m_error)), m_value(nullptr) {}
+    expected(unexpected_t<E2>&& u) : m_value(nullptr), m_error(std::move(u.m_error)) {}
 
-    expected(unexpected_t<void>) : m_error(), m_value(nullptr) {}
+    expected(unexpected_t<void>) : m_value(nullptr), m_error() {}
 
     // do not copy
     expected(const expected&) = delete;
