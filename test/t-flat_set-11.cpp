@@ -189,6 +189,38 @@ TEST_CASE("[flat_set] initialize")
     CHECK(c3[2] == "gg");
 }
 
+TEST_CASE("[flat_map] ranges")
+{
+    using namespace itlib;
+    flat_set<std::string> m = {"abc", "def", "geh", "xxx"};
+    auto abc = m.find("abc");
+    CHECK(*abc == "abc");
+    auto def = m.find("def");
+    CHECK(*def == "def");
+    auto geh = m.find("geh");
+    CHECK(*geh == "geh");
+    auto xxx = m.find("xxx");
+    CHECK(*xxx == "xxx");
+
+    CHECK(m.lower_bound("aaa") == abc);
+    CHECK(m.lower_bound("abc") == abc);
+    CHECK(m.lower_bound("bbb") == def);
+    CHECK(m.lower_bound("xxx") == xxx);
+    CHECK(m.lower_bound("xxz") == m.end());
+
+    CHECK(m.upper_bound("aaa") == abc);
+    CHECK(m.upper_bound("abc") == def);
+    CHECK(m.upper_bound("bbb") == def);
+    CHECK(m.upper_bound("xxx") == m.end());
+    CHECK(m.upper_bound("xxz") == m.end());
+
+    CHECK(m.equal_range("aaa") == std::make_pair(abc, abc));
+    CHECK(m.equal_range("abc") == std::make_pair(abc, def));
+    CHECK(m.equal_range("bbb") == std::make_pair(def, def));
+    CHECK(m.equal_range("xxx") == std::make_pair(xxx, m.end()));
+    CHECK(m.equal_range("xxz") == std::make_pair(m.end(), m.end()));
+}
+
 #include <itlib/static_vector.hpp>
 
 TEST_CASE("[flat_set] static_vector test")

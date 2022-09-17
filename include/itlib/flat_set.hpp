@@ -1,4 +1,4 @@
-// itlib-flat-set v1.03
+// itlib-flat-set v1.05
 //
 // std::set-like class with an underlying vector
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.05 (2022-09-17) upper_bound and equal_range
 //  1.04 (2022-06-23) Transparent lookups (C++14 style)
 //  1.03 (2022-04-14) Noxcept move construct and assign
 //  1.02 (2021-09-28) Fixed construction from std::initializer_list which
@@ -176,6 +177,30 @@ public:
     const_iterator lower_bound(const F& k) const
     {
         return std::lower_bound(m_container.begin(), m_container.end(), k, m_cmp);
+    }
+
+    template <typename K>
+    iterator upper_bound(const K& k)
+    {
+        return std::upper_bound(m_container.begin(), m_container.end(), k, m_cmp);
+    }
+
+    template <typename K>
+    const_iterator upper_bound(const K& k) const
+    {
+        return std::upper_bound(m_container.begin(), m_container.end(), k, m_cmp);
+    }
+
+    template <typename K>
+    std::pair<iterator, iterator> equal_range(const K& k)
+    {
+        return std::equal_range(m_container.begin(), m_container.end(), k, m_cmp);
+    }
+
+    template <typename K>
+    std::pair<const_iterator, const_iterator> equal_range(const K& k) const
+    {
+        return std::equal_range(m_container.begin(), m_container.end(), k, m_cmp);
     }
 
     template <typename F>
