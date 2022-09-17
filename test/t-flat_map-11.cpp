@@ -180,6 +180,38 @@ TEST_CASE("[flat_map] test")
     CHECK(m2.capacity() == m1c);
 }
 
+TEST_CASE("[flat_map] ranges")
+{
+    using namespace itlib;
+    flat_map<std::string, int> m = {{"abc", 1}, {"def", 44}, {"geh", 11}, {"xxx", 43}};
+    auto abc = m.find("abc");
+    CHECK(abc->first == "abc");
+    auto def = m.find("def");
+    CHECK(def->first == "def");
+    auto geh = m.find("geh");
+    CHECK(geh->first == "geh");
+    auto xxx = m.find("xxx");
+    CHECK(xxx->first == "xxx");
+
+    CHECK(m.lower_bound("aaa") == abc);
+    CHECK(m.lower_bound("abc") == abc);
+    CHECK(m.lower_bound("bbb") == def);
+    CHECK(m.lower_bound("xxx") == xxx);
+    CHECK(m.lower_bound("xxz") == m.end());
+
+    CHECK(m.upper_bound("aaa") == abc);
+    CHECK(m.upper_bound("abc") == def);
+    CHECK(m.upper_bound("bbb") == def);
+    CHECK(m.upper_bound("xxx") == m.end());
+    CHECK(m.upper_bound("xxz") == m.end());
+
+    CHECK(m.equal_range("aaa") == std::make_pair(abc, abc));
+    CHECK(m.equal_range("abc") == std::make_pair(abc, def));
+    CHECK(m.equal_range("bbb") == std::make_pair(def, def));
+    CHECK(m.equal_range("xxx") == std::make_pair(xxx, m.end()));
+    CHECK(m.equal_range("xxz") == std::make_pair(m.end(), m.end()));
+}
+
 TEST_CASE("[flat_map] initialize")
 {
     using namespace itlib;

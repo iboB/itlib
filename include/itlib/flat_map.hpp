@@ -1,4 +1,4 @@
-// itlib-flat-map v1.04
+// itlib-flat-map v1.05
 //
 // std::map-like class with an underlying vector
 //
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.05 (2022-09-17) upper_bound and equal_range
 //  1.04 (2022-07-07) Transparent lookups (C++14 style)
 //                    Transparent construction
 //  1.03 (2022-04-14) Noxcept move construct and assign
@@ -196,6 +197,30 @@ public:
     const_iterator lower_bound(const K& k) const
     {
         return std::lower_bound(m_container.begin(), m_container.end(), k, m_cmp);
+    }
+
+    template <typename K>
+    iterator upper_bound(const K& k)
+    {
+        return std::upper_bound(m_container.begin(), m_container.end(), k, m_cmp);
+    }
+
+    template <typename K>
+    const_iterator upper_bound(const K& k) const
+    {
+        return std::upper_bound(m_container.begin(), m_container.end(), k, m_cmp);
+    }
+
+    template <typename K>
+    std::pair<iterator, iterator> equal_range(const K& k)
+    {
+        return std::equal_range(m_container.begin(), m_container.end(), k, m_cmp);
+    }
+
+    template <typename K>
+    std::pair<const_iterator, const_iterator> equal_range(const K& k) const
+    {
+        return std::equal_range(m_container.begin(), m_container.end(), k, m_cmp);
     }
 
     template <typename K>
