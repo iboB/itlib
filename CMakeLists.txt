@@ -19,6 +19,7 @@ if(dev_mode)
 endif()
 
 add_library(itlib INTERFACE)
+add_library(itlib::itlib ALIAS itlib)
 target_include_directories(itlib INTERFACE include)
 
 if(ITLIB_BUILD_TESTS)

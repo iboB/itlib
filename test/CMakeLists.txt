@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 3.14)
 
 include(./get_cpm.cmake)
 
-CPMAddPackage(gh:iboB/doctest-util@0.0.4)
+CPMAddPackage(gh:iboB/doctest-util@0.0.5)
 
 macro(define_doctest_lib std)
     add_library(doctest-${std} STATIC doctest_main.cpp)
     set_target_properties(doctest-${std} PROPERTIES CXX_STANDARD ${std})
-    target_link_libraries(doctest-${std} PUBLIC doctest-headers)
+    target_link_libraries(doctest-${std} PUBLIC doctest::headers)
 endmacro()
 
 define_doctest_lib(11)
@@ -21,7 +21,7 @@ macro(add_test_for_std test std)
     set_target_properties(${tname} PROPERTIES
         CXX_STANDARD ${std}
     )
-    target_link_libraries(${tname} doctest-${std} doctest-util itlib ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(${tname} doctest-${std} doctest::util itlib ${CMAKE_THREAD_LIBS_INIT})
 
     add_test(NAME itlib-${test}-${std} COMMAND ${tname})
 endmacro()
