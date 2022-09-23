@@ -1,4 +1,4 @@
-// itlib-ufunction v1.00
+// itlib-ufunction v1.01
 //
 // Unique Function
 // Non-copyable and noexcept move-constructible replacement for std::function
@@ -30,6 +30,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2022-09-23) Allow ufunction from a free function
 //  1.00 (2020-10-15) Initial release
 //
 //
@@ -93,6 +94,15 @@ public:
     ufunction& operator=(FO&& f) noexcept
     {
         function::operator=(copy_wrapper<FO>{std::move(f)});
+        return *this;
+    }
+
+    // function pointer overloads (otherwise clang and gcc complain for const_cast of function pointers)
+    // noexcept since we're relying on small function opti
+    ufunction(F* fptr) noexcept : function(fptr) {}
+    ufunction& operator=(F* fptr) noexcept
+    {
+        function::operator=(fptr);
         return *this;
     }
 

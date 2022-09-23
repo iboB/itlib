@@ -38,3 +38,14 @@ TEST_CASE("Basic")
     CHECK(f2(1) == 6);
 }
 
+int sum(int a, int b) { return a + b; }
+
+TEST_CASE("Free func")
+{
+    itlib::ufunction<int(int, int)> func = sum;
+    CHECK(func(1, 2) == 3);
+    func = [](int a, int b) { return a * b; };
+    CHECK(func(3, 4) == 12);
+    func = sum;
+    CHECK(func(3, 4) == 7);
+}
