@@ -1,4 +1,4 @@
-// itlib-small-vector v2.01
+// itlib-small-vector v2.02
 //
 // std::vector-like class with a static buffer for initial capacity
 //
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  2.02 (2022-09-24) Minor: Fixed leftover arguments in error handling macros
 //  2.01 (2022-08-26) Minor: renames, doc
 //  2.00 (2022-08-26) Redesign
 //                    * Smaller size
@@ -163,11 +164,11 @@
 #   define I_ITLIB_SMALL_VECTOR_OUT_OF_RANGE_IF(cond) if (cond) throw std::out_of_range("itlib::small_vector out of range")
 #elif ITLIB_SMALL_VECTOR_ERROR_HANDLING == ITLIB_SMALL_VECTOR_ERROR_HANDLING_ASSERT
 #   include <cassert>
-#   define I_ITLIB_SMALL_VECTOR_OUT_OF_RANGE_IF(cond, rescue_return) assert(!(cond) && "itlib::small_vector out of range")
+#   define I_ITLIB_SMALL_VECTOR_OUT_OF_RANGE_IF(cond) assert(!(cond) && "itlib::small_vector out of range")
 #elif ITLIB_SMALL_VECTOR_ERROR_HANDLING == ITLIB_SMALL_VECTOR_ERROR_HANDLING_ASSERT_AND_THROW
 #   include <stdexcept>
 #   include <cassert>
-#   define I_ITLIB_SMALL_VECTOR_OUT_OF_RANGE_IF(cond, rescue_return) \
+#   define I_ITLIB_SMALL_VECTOR_OUT_OF_RANGE_IF(cond) \
     do { if (cond) { assert(false && "itlib::small_vector out of range"); throw std::out_of_range("itlib::small_vector out of range"); } } while(false)
 #else
 #error "Unknown ITLIB_SMALL_VECTOR_ERRROR_HANDLING"
