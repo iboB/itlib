@@ -1,4 +1,4 @@
-// itlib-static-vector v1.04
+// itlib-static-vector v1.05
 //
 // std::vector-like class with a fixed capacity
 //
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.05 (2022-09-24) Simplified error handling macros: no rescue
 //  1.04 (2021-11-18) Added assign ops
 //  1.03 (2021-10-05) Don't rely on operator!= from T. Use operator== instead
 //  1.02 (2021-08-04) emplace_back() returns a reference as per C++17
@@ -76,13 +77,8 @@
 //      ensue if the error is triggered.
 // * ITLIB_STATIC_VECTOR_ERROR_HANDLING_THROW - std::out_of_range is thrown.
 // * ITLIB_STATIC_VECTOR_ERROR_HANDLING_ASSERT - asserions are triggered.
-// * ITLIB_STATIC_VECTOR_ERROR_HANDLING_RESCUE - the error is ignored but
-//      sanity is (somewhat) preserved. Functions which trigger the error will
-//      just bail without changing the vector.
 // * ITLIB_STATIC_VECTOR_ERROR_HANDLING_ASSERT_AND_THROW - combines assert and
 //      throw to catch errors more easily in debug mode
-// * ITLIB_STATIC_VECTOR_ERROR_HANDLING_ASSERT_AND_RESCUE - combines assert and
-//      rescue to catch errors in debug mode and silently bail in release mode.
 //
 // To set this setting by editing the file change the line:
 // ```
@@ -120,33 +116,25 @@
 #define ITLIB_STATIC_VECTOR_ERROR_HANDLING_NONE  0
 #define ITLIB_STATIC_VECTOR_ERROR_HANDLING_THROW 1
 #define ITLIB_STATIC_VECTOR_ERROR_HANDLING_ASSERT 2
-#define ITLIB_STATIC_VECTOR_ERROR_HANDLING_RESCUE 3
-#define ITLIB_STATIC_VECTOR_ERROR_HANDLING_ASSERT_AND_THROW 4
-#define ITLIB_STATIC_VECTOR_ERROR_HANDLING_ASSERT_AND_RESCUE 5
+#define ITLIB_STATIC_VECTOR_ERROR_HANDLING_ASSERT_AND_THROW 3
 
 #if !defined(ITLIB_STATIC_VECTOR_ERROR_HANDLING)
 #   define ITLIB_STATIC_VECTOR_ERROR_HANDLING ITLIB_STATIC_VECTOR_ERROR_HANDLING_THROW
 #endif
 
 #if ITLIB_STATIC_VECTOR_ERROR_HANDLING == ITLIB_STATIC_VECTOR_ERROR_HANDLING_NONE
-#   define I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(cond, rescue_return)
+#   define I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(cond)
 #elif ITLIB_STATIC_VECTOR_ERROR_HANDLING == ITLIB_STATIC_VECTOR_ERROR_HANDLING_THROW
 #   include <stdexcept>
-#   define I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(cond, rescue_return) if (cond) throw std::out_of_range("itlib::static_vector out of range")
+#   define I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(cond) if (cond) throw std::out_of_range("itlib::static_vector out of range")
 #elif ITLIB_STATIC_VECTOR_ERROR_HANDLING == ITLIB_STATIC_VECTOR_ERROR_HANDLING_ASSERT
 #   include <cassert>
-#   define I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(cond, rescue_return) assert(!(cond) && "itlib::static_vector out of range")
-#elif ITLIB_STATIC_VECTOR_ERROR_HANDLING == ITLIB_STATIC_VECTOR_ERROR_HANDLING_RESCUE
-#   define I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(cond, rescue_return) if (cond) return rescue_return
+#   define I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(cond) assert(!(cond) && "itlib::static_vector out of range")
 #elif ITLIB_STATIC_VECTOR_ERROR_HANDLING == ITLIB_STATIC_VECTOR_ERROR_HANDLING_ASSERT_AND_THROW
 #   include <stdexcept>
 #   include <cassert>
-#   define I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(cond, rescue_return) \
+#   define I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(cond) \
     do { if (cond) { assert(false && "itlib::static_vector out of range"); throw std::out_of_range("itlib::static_vector out of range"); } } while(false)
-#elif ITLIB_STATIC_VECTOR_ERROR_HANDLING == ITLIB_STATIC_VECTOR_ERROR_HANDLING_ASSERT_AND_RESCUE
-#   include <cassert>
-#   define I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(cond, rescue_return) \
-    do { if (cond) { assert(false && "itlib::static_vector out of range"); return rescue_return; } } while(false)
 #else
 #error "Unknown ITLIB_STATIC_VECTOR_ERRROR_HANDLING"
 #endif
@@ -220,7 +208,7 @@ public:
     template <size_t CapacityB>
     static_vector(const static_vector<T, CapacityB>& v)
     {
-        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(v.size() > Capacity, );
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(v.size() > Capacity);
 
         for (const auto& i : v)
         {
@@ -441,7 +429,7 @@ public:
 
     void push_back(const_reference v)
     {
-        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(size() >= Capacity, );
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(size() >= Capacity);
 
         ::new(m_data + m_size) T(v);
         ++m_size;
@@ -449,7 +437,7 @@ public:
 
     void push_back(T&& v)
     {
-        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(size() >= Capacity, );
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(size() >= Capacity);
 
         ::new(m_data + m_size) T(std::move(v));
         ++m_size;
@@ -458,7 +446,7 @@ public:
     template<typename... Args>
     reference emplace_back(Args&&... args)
     {
-        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(size() >= Capacity, );
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(size() >= Capacity);
 
         ::new(m_data + m_size) T(std::forward<Args>(args)...);
         ++m_size;
@@ -467,7 +455,7 @@ public:
 
     iterator insert(iterator position, const value_type& val)
     {
-        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(size() >= Capacity, position);
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(size() >= Capacity);
 
         if (position == end())
         {
@@ -490,7 +478,7 @@ public:
     template<typename... Args>
     iterator emplace(iterator position, Args&&... args)
     {
-        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(size() >= Capacity, position);
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(size() >= Capacity);
 
         if (position == end())
         {
@@ -527,7 +515,7 @@ public:
 
     void resize(size_type n)
     {
-        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(n > Capacity, );
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(n > Capacity);
 
         while (m_size > n)
         {
@@ -575,7 +563,7 @@ public:
 private:
     void assign_impl_val(size_t count, const T& value)
     {
-        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(count > Capacity, );
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(count > Capacity);
 
         for (size_t i = 0; i < count; ++i)
         {
@@ -586,7 +574,7 @@ private:
     template <class InputIterator>
     void assign_impl_iter(InputIterator first, InputIterator last)
     {
-        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(long(last - first) > long(Capacity), );
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(long(last - first) > long(Capacity));
 
         for (auto i = first; i != last; ++i)
         {
@@ -596,7 +584,7 @@ private:
 
     void assign_impl_ilist(std::initializer_list<T> l)
     {
-        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(l.size() > Capacity, );
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(l.size() > Capacity);
 
         for (auto&& i : l)
         {
