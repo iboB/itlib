@@ -199,7 +199,7 @@ template <typename CharT>
 class mem_istreambuf final : public std::basic_streambuf<CharT>
 {
 private:
-    static_assert(std::is_trivial<CharT>::value, "mem ostream must be of pod type");
+    static_assert(std::is_trivial<CharT>::value, "mem istream must be of pod type");
     using super = std::basic_streambuf<CharT>;
 public:
     using int_type = typename super::int_type;
