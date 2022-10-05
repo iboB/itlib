@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.14)
 
 include(./get_cpm.cmake)
 
+CPMAddPackage(gh:iboB/icm@1.4.0)
 CPMAddPackage(gh:iboB/doctest-util@0.0.5)
+
+include(${icm_SOURCE_DIR}/icm_build_failure_testing.cmake)
 
 macro(define_doctest_lib std)
     add_library(doctest-${std} STATIC doctest_main.cpp)
@@ -67,3 +70,13 @@ find_package(Threads)
 if (Threads_FOUND)
     add_itlib_test(mutex)
 endif()
+
+icm_add_multiple_build_failure_tests(
+    SOURCES
+        bft-small_vector-revert-cap-mismatch.cpp
+        bft-pod_vector-pod.cpp
+    LIBRARIES
+        itlib
+    PREFIX
+        itlib
+)
