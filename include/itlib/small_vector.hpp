@@ -1,4 +1,4 @@
-// itlib-small-vector v2.02
+// itlib-small-vector v2.03
 //
 // std::vector-like class with a static buffer for initial capacity
 //
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  2.03 (2022-10-31) Minor: Removed unused local var
 //  2.02 (2022-09-24) Minor: Fixed leftover arguments in error handling macros
 //  2.01 (2022-08-26) Minor: renames, doc
 //  2.00 (2022-08-26) Redesign
@@ -591,7 +592,6 @@ public:
     iterator insert(const_iterator position, InputIterator first, InputIterator last)
     {
         auto pos = grow_at(position, last - first);
-        size_type i = 0;
         auto np = pos;
         for (auto p = first; p != last; ++p, ++np)
         {

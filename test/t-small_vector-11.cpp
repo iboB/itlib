@@ -499,6 +499,19 @@ TEST_CASE("[small_vector] static-dynamic")
     CHECK(ivec3.size() == 2);
     CHECK(ivec3.capacity() == 50);
     CHECK_FALSE(ivec3.is_static());
+
+    CHECK(*ivec2.begin() == 11);
+    CHECK(ivec2[1] == 88);
+    CHECK(ivec2.back() == 11);
+
+    auto p = ivec3.insert(ivec3.begin() + 1, ivec2.begin(), ivec2.end());
+    CHECK(p == ivec3.begin() + 1);
+    CHECK(ivec3.size() == 5);
+    CHECK(ivec3.front() == 0);
+    CHECK(ivec3.back() == 0);
+    CHECK(ivec3[1] == 11);
+    CHECK(ivec3[2] == 88);
+    CHECK(ivec3[3] == 11);
 }
 
 struct foo
