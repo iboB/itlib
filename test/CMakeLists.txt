@@ -65,6 +65,7 @@ add_itlib_test(stride_span)
 add_itlib_test(time_t)
 add_itlib_test(type_traits)
 add_itlib_test(ufunction)
+add_itlib_test(utility)
 
 find_package(Threads)
 if (Threads_FOUND)
@@ -75,6 +76,7 @@ icm_add_multiple_build_failure_tests(
     SOURCES
         bft-small_vector-revert-cap-mismatch.cpp
         bft-pod_vector-pod.cpp
+        bft-utility-force_move.cpp
     LIBRARIES
         itlib
     PREFIX
