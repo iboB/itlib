@@ -101,3 +101,21 @@ TEST_CASE("erase_all")
     CHECK(vec.size() == 1);
     CHECK(vec.front() == 1);
 }
+
+#include <itlib/span.hpp>
+
+TEST_CASE("span")
+{
+    std::vector<int> vec = {1,2,3,2,4};
+    itlib::span<int> span = vec;
+    itlib::span<const int> cspan = vec;
+
+    CHECK(itlib::qfind(span, 3) - span.begin() == 3);
+    CHECK(itlib::qfind(cspan, 1) == cspan.begin());
+
+    auto p = pfind(span, 2);
+    CHECK(*p == 2);
+    *p = 18;
+    auto cp = pfind(cspan, 18);
+    CHECK(cp == p);
+}

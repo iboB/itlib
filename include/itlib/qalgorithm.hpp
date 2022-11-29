@@ -1,4 +1,4 @@
-// itlib-qalgorithm v1.01
+// itlib-qalgorithm v1.02
 //
 // Wrappers of <algorithm> algorithms for entire containers
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2022-11-29) span-compatible pfind and pfind_if
 //  1.01 (2020-12-29) Added erase functions
 //  1.00 (2020-12-28) First pulic release
 //
@@ -72,7 +73,7 @@ struct iterator_t
 template <typename Container>
 struct pointer_t
 {
-    using type = typename std::conditional<std::is_const<Container>::value, typename Container::value_type const*, typename Container::value_type*>::type;
+    using type = typename std::conditional<std::is_const<Container>::value, typename Container::const_pointer, typename Container::pointer>::type;
 };
 }
 
