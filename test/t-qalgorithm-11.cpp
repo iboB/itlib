@@ -110,7 +110,7 @@ TEST_CASE("span")
     itlib::span<int> span = vec;
     itlib::span<const int> cspan = vec;
 
-    CHECK(itlib::qfind(span, 3) - span.begin() == 3);
+    CHECK(itlib::qfind(span, 3) - span.begin() == 2);
     CHECK(itlib::qfind(cspan, 1) == cspan.begin());
 
     auto p = pfind(span, 2);
