@@ -9,7 +9,7 @@ public:
     using itlib::enable_shared_from::weak_from;
     using itlib::enable_shared_from::shared_from;
 
-    auto clone() {
+    std::shared_ptr<session> clone() {
         return shared_from(this);
     }
 };
