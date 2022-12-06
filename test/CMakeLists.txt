@@ -45,6 +45,7 @@ endmacro()
 
 add_itlib_test(itlib)
 
+add_itlib_test(atomic)
 add_itlib_test(dynamic_bitset)
 add_itlib_test(expected)
 add_itlib_test(flat_map)
