@@ -82,7 +82,7 @@ protected:
         return esd::weak_from_this();
 #else
         return shared_from_this();
-#endif;
+#endif
     }
 
     std::weak_ptr<const void> weak_from_this() const
@@ -91,7 +91,7 @@ protected:
         return esd::weak_from_this();
 #else
         return shared_from_this();
-#endif;
+#endif
     }
 
     template <typename T>
