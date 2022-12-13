@@ -64,7 +64,7 @@ struct alignas(64) asps_spinlock {
     }
 
     struct lock_guard {
-        lock_guard(asps_spinlock& sl) : m_sl(sl) { m_sl.lock(); }
+        lock_guard(asps_spinlock& sl) noexcept : m_sl(sl) { m_sl.lock(); }
         ~lock_guard() { m_sl.unlock(); }
     private:
         asps_spinlock& m_sl;
@@ -102,8 +102,8 @@ class atomic_shared_ptr_storage {
 public:
     using shared_pointer_type = std::shared_ptr<T>;
 
-    atomic_shared_ptr_storage() = default;
-    atomic_shared_ptr_storage(shared_pointer_type ptr) : m_holder(std::move(ptr)) {}
+    atomic_shared_ptr_storage() noexcept = default;
+    atomic_shared_ptr_storage(shared_pointer_type ptr) noexcept : m_holder(std::move(ptr)) {}
 
     atomic_shared_ptr_storage(const atomic_shared_ptr_storage&) = delete;
     atomic_shared_ptr_storage& operator=(const atomic_shared_ptr_storage&) = delete;
