@@ -4,7 +4,7 @@
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2020 Borislav Stanimirov
+// Copyright(c) 2020-2022 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
