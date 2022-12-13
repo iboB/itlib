@@ -1,4 +1,4 @@
-// itlib-make-ptr v1.00
+// itlib-make-ptr v1.01
 //
 // Helper functions for making std::shared_ptr and std::unique_ptr
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2022-13-12) Added make_aliased
 //  1.00 (2020-10-15) Initial release
 //
 //
@@ -47,6 +48,11 @@
 //   The same as itlib::make_shared but for std::unique_ptr
 //   It's also written for C++11, so you don't need to enable C++14 to include
 //   this header. However it's not a full substitution for std::make_unique
+//
+// * std::shared_ptr<T> make_aliased(const std::shared_ptr<U>& owner, T* ptr)
+//   *SAFELY* create an aliased shared pointer.
+//   If the use count of owner is zero, it will return null even if ptr is
+//   not null.
 //
 // Example:
 //
@@ -84,6 +90,12 @@ auto make_unique(T&& t) -> std::unique_ptr<typename std::remove_reference<T>::ty
 {
     using RRT = typename std::remove_reference<T>::type;
     return  std::unique_ptr<RRT>(new RRT(std::forward<T>(t)));
+}
+
+template <typename U, typename T>
+std::shared_ptr<T> make_aliased(const std::shared_ptr<U>& owner, T* ptr) {
+    if (owner.use_count() == 0) return {};
+    return std::shared_ptr<T>(owner, ptr);
 }
 
 }

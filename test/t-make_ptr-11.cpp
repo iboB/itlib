@@ -1,3 +1,6 @@
+// Copyright (c) Borislav Stanimirov
+// SPDX-License-Identifier: MIT
+//
 #include <doctest/doctest.h>
 
 #include <itlib/make_ptr.hpp>
@@ -19,12 +22,34 @@ CHECK(heist->size() == 3); \
 CHECK(heist->data() == vdata); \
 
 
-TEST_CASE("[make-ptr:make_shared] test")
+TEST_CASE("[make-ptr:make_shared]")
 {
     maker_test(itlib::make_shared);
 }
 
-TEST_CASE("[make-ptr:make_unique] test")
+TEST_CASE("[make-ptr:make_unique]")
 {
     maker_test(itlib::make_unique);
+}
+
+struct vec { int x; int y; };
+
+TEST_CASE("[make-ptr:make_aliased]")
+{
+    // non-null
+    {
+        auto ptr = itlib::make_shared(vec{1, 2});
+        auto alias = itlib::make_aliased(ptr, &ptr->y);
+        CHECK(alias);
+        CHECK(*alias == 2);
+        CHECK(alias.use_count() == 2);
+    }
+
+    // null
+    {
+        std::shared_ptr<vec> ptr;
+        auto alias = itlib::make_aliased(ptr, &ptr->y);
+        CHECK_FALSE(alias);
+        CHECK(alias.use_count() == 0);
+    }
 }
