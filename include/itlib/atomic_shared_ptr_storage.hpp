@@ -77,8 +77,8 @@ class asps_holder {
     sptr m_ptr;
     mutable asps_spinlock m_spinlock;
 public:
-    asps_holder() = default;
-    asps_holder(std::shared_ptr<T> ptr) : m_ptr(std::move(ptr)) {}
+    asps_holder() noexcept = default;
+    asps_holder(std::shared_ptr<T> ptr) noexcept : m_ptr(std::move(ptr)) {}
 
     sptr load() const noexcept {
         asps_spinlock::lock_guard _l(m_spinlock);
