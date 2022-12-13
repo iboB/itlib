@@ -47,8 +47,7 @@ endmacro()
 
 add_itlib_test(itlib)
 
-add_itlib_test(atomic)
-add_itlib_test(dynamic_bitset)
+add_itlib_test(atp)
 add_itlib_test(expected)
 add_itlib_test(flat_map)
 add_itlib_test(flat_set)
@@ -73,6 +72,8 @@ add_itlib_test(utility)
 
 find_package(Threads)
 if (Threads_FOUND)
+    add_itlib_test(atomic)
+    add_itlib_test(atomic_shared_ptr_storage)
     add_itlib_test(mutex)
 endif()
 
