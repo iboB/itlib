@@ -89,6 +89,27 @@ public:
         asps_spinlock::lock_guard _l(m_spinlock);
         m_ptr.swap(ptr);
     }
+
+    sptr exchange(sptr ptr) noexcept {
+        {
+            asps_spinlock::lock_guard _l(m_spinlock);
+            m_ptr.swap(ptr);
+        }
+        return std::move(ptr);
+    }
+
+    // have _strong to match atomic<shared_ptr>
+    bool compare_exchange_strong(sptr& expect, sptr ptr) noexcept {
+        asps_spinlock::lock_guard _l(m_spinlock);
+        if (m_ptr == expect) {
+            m_ptr.swap(ptr);
+            return true;
+        }
+        else {
+            expect = m_ptr;
+            return false;
+        }
+    }
 };
 
 }
@@ -110,5 +131,11 @@ public:
 
     shared_pointer_type load() const noexcept { return m_holder.load(); }
     void store(shared_pointer_type ptr) noexcept { m_holder.store(std::move(ptr)); }
+
+    shared_pointer_type exchange(shared_pointer_type ptr) noexcept { return m_holder.exchange(std::move(ptr)); }
+
+    bool compare_exchange(shared_pointer_type& expect, shared_pointer_type ptr) noexcept {
+        return m_holder.compare_exchange_strong(expect, std::move(ptr));
+    }
 };
 }
