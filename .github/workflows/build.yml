@@ -9,7 +9,7 @@ jobs:
         type: [Debug, RelWithDebInfo]
     steps:
       - name: Clone
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Configure
         run: cmake . -DCMAKE_BUILD_TYPE=${{ matrix.type }} -DITLIB_ASAN=1
       - name: Build
