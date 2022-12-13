@@ -43,7 +43,7 @@
 #pragma once
 #include <memory>
 
-#if __cplusplus >= 202000L
+#if __cplusplus >= 202000L && defined(__cpp_lib_atomic_shared_ptr)
 // do what the stdlib implementers chose as best in case it's available
 namespace itlib::impl {
 template <typename T>
