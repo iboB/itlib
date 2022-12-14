@@ -133,5 +133,9 @@ TEST_CASE("[itlib::atomic_shared_ptr_storage] exchange") {
     ta.join();
     tb.join();
 
-    CHECK(sum.load() >= 2);
+    // if thread b completed all of its iterations before a managed to do one,
+    // we will end up with 100% fail rate in b and a stored in storage
+    sum += storage.compare_exchange(a, b);
+
+    CHECK(sum >= 2);
 }
