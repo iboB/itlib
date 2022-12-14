@@ -35,13 +35,13 @@
 //
 // Simply include this file wherever you need.
 // It defines a class atomic_shared_ptr_storage<T> which wraps
-// std::shared_ptr<T> and provides atomic load, store and exchange on it.
+// std::shared_ptr<T> and provides atomic load, store, and exchange on it.
 //
 // It's more or less the same as std::atomic<std::shared_ptr<T>>, but it does
 // not provide a pointer interface.
 //
 // Personal opinion:
-// I consider it the pointer interface of std::atomic<std::shared_ptr<T>>
+// I consider the pointer interface of std::atomic<std::shared_ptr<T>>
 // dangerous and bad. This class provides the interface which I consider
 // valuable and explicitly describes the purpose - atomic ops.
 //
@@ -105,7 +105,11 @@ public:
             asps_spinlock::lock_guard _l(m_spinlock);
             m_ptr.swap(ptr);
         }
+#if __cplusplus >= 201700
+        return ptr; // C++17 guarantees NRVO
+#else
         return std::move(ptr);
+#endif
     }
 
     // have _strong to match atomic<shared_ptr>
