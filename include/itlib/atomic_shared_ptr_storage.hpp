@@ -34,6 +34,16 @@
 //                  DOCUMENTATION
 //
 // Simply include this file wherever you need.
+// It defines a class atomic_shared_ptr_storage<T> which wraps
+// std::shared_ptr<T> and provides atomic load, store and exchange on it.
+//
+// It's more or less the same as std::atomic<std::shared_ptr<T>>, but it does
+// not provide a pointer interface.
+//
+// Personal opinion:
+// I consider it the pointer interface of std::atomic<std::shared_ptr<T>>
+// dangerous and bad. This class provides the interface which I consider
+// valuable and explicitly describes the purpose - atomic ops.
 //
 //                  TESTS
 //
