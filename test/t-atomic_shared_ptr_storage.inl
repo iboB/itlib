@@ -9,6 +9,8 @@
 #include <atomic>
 
 TEST_CASE("[itlib::atomic_shared_ptr_storage] basic") {
+    static_assert(sizeof(itlib::atomic_shared_ptr_storage<int>) <= 64, "We want true sharing here");
+
     {
         itlib::atomic_shared_ptr_storage<int> pi;
         CHECK_FALSE(pi.load());

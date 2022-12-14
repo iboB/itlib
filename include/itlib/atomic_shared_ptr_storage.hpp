@@ -64,7 +64,7 @@ using asps_holder = std::atomic<std::shared_ptr<T>>;
 namespace itlib {
 namespace impl {
 
-struct alignas(64) asps_spinlock {
+struct asps_spinlock {
     std::atomic_flag flag = ATOMIC_FLAG_INIT;
     void lock() noexcept {
         while (flag.test_and_set(std::memory_order_acquire)) /* spin */;
@@ -82,7 +82,7 @@ struct alignas(64) asps_spinlock {
 };
 
 template <typename T>
-class asps_holder {
+class alignas(64) asps_holder {
     using sptr = std::shared_ptr<T>;
     sptr m_ptr;
     mutable asps_spinlock m_spinlock;
