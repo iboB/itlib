@@ -53,6 +53,7 @@
 //   *SAFELY* create an aliased shared pointer.
 //   If the use count of owner is zero, it will return null even if ptr is
 //   not null.
+//   https://ibob.bg/blog/2022/12/28/dont-use-shared_ptr-aliasing-ctor/
 //
 // Example:
 //
