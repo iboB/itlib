@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 include(./get_cpm.cmake)
 
 CPMAddPackage(gh:iboB/icm@1.4.2)
-CPMAddPackage(gh:iboB/doctest-util@0.0.6)
+CPMAddPackage(gh:iboB/doctest-util@0.0.7)
 
 include(${icm_SOURCE_DIR}/icm_build_failure_testing.cmake)
 
