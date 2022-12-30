@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 include(./get_cpm.cmake)
 
 CPMAddPackage(gh:iboB/icm@1.4.2)
-CPMAddPackage(gh:iboB/doctest-util@0.0.5)
+CPMAddPackage(gh:iboB/doctest-util@0.0.6)
 
 include(${icm_SOURCE_DIR}/icm_build_failure_testing.cmake)
 
@@ -20,34 +20,40 @@ define_doctest_lib(20)
 
 macro(add_test_for_std test std)
     set(fname t-${test}-${std}.cpp)
-    set(tname itlib-test-${test}-${std})
-    add_executable(${tname} ${fname})
-    set_target_properties(${tname} PROPERTIES
+    set(targetname itlib-test-${test}-${std})
+    add_executable(${targetname} ${fname})
+    set_target_properties(${targetname} PROPERTIES
         CXX_STANDARD ${std}
     )
-    target_link_libraries(${tname} doctest-${std} doctest::util itlib ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(${targetname} doctest-${std} doctest::util itlib::itlib ${CMAKE_THREAD_LIBS_INIT})
 
-    add_test(NAME itlib-${test}-${std} COMMAND ${tname})
+    set(testname itlib-${test}-${std} )
+    add_test(NAME ${testname} COMMAND ${targetname})
+
+    set(labels ${ARGN})
+    if(labels)
+        set_tests_properties(${testname} PROPERTIES LABELS "${labels}")
+    endif()
 endmacro()
 
 macro(add_test_if_exist test std)
     set(fname t-${test}-${std}.cpp)
 
     if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${fname})
-        add_test_for_std(${test} ${std})
+        add_test_for_std(${test} ${std} ${ARGN})
     endif()
 endmacro()
 
 macro(add_itlib_test test)
-    add_test_if_exist(${test} 11)
-    add_test_if_exist(${test} 14)
-    add_test_if_exist(${test} 17)
-    add_test_if_exist(${test} 20)
+    add_test_if_exist(${test} 11 ${ARGN})
+    add_test_if_exist(${test} 14 ${ARGN})
+    add_test_if_exist(${test} 17 ${ARGN})
+    add_test_if_exist(${test} 20 ${ARGN})
 endmacro()
 
 add_itlib_test(itlib)
 
-add_itlib_test(atp)
+add_itlib_test(dynamic_bitset)
 add_itlib_test(expected)
 add_itlib_test(flat_map)
 add_itlib_test(flat_set)
@@ -72,9 +78,9 @@ add_itlib_test(utility)
 
 find_package(Threads)
 if (Threads_FOUND)
-    add_itlib_test(atomic)
-    add_itlib_test(atomic_shared_ptr_storage)
-    add_itlib_test(mutex)
+    add_itlib_test(atomic tsan)
+    add_itlib_test(atomic_shared_ptr_storage tsan)
+    add_itlib_test(mutex tsan)
 endif()
 
 icm_add_multiple_build_failure_tests(
