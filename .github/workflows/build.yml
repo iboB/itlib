@@ -16,9 +16,15 @@ jobs:
         # vcvars will add them to PATH and allow msvc asan executables to run
         if: matrix.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
-      - name: Configure
+      - name: Configure ASAN
         run: cmake . -DCMAKE_BUILD_TYPE=${{ matrix.type }} -DITLIB_ASAN=1
-      - name: Build
+      - name: Build ASAN
         run: cmake --build . --config ${{ matrix.type }}
-      - name: Test
+      - name: Test ASAN
         run: ctest -C ${{ matrix.type }} --output-on-failure
+      - name: Configure TSAN
+        run: cmake . -DCMAKE_BUILD_TYPE=${{ matrix.type }} -DITLIB_ASAN=0 -DITLIB_TSAN=1
+      - name: Build TSAN
+        run: cmake --build . --config ${{ matrix.type }}
+      - name: Test TSAN
+        run: ctest -L tsan -C ${{ matrix.type }} --output-on-failure
