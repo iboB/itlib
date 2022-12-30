@@ -24,7 +24,7 @@ if(ITLIB_TSAN)
     endif()
 elseif(ITLIB_ASAN)
     if(MSVC)
-        # set(ITLIB_SAN_FLAGS "-fsanitize=address")
+        set(ITLIB_SAN_FLAGS "/fsanitize=address")
     elseif(APPLE)
         # apple clang doesn't support the leak sanitizer
         set(ITLIB_SAN_FLAGS "-fsanitize=address,undefined -pthread -g")
