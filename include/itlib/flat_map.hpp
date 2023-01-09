@@ -1,11 +1,11 @@
-// itlib-flat-map v1.05
+// itlib-flat-map v1.06
 //
 // std::map-like class with an underlying vector
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2016-2019 Chobolabs Inc.
-// Copyright(c) 2020-2022 Borislav Stanimirov
+// Copyright(c) 2020-2023 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.06 (2023-01-09) Fixed transparency for std::string_view
 //  1.05 (2022-09-17) upper_bound and equal_range
 //  1.04 (2022-07-07) Transparent lookups (C++14 style)
 //                    Transparent construction
@@ -303,7 +304,7 @@ public:
     }
 
     template <typename K>
-    typename std::enable_if<std::is_convertible<K, key_type>::value,
+    typename std::enable_if<std::is_constructible<key_type, K>::value,
     mapped_type&>::type operator[](K&& k)
     {
         auto i = lower_bound(k);
