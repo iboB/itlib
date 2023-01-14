@@ -23,6 +23,9 @@ TEST_CASE("[flat_set] test")
     using namespace itlib;
 
     flat_set<int> iset;
+    static_assert(std::is_same<typename flat_set<int>::container_type, std::vector<int>>::value, "default container is vector");
+    static_assert(sizeof(iset) == sizeof(std::vector<int>), "empty base optimization must work");
+
     CHECK(iset.empty());
     CHECK(iset.size() == 0);
     CHECK(iset.capacity() == 0);
@@ -219,6 +222,26 @@ TEST_CASE("[flat_map] ranges")
     CHECK(m.equal_range("bbb") == std::make_pair(def, def));
     CHECK(m.equal_range("xxx") == std::make_pair(xxx, m.end()));
     CHECK(m.equal_range("xxz") == std::make_pair(m.end(), m.end()));
+}
+
+TEST_CASE("[flat_set] custom cmp")
+{
+    // stateful comparator
+    struct distance_from_constant
+    {
+        int middle = 0;
+        bool operator()(const int& a, const int& b) const { return std::abs(a - middle) < std::abs(b - middle); }
+    };
+
+    itlib::flat_set<int, distance_from_constant> dist({0, 9, 10, 11, 12, 20}, distance_from_constant{10});
+    CHECK(dist.size() == 4);
+
+    dist.clear();
+    dist.emplace(5);
+    dist.emplace(10);
+
+    CHECK(dist.size() == 2);
+    CHECK(dist.container() == std::vector<int>{10, 5});
 }
 
 #include <itlib/static_vector.hpp>
