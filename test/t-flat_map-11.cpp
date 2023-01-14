@@ -23,6 +23,9 @@ TEST_CASE("[flat_map] test")
     using namespace itlib;
 
     flat_map<int, float> ifmap;
+    static_assert(std::is_same<typename flat_map<int, float>::container_type, std::vector<std::pair<int, float>>>::value, "default container is vector");
+    static_assert(sizeof(ifmap) == sizeof(std::vector<std::pair<int, float>>), "empty base optimization must work");
+
     CHECK(ifmap.empty());
     CHECK(ifmap.size() == 0);
     CHECK(ifmap.capacity() == 0);
@@ -230,6 +233,33 @@ TEST_CASE("[flat_map] initialize")
     flat_map<int, int> m3 = {{5, 4}, {23, 11}, {3, 44}, {5, 4}, {23, 11}};
     CHECK(m3.size() == 3);
     CHECK(m3.container() == std::vector<std::pair<int, int>>{{3, 44}, {5, 4}, {23, 11}});
+}
+
+TEST_CASE("[flat_map] custom cmp")
+{
+    // stateful comparator
+    struct distance_from_constant
+    {
+        distance_from_constant(int m) : middle(m) {}
+        int middle = 0;
+        bool operator()(const int& a, const int& b) const { return std::abs(a - middle) < std::abs(b - middle); }
+    };
+
+    itlib::flat_map<int, std::string, distance_from_constant> dist({0, 9, 10, 11, 12, 20}, distance_from_constant{10});
+    CHECK(dist.size() == 4);
+
+    dist.clear();
+    dist.emplace(5);
+    dist.emplace(10);
+    auto dr = dist.emplace(15);
+    CHECK_FALSE(dr.second);
+
+    CHECK(dist.size() == 2);
+    CHECK(dist.container() == std::vector<int>{10, 5});
+
+    auto f = dist.find(15);
+    CHECK(f != dist.end());
+    CHECK(*f == 5);
 }
 
 #include <itlib/static_vector.hpp>
