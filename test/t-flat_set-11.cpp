@@ -229,6 +229,7 @@ TEST_CASE("[flat_set] custom cmp")
     // stateful comparator
     struct distance_from_constant
     {
+        distance_from_constant(int m) : middle(m) {}
         int middle = 0;
         bool operator()(const int& a, const int& b) const { return std::abs(a - middle) < std::abs(b - middle); }
     };
@@ -239,9 +240,15 @@ TEST_CASE("[flat_set] custom cmp")
     dist.clear();
     dist.emplace(5);
     dist.emplace(10);
+    auto dr = dist.emplace(15);
+    CHECK_FALSE(dr.second);
 
     CHECK(dist.size() == 2);
     CHECK(dist.container() == std::vector<int>{10, 5});
+
+    auto f = dist.find(15);
+    CHECK(f != dist.end());
+    CHECK(*f == 5);
 }
 
 #include <itlib/static_vector.hpp>
