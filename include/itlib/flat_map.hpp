@@ -29,7 +29,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.06 (2023-01-14) Inherit from Compare to enable empty base optimization
+//  1.07 (2023-01-14) Inherit from Compare to enable empty base optimization
 //  1.06 (2023-01-09) Fixed transparency for std::string_view
 //  1.05 (2022-09-17) upper_bound and equal_range
 //  1.04 (2022-07-07) Transparent lookups (C++14 style)
