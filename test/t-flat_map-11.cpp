@@ -245,21 +245,27 @@ TEST_CASE("[flat_map] custom cmp")
         bool operator()(const int& a, const int& b) const { return std::abs(a - middle) < std::abs(b - middle); }
     };
 
-    itlib::flat_map<int, std::string, distance_from_constant> dist({0, 9, 10, 11, 12, 20}, distance_from_constant{10});
+    itlib::flat_map<int, std::string, distance_from_constant> dist(
+        {{0, "a"}, {9, "b"}, {10, "c"}, {11, "d"}, {12, "e"}, {20, "f"}},
+        distance_from_constant{10});
     CHECK(dist.size() == 4);
 
     dist.clear();
-    dist.emplace(5);
-    dist.emplace(10);
-    auto dr = dist.emplace(15);
+    dist.insert({5, "five"});
+    dist[10] = "ten";
+    auto dr = dist.insert({15, "xxx"});
     CHECK_FALSE(dr.second);
 
     CHECK(dist.size() == 2);
-    CHECK(dist.container() == std::vector<int>{10, 5});
+    CHECK(dist.container() == std::vector<std::pair<int, std::string>>{{10, "ten"}, {5, "five"}});
 
     auto f = dist.find(15);
     CHECK(f != dist.end());
-    CHECK(*f == 5);
+    CHECK(f->second == "five");
+
+    CHECK(dist[15] == "five");
+
+    CHECK(dist.size() == 2);
 }
 
 #include <itlib/static_vector.hpp>

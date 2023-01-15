@@ -155,8 +155,7 @@ public:
     typedef typename container_type::difference_type difference_type;
     typedef typename container_type::size_type size_type;
 
-    flat_map()
-    {}
+    flat_map() = default;
 
     explicit flat_map(const key_compare& comp, const allocator_type& alloc = allocator_type())
         : pair_compare(comp)
