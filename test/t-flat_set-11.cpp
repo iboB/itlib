@@ -190,9 +190,13 @@ TEST_CASE("[flat_set] initialize")
     CHECK(c3[0] == "aa");
     CHECK(c3[1] == "ba");
     CHECK(c3[2] == "gg");
+
+    std::vector<int> ints = {4, 3, 2, 2, 1, 4};
+    flat_set<int> m4(ints.begin(), ints.end());
+    CHECK(m4.container() == std::vector<int>{1, 2, 3, 4});
 }
 
-TEST_CASE("[flat_map] ranges")
+TEST_CASE("[flat_set] ranges")
 {
     using namespace itlib;
     flat_set<std::string> m = {"abc", "def", "geh", "xxx"};

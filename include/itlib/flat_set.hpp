@@ -1,4 +1,4 @@
-// itlib-flat-set v1.06
+// itlib-flat-set v1.07
 //
 // std::set-like class with an underlying vector
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.07 (2023-01-16) Constructors from iterator ranges
 //  1.06 (2023-01-14) Fixed initialization with custom Compare when equivalence
 //                    is not the same as `==`.
 //                    Inherit from Compare to enable empty base optimization
@@ -147,6 +148,16 @@ public:
 
     flat_set(std::initializer_list<value_type> init, const allocator_type& alloc)
         : flat_set(std::move(init), key_compare(), alloc)
+    {}
+
+    template <class InputIterator, typename = decltype(*std::declval<InputIterator>())>
+    flat_set(InputIterator begin, InputIterator end, const key_compare& comp, const allocator_type& alloc = allocator_type())
+        : flat_set(container_type(begin, end, alloc), comp)
+    {}
+
+    template <class InputIterator, typename = decltype(*std::declval<InputIterator>())>
+    flat_set(InputIterator begin, InputIterator end, const allocator_type& alloc = allocator_type())
+        : flat_set(begin, end, key_compare(), alloc)
     {}
 
     flat_set(const flat_set& x) = default;
