@@ -1,11 +1,11 @@
-// itlib-static-vector v1.05
+// itlib-static-vector v1.05dev
 //
 // std::vector-like class with a fixed capacity
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2016-2019 Chobolabs Inc.
-// Copyright(c) 2020-2021 Borislav Stanimirov
+// Copyright(c) 2020-2023 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.06 (2023-xx-xx) Shim allocator arg to constructors for template code
 //  1.05 (2022-09-24) Simplified error handling macros: no rescue
 //  1.04 (2021-11-18) Added assign ops
 //  1.03 (2021-10-05) Don't rely on operator!= from T. Use operator== instead
@@ -176,23 +177,25 @@ public:
 
     static_vector() = default;
 
-    explicit static_vector(size_t count)
+    static_vector(allocator_type) {}
+
+    explicit static_vector(size_t count, allocator_type = {})
     {
         resize(count);
     }
 
-    static_vector(size_t count, const T& value)
+    static_vector(size_t count, const T& value, allocator_type = {})
     {
         assign_impl_val(count, value);
     }
 
     template <class InputIterator, typename = decltype(*std::declval<InputIterator>())>
-    static_vector(InputIterator first, InputIterator last)
+    static_vector(InputIterator first, InputIterator last, allocator_type = {})
     {
         assign_impl_iter(first, last);
     }
 
-    static_vector(std::initializer_list<T> l)
+    static_vector(std::initializer_list<T> l, allocator_type = {})
     {
         assign_impl_ilist(l);
     }
