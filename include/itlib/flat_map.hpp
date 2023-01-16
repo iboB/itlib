@@ -1,4 +1,4 @@
-// itlib-flat-map v1.07
+// itlib-flat-map v1.08
 //
 // std::map-like class with an underlying vector
 //
@@ -29,6 +29,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.08 (2023-01-16) Constructors from iterator ranges.
+//                    Constructor from container
 //  1.07 (2023-01-14) Inherit from Compare to enable empty base optimization
 //  1.06 (2023-01-09) Fixed transparency for std::string_view
 //  1.05 (2022-09-17) upper_bound and equal_range
@@ -162,9 +164,9 @@ public:
         , m_container(alloc)
     {}
 
-    flat_map(std::initializer_list<value_type> init, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type())
+    explicit flat_map(container_type container, const key_compare& comp = key_compare())
         : pair_compare(comp)
-        , m_container(std::move(init), alloc)
+        , m_container(std::move(container))
     {
         std::sort(m_container.begin(), m_container.end(), cmp());
         auto new_end = std::unique(m_container.begin(), m_container.end(), [this](const value_type& a, const value_type& b) {
@@ -173,8 +175,22 @@ public:
         m_container.erase(new_end, m_container.end());
     }
 
+    flat_map(std::initializer_list<value_type> init, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type())
+        : flat_map(container_type(std::move(init), alloc), comp)
+    {}
+
     flat_map(std::initializer_list<value_type> init, const allocator_type& alloc)
         : flat_map(std::move(init), key_compare(), alloc)
+    {}
+
+    template <class InputIterator, typename = decltype(*std::declval<InputIterator>())>
+    flat_map(InputIterator begin, InputIterator end, const key_compare& comp, const allocator_type& alloc = allocator_type())
+        : flat_map(container_type(begin, end, alloc), comp)
+    {}
+
+    template <class InputIterator, typename = decltype(*std::declval<InputIterator>())>
+    flat_map(InputIterator begin, InputIterator end, const allocator_type& alloc = allocator_type())
+        : flat_map(begin, end, key_compare(), alloc)
     {}
 
     flat_map(const flat_map& x) = default;

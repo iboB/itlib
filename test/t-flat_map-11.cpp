@@ -233,6 +233,10 @@ TEST_CASE("[flat_map] initialize")
     flat_map<int, int> m3 = {{5, 4}, {23, 11}, {3, 44}, {5, 4}, {23, 11}};
     CHECK(m3.size() == 3);
     CHECK(m3.container() == std::vector<std::pair<int, int>>{{3, 44}, {5, 4}, {23, 11}});
+
+    std::vector<std::pair<int, int>> ints = {{5, 4}, {23, 11}, {3, 44}, {5, 4}, {3, 44}};
+    flat_map<int, int> m4(ints.begin(), ints.end());
+    CHECK(m4.container() == m3.container());
 }
 
 TEST_CASE("[flat_map] custom cmp")
