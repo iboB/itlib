@@ -30,6 +30,7 @@
 //                  VERSION HISTORY
 //
 //  1.06 (2023-xx-xx) Shim allocator arg to constructors for template code
+//                    All standard overloads of insert
 //  1.05 (2022-09-24) Simplified error handling macros: no rescue
 //  1.04 (2021-11-18) Added assign ops
 //  1.03 (2021-10-05) Don't rely on operator!= from T. Use operator== instead
@@ -456,50 +457,60 @@ public:
         return back();
     }
 
-    iterator insert(iterator position, const value_type& val)
+    iterator insert(const_iterator position, const value_type& val)
     {
-        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(size() >= Capacity);
+        auto pos = grow_at(position, 1);
+        ::new (pos) T(val);
+        return pos;
+    }
 
-        if (position == end())
+    iterator insert(const_iterator position, value_type&& val)
+    {
+        auto pos = grow_at(position, 1);
+        ::new (pos) T(std::move(val));
+        return pos;
+    }
+
+    iterator insert(const_iterator position, size_type count, const value_type& val)
+    {
+        auto pos = grow_at(position, count);
+        for (size_type i = 0; i < count; ++i)
         {
-            emplace_back(val);
-            return position;
+            ::new (pos + i) T(val);
         }
+        return pos;
+    }
 
-        emplace_back(std::move(back()));
-
-        for (auto i = end() - 2; i != position; --i)
+    template <typename InputIterator, typename = decltype(*std::declval<InputIterator>())>
+    iterator insert(const_iterator position, InputIterator first, InputIterator last)
+    {
+        auto pos = grow_at(position, last - first);
+        auto np = pos;
+        for (auto p = first; p != last; ++p, ++np)
         {
-            *i = std::move(*(i - 1));
+            ::new (np) T(*p);
         }
+        return pos;
+    }
 
-        *position = val;
-
-        return position;
+    iterator insert(const_iterator position, std::initializer_list<T> ilist)
+    {
+        auto pos = grow_at(position, ilist.size());
+        size_type i = 0;
+        for (auto& elem : ilist)
+        {
+            ::new (pos + i) T(std::move(elem));
+            ++i;
+        }
+        return pos;
     }
 
     template<typename... Args>
-    iterator emplace(iterator position, Args&&... args)
+    iterator emplace(const_iterator position, Args&&... args)
     {
-        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(size() >= Capacity);
-
-        if (position == end())
-        {
-            emplace_back(std::forward<Args>(args)...);
-            return position;
-        }
-
-        emplace_back(std::move(back()));
-
-        for (auto i = end() - 2; i != position; --i)
-        {
-            *i = std::move(*(i - 1));
-        }
-
-        position->~T();
-        ::new (position) T(std::forward<Args>(args)...);
-
-        return position;
+        auto pos = grow_at(position, 1);
+        ::new (pos) T(std::forward<Args>(args)...);
+        return pos;
     }
 
     iterator erase(const_iterator position)
@@ -593,6 +604,21 @@ private:
         {
             push_back(i);
         }
+    }
+
+    T* grow_at(const T* cp, size_t by) {
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(size() + by > Capacity);
+
+        auto position = const_cast<T*>(cp);
+
+        for (auto p = end() - 1; p >= position; --p)
+        {
+            ::new (p + by) T(std::move(*p));
+            p->~T();
+        }
+        m_size += by;
+
+        return position;
     }
 
     typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type m_data[Capacity];
