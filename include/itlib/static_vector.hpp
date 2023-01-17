@@ -1,4 +1,4 @@
-// itlib-static-vector v1.06
+// itlib-static-vector v1.06dev
 //
 // std::vector-like class with a fixed capacity
 //
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.07 (2023-xx-xx) Added resize with initializer
 //  1.06 (2023-01-17) Shim allocator arg to constructors for template code
 //                    All standard overloads of insert
 //                    All standard overloads of erase
@@ -538,6 +539,21 @@ public:
         while (n > m_size)
         {
             emplace_back();
+        }
+    }
+
+    void resize(size_type n, const value_type& v)
+    {
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(n > Capacity);
+
+        while (m_size > n)
+        {
+            pop_back();
+        }
+
+        while (n > m_size)
+        {
+            push_back(v);
         }
     }
 

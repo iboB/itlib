@@ -158,8 +158,8 @@ TEST_CASE("[static_vector] test")
     CHECK(svec.size() == svec.capacity());
 
     // swap
-    svec = { "1", "2", "3" };
-    svec2 = { "4", "5", "6", "7" };
+    svec = {"1", "2", "3"};
+    svec2 = {"4", "5", "6", "7"};
 
     svec.swap(svec2);
 
@@ -174,6 +174,23 @@ TEST_CASE("[static_vector] test")
     CHECK(svec2.size() == svec.size());
     CHECK(svec2.back() == "c");
     CHECK(svec.front() == "1");
+
+    // resize
+    svec.resize(6, "xxx");
+    REQUIRE(svec.size() == 6);
+    CHECK(svec[3] == "xxx");
+    CHECK(svec.back() == svec[4]);
+    svec.resize(3, "xxx");
+    CHECK(svec.size() == 3);
+
+    svec.resize(5);
+    REQUIRE(svec.size() == 5);
+    CHECK(svec[3].empty());
+    CHECK(svec.back() == "");
+    svec.resize(3);
+    CHECK(svec.size() == 3);
+
+    CHECK(svec == static_vector<std::string, 3>{"1", "2", "3"});
 }
 
 struct foo
