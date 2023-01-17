@@ -234,27 +234,36 @@ TEST_CASE("[static_vector] insert/erase")
     const svec helper = {"0", "1"};
     {
         svec e;
-        e.insert(e.begin(), {"0", "1"});
+        auto it = e.insert(e.begin(), {"0", "1"});
+        CHECK(it == e.begin());
         CHECK(e == helper);
     }
     {
         svec e;
-        e.insert(e.end(), helper.begin(), helper.end());
+        auto it = e.insert(e.end(), helper.begin(), helper.end());
+        CHECK(it == e.begin());
         CHECK(e == helper);
     }
 
     svec vec = {"5", "8", "9"};
-    vec.insert(vec.begin(), {"2", "3", "4"});
+    auto it = vec.insert(vec.begin(), {"2", "3", "4"});
+    CHECK(it == vec.begin());
 
-    vec.insert(vec.begin(), helper.begin(), helper.end());
-    vec.insert(vec.begin(), helper.begin(), helper.begin());
+    it = vec.insert(vec.begin(), helper.begin(), helper.end());
+    CHECK(it == vec.begin());
+    it = vec.insert(vec.begin(), helper.begin(), helper.begin());
+    CHECK(it == vec.begin());
 
-    vec.insert(vec.begin() + 6, 0, "zzz");
-    vec.insert(vec.begin() + 6, 2, "xxx");
+    it = vec.insert(vec.begin() + 6, 0, "zzz");
+    CHECK(it == vec.begin() + 6);
+    it = vec.insert(vec.begin() + 6, 2, "xxx");
+    CHECK(it == vec.begin() + 6);
 
     std::string ten = "10";
-    vec.insert(vec.end(), std::move(ten));
-    vec.insert(vec.end(), {"11", "12"});
+    it = vec.insert(vec.end(), std::move(ten));
+    CHECK(it == vec.begin() + 10);
+    it = vec.insert(vec.end(), {"11", "12"});
+    CHECK(it == vec.begin() + 11);
 
     REQUIRE(vec.size() == 13);
 
@@ -262,22 +271,27 @@ TEST_CASE("[static_vector] insert/erase")
     for (int i = 6; i < 8; ++i) CHECK(vec[i] == "xxx");
     for (int i = 8; i < 13; ++i) CHECK(vec[i] == std::to_string(i));
 
-    vec.erase(vec.begin() + 6, vec.begin() + 8);
+    it = vec.erase(vec.begin() + 6, vec.begin() + 8);
+    CHECK(vec.begin() + 6);
     REQUIRE(vec.size() == 11);
     for (int i = 0; i <= 5; ++i) CHECK(vec[i] == std::to_string(i));
     for (int i = 8; i < 13; ++i) CHECK(vec[i-2] == std::to_string(i));
 
-    vec.erase(vec.end() - 4, vec.end());
+    it = vec.erase(vec.end() - 4, vec.end());
+    CHECK(it == vec.end());
     REQUIRE(vec.size() == 7);
     for (int i = 0; i <= 5; ++i) CHECK(vec[i] == std::to_string(i));
     CHECK(vec.back() == "8");
 
-    vec.erase(vec.begin(), vec.begin() + 3);
+    it = vec.erase(vec.begin(), vec.begin() + 3);
+    CHECK(it == vec.begin());
     REQUIRE(vec.size() == 4);
     CHECK(vec == svec{"3", "4", "5", "8"});
 
-    vec.erase(vec.begin(), vec.end());
+    it = vec.erase(vec.begin(), vec.end());
+    CHECK(it == vec.end());
     CHECK(vec.empty());
 
-    vec.erase(vec.begin(), vec.end()); // must be safe
+    it = vec.erase(vec.begin(), vec.end()); // must be safe
+    CHECK(it == vec.end());
 }
