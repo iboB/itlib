@@ -272,6 +272,25 @@ TEST_CASE("[flat_map] custom cmp")
     CHECK(dist.size() == 2);
 }
 
+TEST_CASE("[flat_map] at bounds check")
+{
+    itlib::flat_map<int, char> map = {{1, 'a'}, {4, 'd'}, {3, 'c'}};
+    CHECK(map.at(1) == 'a');
+    CHECK(map.at(3) == 'c');
+    CHECK(map.at(4) == 'd');
+    CHECK_THROWS_AS_MESSAGE(map.at(0), std::out_of_range, "itlib::flat_map out of range");
+    CHECK_THROWS_AS_MESSAGE(map.at(2), std::out_of_range, "itlib::flat_map out of range");
+    CHECK_THROWS_AS_MESSAGE(map.at(5), std::out_of_range, "itlib::flat_map out of range");
+
+    const auto& cmap = map;
+    CHECK(cmap.at(1) == 'a');
+    CHECK(cmap.at(3) == 'c');
+    CHECK(cmap.at(4) == 'd');
+    CHECK_THROWS_AS_MESSAGE(cmap.at(0), std::out_of_range, "itlib::flat_map out of range");
+    CHECK_THROWS_AS_MESSAGE(cmap.at(2), std::out_of_range, "itlib::flat_map out of range");
+    CHECK_THROWS_AS_MESSAGE(cmap.at(5), std::out_of_range, "itlib::flat_map out of range");
+}
+
 #include <itlib/static_vector.hpp>
 
 TEST_CASE("[flat_map] static_vector test")
