@@ -3,6 +3,7 @@
 #include <itlib/static_vector.hpp>
 
 #include <cstring>
+#include <string>
 
 TEST_CASE("[static_vector] test")
 {
@@ -224,4 +225,59 @@ TEST_CASE("[static_vector] assign")
     CHECK(a[0] == 7);
     CHECK(a[1] == 6);
     CHECK(a[2] == 5);
+}
+
+TEST_CASE("[static_vector] insert/erase")
+{
+    using svec = itlib::static_vector<std::string, 20>;
+
+    const svec helper = {"0", "1"};
+    {
+        svec e;
+        e.insert(e.begin(), {"0", "1"});
+        CHECK(e == helper);
+    }
+    {
+        svec e;
+        e.insert(e.end(), helper.begin(), helper.end());
+        CHECK(e == helper);
+    }
+
+    svec vec = {"5", "8", "9"};
+    vec.insert(vec.begin(), {"2", "3", "4"});
+
+    vec.insert(vec.begin(), helper.begin(), helper.end());
+    vec.insert(vec.begin(), helper.begin(), helper.begin());
+
+    vec.insert(vec.begin() + 6, 0, "zzz");
+    vec.insert(vec.begin() + 6, 2, "xxx");
+
+    std::string ten = "10";
+    vec.insert(vec.end(), std::move(ten));
+    vec.insert(vec.end(), {"11", "12"});
+
+    REQUIRE(vec.size() == 13);
+
+    for (int i = 0; i <= 5; ++i) CHECK(vec[i] == std::to_string(i));
+    for (int i = 6; i < 8; ++i) CHECK(vec[i] == "xxx");
+    for (int i = 8; i < 13; ++i) CHECK(vec[i] == std::to_string(i));
+
+    vec.erase(vec.begin() + 6, vec.begin() + 8);
+    REQUIRE(vec.size() == 11);
+    for (int i = 0; i <= 5; ++i) CHECK(vec[i] == std::to_string(i));
+    for (int i = 8; i < 13; ++i) CHECK(vec[i-2] == std::to_string(i));
+
+    vec.erase(vec.end() - 4, vec.end());
+    REQUIRE(vec.size() == 7);
+    for (int i = 0; i <= 5; ++i) CHECK(vec[i] == std::to_string(i));
+    CHECK(vec.back() == "8");
+
+    vec.erase(vec.begin(), vec.begin() + 3);
+    REQUIRE(vec.size() == 4);
+    CHECK(vec == svec{"3", "4", "5", "8"});
+
+    vec.erase(vec.begin(), vec.end());
+    CHECK(vec.empty());
+
+    vec.erase(vec.begin(), vec.end()); // must be safe
 }

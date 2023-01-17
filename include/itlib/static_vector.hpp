@@ -1,4 +1,4 @@
-// itlib-static-vector v1.05dev
+// itlib-static-vector v1.06
 //
 // std::vector-like class with a fixed capacity
 //
@@ -29,8 +29,9 @@
 //
 //                  VERSION HISTORY
 //
-//  1.06 (2023-xx-xx) Shim allocator arg to constructors for template code
+//  1.06 (2023-01-17) Shim allocator arg to constructors for template code
 //                    All standard overloads of insert
+//                    All standard overloads of erase
 //  1.05 (2022-09-24) Simplified error handling macros: no rescue
 //  1.04 (2021-11-18) Added assign ops
 //  1.03 (2021-10-05) Don't rely on operator!= from T. Use operator== instead
@@ -144,9 +145,11 @@
 
 #if defined(ITLIB_STATIC_VECTOR_NO_DEBUG_BOUNDS_CHECK)
 #   define I_ITLIB_STATIC_VECTOR_BOUNDS_CHECK(i)
+#   define I_ITLIB_STATIC_VECTOR_BOUNDS_CHECK_ITER(iter)
 #else
 #   include <cassert>
 #   define I_ITLIB_STATIC_VECTOR_BOUNDS_CHECK(i) assert((i) < this->size())
+#   define I_ITLIB_STATIC_VECTOR_BOUNDS_CHECK_ITER(iter) assert((iter) >= this->begin() && (iter) <= this->end())
 #endif
 
 namespace itlib
@@ -419,16 +422,16 @@ public:
     // modifiers
     void pop_back()
     {
-        reinterpret_cast<const T*>(m_data + m_size - 1)->~T();
-        --m_size;
+        shrink_at(end() - 1, 1);
     }
 
     void clear() noexcept
     {
-        while (!empty())
-        {
-            pop_back();
+        auto e = end();
+        for (auto p = begin(); p != e; ++p) {
+            p->~T();
         }
+        m_size = 0;
     }
 
     void push_back(const_reference v)
@@ -515,16 +518,12 @@ public:
 
     iterator erase(const_iterator position)
     {
-        auto dist = position - begin();
-        position->~T();
+        return shrink_at(position, 1);
+    }
 
-        for (auto i = begin() + dist + 1; i != end(); ++i)
-        {
-            *(i - 1) = std::move(*i);
-        }
-
-        resize(size() - 1);
-        return begin() + dist;
+    iterator erase(const_iterator first, const_iterator last)
+    {
+        return shrink_at(first, last - first);
     }
 
     void resize(size_type n)
@@ -608,8 +607,10 @@ private:
 
     T* grow_at(const T* cp, size_t by) {
         I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(size() + by > Capacity);
+        I_ITLIB_STATIC_VECTOR_BOUNDS_CHECK_ITER(cp);
 
         auto position = const_cast<T*>(cp);
+        if (by == 0) return position;
 
         for (auto p = end() - 1; p >= position; --p)
         {
@@ -617,6 +618,37 @@ private:
             p->~T();
         }
         m_size += by;
+
+        return position;
+    }
+
+    T* shrink_at(const T* cp, size_t num)
+    {
+        I_ITLIB_STATIC_VECTOR_OUT_OF_RANGE_IF(num > size());
+        I_ITLIB_STATIC_VECTOR_BOUNDS_CHECK_ITER(cp);
+
+        auto position = const_cast<T*>(cp);
+
+        const auto s = size();
+        if (s - num == 0)
+        {
+            clear();
+            return begin();
+        }
+
+        const auto myend = end();
+        for (auto p = position, np = position + num; np != myend; ++p, ++np)
+        {
+            p->~T();
+            ::new (p) T(std::move(*np));
+        }
+
+        for (auto p = myend - num; p != myend; ++p)
+        {
+            p->~T();
+        }
+
+        m_size -= num;
 
         return position;
     }

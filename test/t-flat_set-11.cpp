@@ -261,7 +261,10 @@ TEST_CASE("[flat_set] static_vector test")
 {
     using namespace itlib;
 
-    flat_set<int, std::less<int>, static_vector<int, 10>> sset;
+    flat_set<int, std::less<int>, static_vector<int, 10>> sset = {1, 5, 3, 5, 5, 2, 1};
+    CHECK(sset.size() == 4);
+    CHECK(sset.container() == static_vector<int, 4>{1, 2, 3, 5});
+    sset.clear();
     CHECK(sset.empty());
     CHECK(sset.size() == 0);
     CHECK(sset.capacity() == 10);

@@ -297,7 +297,16 @@ TEST_CASE("[flat_map] static_vector test")
 {
     using namespace itlib;
 
-    flat_map<int, char, std::less<int>, static_vector<std::pair<int, char>, 10>> smap;
+    flat_map<int, char, std::less<int>, static_vector<std::pair<int, char>, 10>> smap
+        = {{0, 'a'}, {1, 'b'}, {3, 'd'}, {1, 'b'}, {1, 'b'}, {2, 'c'}};
+    CHECK(smap.size() == 4);
+    CHECK(smap[0] == 'a');
+    CHECK(smap.at(1) == 'b');
+    CHECK(smap.find(2)->second == 'c');
+    CHECK(smap.container().back().second == 'd');
+    CHECK(smap.find(10) == smap.end());
+
+    smap.clear();
     CHECK(smap.empty());
     CHECK(smap.size() == 0);
     CHECK(smap.capacity() == 10);
