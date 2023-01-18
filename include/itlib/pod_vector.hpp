@@ -1,11 +1,11 @@
-// itlib-pod-vector v1.06
+// itlib-pod-vector v1.07
 //
 // A vector of PODs. Similar to std::vector, but doesn't call constructors or
 // destructors and instead uses memcpy and memmove to manage the data
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2020-2022 Borislav Stanimirov
+// Copyright(c) 2020-2023 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -29,6 +29,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.07 (2023-01-18) Use std::copy and std::fill. This does help compilers
+//                    generate better code (expecially MSVC)
 //  1.06 (2022-08-26) Inherit from allocator to make use of EBO
 //  1.05 (2022-06-09) Support for alignment of T.
 //                    Requires aloc_align from allocator implementations!
@@ -102,6 +104,7 @@
 #include <iterator>
 #include <cstring>
 #include <cstdint>
+#include <algorithm>
 
 namespace itlib
 {
@@ -611,27 +614,13 @@ private:
     // fill count elements from p with value
     static void fill(T* p, size_type count, const T& value)
     {
-        // we could look for optimizations here
-        // we could use memset if sizeof(T) == 1
-        // however all observed compilers ended up recognizing this
-        // and using memset with optimizations in such a case
-        // that's enough for us
-        for (size_type i = 0; i < count; ++i)
-        {
-            *p++ = value;
-        }
+        std::fill(p, p + count, value);
     }
 
     template <typename InputIterator>
     static void copy_not_aliased(T* p, InputIterator begin, InputIterator end)
     {
-        // much like above when InputIterator is const T* or bitwise equivalent to T*
-        // (say int/unsinged)
-        // compilers with optimizations end up recognizing the case and using memcpy
-        for (auto i = begin; i != end; ++i)
-        {
-            *p++ = *i;
-        }
+        std::copy(begin, end, p);
     }
 
     // still for extra help, we can provide this (alsto it will be faster in debug)
