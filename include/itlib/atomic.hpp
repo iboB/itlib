@@ -1,10 +1,10 @@
-// itlib-atomic v0.01 beta
+// itlib-atomic v0.02 beta
 //
 // Extenstions for std::atomic
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2022 Borislav Stanimirov
+// Copyright(c) 2022-2023 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  0.02 (2023-01-27) relaxed counter: copying, explicit ctor, explicit ops
 //  0.01 (2022-12-06) Initial beta release
 //
 //
@@ -60,23 +61,28 @@ struct atomic_relaxed_counter {
     static const std::memory_order rel = std::memory_order_relaxed;
 
     atomic_relaxed_counter() noexcept = default;
-    atomic_relaxed_counter(I init) noexcept : a(init) {};
+    explicit atomic_relaxed_counter(I init) noexcept : a(init) {};
 
-    atomic_relaxed_counter(const atomic_relaxed_counter&) = delete;
-    atomic_relaxed_counter& operator=(const atomic_relaxed_counter&) = delete;
-
-    operator I() const noexcept {
-        return a.load(rel);
+    atomic_relaxed_counter(const atomic_relaxed_counter& b) : a(b.load()) {}
+    atomic_relaxed_counter& operator=(const atomic_relaxed_counter& b) {
+        a.store(b.load());
+        return *this;
     }
+
+    I load() const noexcept { return a.load(rel); }
+    void store(I i) noexcept { return a.store(i, rel); }
+
+    operator I() const noexcept { return load(); } // intentionally implicit
+
     I operator++() noexcept { return a.fetch_add(1, rel) + 1; }
     I operator++(int) noexcept { return a.fetch_add(1, rel); }
     I operator+=(I i) noexcept { return a.fetch_add(i, rel) + i; }
     I operator--() noexcept { return a.fetch_sub(1, rel) - 1; }
-    I operator-(int) noexcept { return a.fetch_sub(1, rel); }
+    I operator--(int) noexcept { return a.fetch_sub(1, rel); }
     I operator-=(I i) noexcept { return a.fetch_sub(i, rel) - i; }
 
     I operator=(I i) {
-        a.store(i, rel);
+        store(i);
         return i;
     }
 };
