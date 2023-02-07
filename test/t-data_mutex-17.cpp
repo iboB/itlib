@@ -9,6 +9,7 @@
 #include <shared_mutex>
 #include <cstdlib>
 #include <random>
+#include <thread>
 
 #include <doctest/doctest.h>
 

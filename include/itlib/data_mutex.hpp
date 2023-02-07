@@ -131,7 +131,7 @@ public:
 
     struct try_shared_lock_t : public shared_lock_base_t {
         explicit try_shared_lock_t(const data_mutex& dm) : shared_lock_base_t(dm.m_mutex) {
-            if (this->m_mutex.try_lock()) this->m_data = &dm.m_data;
+            if (this->m_mutex.try_lock_shared()) this->m_data = &dm.m_data;
             else this->m_data = nullptr;
         }
         explicit operator bool() const noexcept { return !!this->m_data; }
