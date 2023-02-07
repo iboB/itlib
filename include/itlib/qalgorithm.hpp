@@ -1,10 +1,10 @@
-// itlib-qalgorithm v1.02
+// itlib-qalgorithm v1.03
 //
 // Wrappers of <algorithm> algorithms for entire containers
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2020 Borislav Stanimirov
+// Copyright(c) 2020-2023 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.03 (2023-02-07) qall_of, qany_of, qnone_of, identity
 //  1.02 (2022-11-29) span-compatible pfind and pfind_if
 //  1.01 (2020-12-29) Added erase functions
 //  1.00 (2020-12-28) First pulic release
@@ -46,7 +47,12 @@
 // * bool erase_first_if(container, pred) - erase the first elemenf which matches pred. returns true if something was erased
 // * size_t erase_all(container, value) - erases all elements equal to value, returns number of elements erased
 // * size_t erase_all_if(container, value) - erases all elements which match pred, returns number of elements erased
+// * bool qall_of(container, pred = identity) - checks if all elements evaluate to true with predicate
+// * bool qany_of(container, pred = identity) - checks if any elements evaluate to true with predicate
+// * bool qnone_of(container, pred = identity) - checks if no elements evaluate to true with predicate
 //
+// ... and the following types:
+// * identity - an identity unary predicate similar to C++20's std::identity
 //
 //                  TESTS
 //
@@ -140,5 +146,24 @@ typename Container::size_type erase_all_if(Container& c, Pred&& pred)
     c.erase(newend, c.end());
     return ret;
 }
+
+struct identity
+{
+    template <typename T>
+    const T& operator()(const T& t) { return t; }
+};
+
+template <typename Container, typename Pred>
+bool qall_of(const Container& c, Pred&& pred) { return std::all_of(c.begin(), c.end(), std::forward<Pred>(pred)); }
+template <typename Container>
+bool qall_of(const Container& c) { return qall_of(c, identity{}); }
+template <typename Container, typename Pred>
+bool qany_of(const Container& c, Pred&& pred) { return std::any_of(c.begin(), c.end(), std::forward<Pred>(pred)); }
+template <typename Container>
+bool qany_of(const Container& c) { return qany_of(c, identity{}); }
+template <typename Container, typename Pred>
+bool qnone_of(const Container& c, Pred&& pred) { return std::none_of(c.begin(), c.end(), std::forward<Pred>(pred)); }
+template <typename Container>
+bool qnone_of(const Container& c) { return qnone_of(c, identity{}); }
 
 }

@@ -1,3 +1,6 @@
+// Copyright (c) Borislav Stanimirov
+// SPDX-License-Identifier: MIT
+//
 #include <doctest/doctest.h>
 
 #include <itlib/qalgorithm.hpp>
@@ -100,6 +103,30 @@ TEST_CASE("erase_all")
     CHECK(itlib::erase_all_if(vec, [](int i) { return i > 2; }) == 2);
     CHECK(vec.size() == 1);
     CHECK(vec.front() == 1);
+}
+
+TEST_CASE("all/any/none")
+{
+    std::vector<int>
+        empty,
+        all = {1, 5, 3, 6, 7},
+        some = {0, 1, 2, 3, 4},
+        none = {0, 0, 0, 0, 0, 0};
+
+    CHECK(itlib::qall_of(empty));
+    CHECK(itlib::qall_of(all));
+    CHECK_FALSE(itlib::qall_of(some));
+    CHECK_FALSE(itlib::qall_of(none));
+
+    CHECK_FALSE(itlib::qany_of(empty));
+    CHECK(itlib::qany_of(all));
+    CHECK(itlib::qany_of(some));
+    CHECK_FALSE(itlib::qany_of(none));
+
+    CHECK(itlib::qnone_of(empty));
+    CHECK_FALSE(itlib::qnone_of(all));
+    CHECK_FALSE(itlib::qnone_of(some));
+    CHECK(itlib::qnone_of(none));
 }
 
 #include <itlib/span.hpp>
