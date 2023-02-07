@@ -80,6 +80,7 @@ find_package(Threads)
 if (Threads_FOUND)
     add_itlib_test(atomic tsan)
     add_itlib_test(atomic_shared_ptr_storage tsan)
+    add_itlib_test(data_mutex tsan)
     add_itlib_test(mutex tsan)
 endif()
 
