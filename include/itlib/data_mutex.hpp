@@ -34,6 +34,18 @@
 //                  DOCUMENTATION
 //
 // Simply include this file wherever you need.
+// The library defines the template type data_mutex<T, Mutex> which is a
+// pair of an object and an associated mutex used to synchronize access to it.
+//
+// To access the object inside one must use one of the following methods:
+// * unique_lock (mutex lock/unlock)
+// * try_unique_lock (mutex try_lock/unlock)
+// * shared_lock (mutex lock_shared/unlock_shared)
+// * try_shared_lock (mutex try_lock_shared/unlock_shared)
+//
+// They all return thin pointer-like wrappers of T. Which have operators
+// -> and *. In the case of the try_* functions, they also have a bool
+// interface
 //
 //
 //                  TESTS
