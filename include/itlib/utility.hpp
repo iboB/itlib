@@ -1,10 +1,10 @@
-// itlib-utility v1.00
+// itlib-utility v1.01
 //
 // Utility functions to extend <utility>
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2022 Borislav Stanimirov
+// Copyright(c) 2022-2023 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2023-02-08) Added make_nullptr
 //  1.00 (2022-11-28) Initial release
 //
 //
@@ -43,6 +44,9 @@
 // * owner_from_member:
 //      A "hacky" ofsetof-like func which allows you to get a pointer to the
 //      owner from a pointer to a member.
+// * make_nullptr:
+//      A function to make a null pointer from a (potentially incomplete) type
+//      Equivalent to static_cast<T*>(nullptr), but with a clearer intent
 #pragma once
 #include <type_traits>
 #include <cstdint>
@@ -64,5 +68,8 @@ const Owner* owner_from_member(const Member& member, Member(Owner::* ptr)) noexc
     auto m_offset = reinterpret_cast<uintptr_t>(&(null_owner->*ptr));
     return reinterpret_cast<const Owner*>(m_p - m_offset);
 }
+
+template <typename T>
+T* make_nullptr() { return static_cast<T*>(nullptr); }
 
 }

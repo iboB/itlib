@@ -1,8 +1,11 @@
-#include <doctest/doctest.h>
-
+// Copyright (c) Borislav Stanimirov
+// SPDX-License-Identifier: MIT
+//
 #include <itlib/utility.hpp>
 
 #include <string>
+
+#include <doctest/doctest.h>
 
 TEST_CASE("force_move") {
     auto i = itlib::force_move(7);
@@ -32,4 +35,12 @@ TEST_CASE("owner_from_member") {
     CHECK(x.m.get_owner_name().empty());
     x.name = "xxx";
     CHECK(x.m.get_owner_name() == "xxx");
+}
+
+class incomplete;
+
+TEST_CASE("make_nullptr") {
+    auto in = itlib::make_nullptr<incomplete>();
+    CHECK_FALSE(in);
+    static_assert(std::is_same<incomplete*, decltype(in)>::value, "must be same type");
 }
