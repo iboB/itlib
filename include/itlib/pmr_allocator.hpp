@@ -60,7 +60,7 @@ public:
 #if __cplusplus < 202000L
     using super::resource;
 
-    void* allocate_bytes(std::size_t n, std::size_t a = alignof(std::max_align_t)) {
+    [[nodiscard]] void* allocate_bytes(std::size_t n, std::size_t a = alignof(std::max_align_t)) {
         return resource()->allocate(n, a);
     }
 
