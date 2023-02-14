@@ -8,4 +8,4 @@ The "itlib" tests check that the compiler meets the requirements for the librari
 
 Tests prefixed with "bft" are build failure tests. They check for expected compilation errors.
 
-Using [doctest](https://github.com/onqtam/doctest) through [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake)
+Using [doctest](https://github.com/onqtam/doctest) and [doctest-util](https://github.com/iboB/doctest-util) through [CPM.cmake](https://github.com/cpm-cmake/CPM.cmake)
