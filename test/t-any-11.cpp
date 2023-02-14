@@ -33,7 +33,7 @@ TEST_CASE("basic") {
     CHECK(a);
     CHECK(*a.tdata<std::string>() == "foo bar");
 
-    a = std::make_unique<int>(43);
+    a = std::unique_ptr<int>(new int(43));
     CHECK(a);
 
     auto& uptr = *a.tdata<std::unique_ptr<int>>();
