@@ -193,8 +193,10 @@ public:
 
     void reset() noexcept {
         if (!m_block) return;
+        auto size = m_block->size;
+        auto alignment = m_block->alignment;
         m_block->~obj_block();
-        free_block();
+        free_block(size, alignment);
     }
 
     template <typename T, typename... Args>
@@ -211,7 +213,7 @@ public:
             return r->m_data;
         }
         catch (...) {
-            free_block();
+            free_block(size, alignment);
             throw;
         }
     }
@@ -223,16 +225,18 @@ public:
         m_block = static_cast<anyimpl::obj_block*>(Alloc::allocate_bytes(o.m_block->size, o.m_block->alignment));
         try {
             o.m_block->clone_to(m_block);
+            m_block->size = o.m_block->size;
+            m_block->alignment = o.m_block->alignment;
         }
         catch (...) {
-            free_block();
+            free_block(o.m_block->size, o.m_block->alignment);
             throw;
         }
     }
 
 private:
-    void free_block() noexcept {
-        Alloc::deallocate_bytes(m_block, m_block->size, m_block->alignment);
+    void free_block(size_t size, size_t alignment) noexcept {
+        Alloc::deallocate_bytes(m_block, size, alignment);
         m_block = nullptr;
     }
 };
