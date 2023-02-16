@@ -114,7 +114,7 @@ TEST_CASE("[stride_span] algorithm") {
     CHECK(f == odds.begin() + 1);
 
     std::vector<int> codds = {1, 3, 5, 7, 9};
-    CHECK(std::equal(odds.begin(), odds.end(), codds.begin(), codds.end()));
+    CHECK(std::equal(odds.begin(), odds.end(), codds.begin()));
 }
 
 struct foo
