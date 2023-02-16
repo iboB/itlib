@@ -1,9 +1,13 @@
-#include <doctest/doctest.h>
-
+// Copyright (c) Borislav Stanimirov
+// SPDX-License-Identifier: MIT
+//
 #include <itlib/stride_span.hpp>
+
+#include <doctest/doctest.h>
 
 #include <vector>
 #include <cstring>
+#include <algorithm>
 
 TEST_CASE("[stride_span] construction and iteration")
 {
@@ -38,6 +42,7 @@ TEST_CASE("[stride_span] construction and iteration")
         CHECK(eints);
         CHECK(!eints.empty());
         CHECK(eints.size() == 4);
+        CHECK(eints.end() - eints.begin() == 4);
         CHECK(eints.begin() + 4 == eints.end());
         CHECK(*eints.rbegin() == 4);
 
@@ -94,6 +99,22 @@ TEST_CASE("[stride_span] construction and iteration")
         }
         CHECK(sum == 44332211);
     }
+}
+
+TEST_CASE("[stride_span] algorithm") {
+    int nums[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    itlib::stride_span<int> odds(reinterpret_cast<uint8_t*>(nums), sizeof(int) * 2, 5);
+    CHECK(odds.front() == 1);
+    CHECK(odds[1] == 3);
+    CHECK(odds.back() == 9);
+    CHECK(std::all_of(odds.begin(), odds.end(), [](int i) -> bool { return i % 2 == 1; }));
+    auto f = std::find(odds.begin(), odds.end(), 2);
+    CHECK(f == odds.end());
+    f = std::find(odds.begin(), odds.end(), 3);
+    CHECK(f == odds.begin() + 1);
+
+    std::vector<int> codds = {1, 3, 5, 7, 9};
+    CHECK(std::equal(odds.begin(), odds.end(), codds.begin(), codds.end()));
 }
 
 struct foo
