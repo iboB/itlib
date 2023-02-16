@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <vector>
+#include <algorithm>
 
 TEST_CASE("[poly_span] empty")
 {
@@ -63,6 +64,27 @@ TEST_CASE("[poly_span] field")
     CHECK(v[1].b == 8);
     CHECK(v[2].b == 8);
     CHECK(v[3].a == 8);
+}
+
+TEST_CASE("[stride_span] algorithm") {
+    std::vector<selectable> v = {{1, 20, true}, {40, 3, false}, {80, 5, false}, {7, 80, true}};
+
+    itlib::poly_span<int&> odds(v.data(), v.size(), [](selectable& s) -> int& {
+        if (s.use_a) return s.a;
+        return s.b;
+    });
+
+    CHECK(odds.front() == 1);
+    CHECK(odds[1] == 3);
+    CHECK(odds.back() == 7);
+    CHECK(std::all_of(odds.begin(), odds.end(), [](int i) -> bool { return i % 2 == 1; }));
+    auto f = std::find(odds.begin(), odds.end(), 20);
+    CHECK(f == odds.end());
+    f = std::find(odds.begin(), odds.end(), 3);
+    CHECK(f == odds.begin() + 1);
+
+    std::vector<int> codds = {1, 3, 5, 7};
+    CHECK(std::equal(odds.begin(), odds.end(), codds.begin(), codds.end()));
 }
 
 struct shape
