@@ -129,14 +129,14 @@ TEST_CASE("lifetime")
 
     lifetime_counter_sentry vsentry(value::root_lifetime_stats()), esentry(error::root_lifetime_stats());
 
-    impl::lifetime_stats empty;
+    lifetime_stats empty;
     {
         value::lifetime_stats vs;
         error::lifetime_stats es;
 
         const auto x = func(false);
         CHECK(!x);
-        CHECK(vs == empty);
+        CHECK(vs.checkpoint() == empty);
         CHECK(es.d_ctr == 1);
         CHECK(es.living == 1);
         CHECK(es.total == 1);
@@ -148,7 +148,7 @@ TEST_CASE("lifetime")
         error::lifetime_stats es;
 
         const auto x = func(true);
-        CHECK(es == empty);
+        CHECK(es.checkpoint() == empty);
         CHECK(vs.d_ctr == 1);
         CHECK(vs.living == 1);
         CHECK(vs.total == 1);
@@ -174,7 +174,7 @@ TEST_CASE("lifetime")
         CHECK(es.living == 2);
         CHECK(es.total == 4);
 
-        CHECK(vs == empty);
+        CHECK(vs.checkpoint() == empty);
     }
 
     {
@@ -197,7 +197,7 @@ TEST_CASE("lifetime")
         CHECK(vs.living == 2);
         CHECK(vs.total == 4);
 
-        CHECK(es == empty);
+        CHECK(es.checkpoint() == empty);
     }
 
 
@@ -286,7 +286,7 @@ TEST_CASE("ref lifetime")
 
     lifetime_counter_sentry vsentry(value::root_lifetime_stats()), esentry(error::root_lifetime_stats());
 
-    impl::lifetime_stats empty;
+    lifetime_stats empty;
     {
         value::lifetime_stats vs;
         error::lifetime_stats es;
@@ -308,7 +308,7 @@ TEST_CASE("ref lifetime")
         const obj o;
 
         const auto x = o.iv();
-        CHECK(es == empty);
+        CHECK(es.checkpoint() == empty);
         CHECK(vs.living == 1);
         CHECK(vs.total == 1);
     }
@@ -350,7 +350,7 @@ TEST_CASE("ref lifetime")
         CHECK(vs.living == 1);
         CHECK(vs.total == 1);
 
-        CHECK(es == empty);
+        CHECK(es.checkpoint() == empty);
     }
 
 
@@ -424,7 +424,7 @@ TEST_CASE("void lifetime")
 
     lifetime_counter_sentry esentry(error::root_lifetime_stats());
 
-    impl::lifetime_stats empty;
+    lifetime_stats empty;
     {
         error::lifetime_stats es;
 
@@ -440,7 +440,7 @@ TEST_CASE("void lifetime")
         error::lifetime_stats es;
 
         const auto x = func(true);
-        CHECK(es == empty);
+        CHECK(es.checkpoint() == empty);
     }
 
     {
@@ -468,7 +468,7 @@ TEST_CASE("void lifetime")
 
         auto x = func(true);
         x = func(true);
-        CHECK(es == empty);
+        CHECK(es.checkpoint() == empty);
     }
 
 
