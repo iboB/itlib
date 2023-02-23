@@ -69,4 +69,18 @@ TEST_CASE("pmr_allocator") {
         CHECK(stats.total == 3);
     }
 }
+
+TEST_CASE("pmr_allocator ctors") {
+    {
+        auto mrs = std::pmr::get_default_resource();
+        itlib::pmr_allocator a(mrs);
+        itlib::pmr_allocator b;
+        CHECK(a == b);
+    }
+    {
+        itlib::pmr_allocator<int> a;
+        itlib::pmr_allocator<float> b(a);
+        CHECK(a == b);
+    }
+}
 #endif

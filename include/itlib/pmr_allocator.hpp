@@ -1,4 +1,4 @@
-// itlib-pmr_allocator v1.00
+// itlib-pmr_allocator v1.01
 //
 // A C++17 implementation of the C++20 additions to std::pmr::allocator
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2023-02-23) Proper constructors
 //  1.00 (2023-02-09) Initial release
 //
 //
@@ -55,6 +56,8 @@ class pmr_allocator : public std::pmr::polymorphic_allocator<T> {
 public:
     using super = std::pmr::polymorphic_allocator<T>;
     using value_type = typename super::value_type;
+
+    using super::polymorphic_allocator;
 
     // leave this to the standard implementation if available
 #if __cplusplus < 202000L
