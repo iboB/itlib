@@ -29,7 +29,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.01 (2023-02-16) Proper iterator support
+//  1.01 (2023-02-27) Proper iterator support
 //  1.00 (2022-05-15) Initial release
 //
 //
@@ -207,6 +207,8 @@ public:
         CT* operator->() const noexcept { return reinterpret_cast<T*>(p); }
         t_iterator& operator++() noexcept { p += stride; return *this; }
         t_iterator& operator--() noexcept { p -= stride; return *this; }
+        t_iterator& operator+=(const ptrdiff_t diff) noexcept { p += diff * stride; return *this; }
+        t_iterator& operator-=(const ptrdiff_t diff) noexcept { p -= diff * stride; return *this; }
         t_iterator operator+(const ptrdiff_t diff) const noexcept { return t_iterator(p + stride * diff, stride); }
         t_iterator operator-(const ptrdiff_t diff) const noexcept { return t_iterator(p - stride * diff, stride); }
         ptrdiff_t operator-(const t_iterator& other) const noexcept { return (p - other.p) / stride; }
