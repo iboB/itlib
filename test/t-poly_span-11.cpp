@@ -85,6 +85,10 @@ TEST_CASE("[stride_span] algorithm") {
 
     std::vector<int> codds = {1, 3, 5, 7};
     CHECK(std::equal(odds.begin(), odds.end(), codds.begin()));
+
+    std::vector<int> clone;
+    clone.assign(odds.begin(), odds.end());
+    CHECK(codds == clone);
 }
 
 struct shape
