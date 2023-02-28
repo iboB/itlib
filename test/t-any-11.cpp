@@ -6,7 +6,7 @@
 #include <doctest/doctest.h>
 
 #include <string>
-#include <memory>
+#include <vector>
 
 TEST_CASE("basic") {
     itlib::any<> a;
@@ -57,4 +57,14 @@ TEST_CASE("basic") {
     auto& str = a.emplace<std::string>("baz");
     CHECK(a);
     CHECK(&str == a.data());
+}
+
+TEST_CASE("allocator aware") {
+    static_assert(!std::uses_allocator<itlib::any<>, std::allocator<char>>::value, "not compatible with std::allocator (yet)");
+
+    std::vector<itlib::any<>> vec;
+    vec.emplace_back();
+    CHECK(vec.size() == 1);
+    auto& back = vec.back();
+    CHECK(back.has_value() == false);
 }

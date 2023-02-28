@@ -1,4 +1,4 @@
-// itlib-any v1.00
+// itlib-any v1.01
 //
 // An alternative implementation of C++17's std::any
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2023-02-28) Fixed allocator awareness
 //  1.00 (2023-02-14) Initial release
 //
 //
@@ -53,6 +54,7 @@
 #include <utility>
 #include <typeinfo>
 #include <type_traits>
+#include <memory>
 
 namespace itlib {
 
@@ -136,7 +138,8 @@ public:
     using allocator_type = Alloc;
 
     any() noexcept = default;
-    any(const Alloc& a) noexcept : Alloc(a) {}
+    explicit any(const Alloc& a) noexcept : Alloc(a) {}
+    any(std::allocator_arg_t, const Alloc& a) : Alloc(a) {}
 
     any(any&& o) noexcept : Alloc(o), m_block(o.m_block) {
         o.m_block = nullptr;
@@ -161,7 +164,11 @@ public:
 
     // only enable these if T is not another any
     template <typename T, typename std::enable_if<!anyimpl::is_any<typename std::decay<T>::type>::value, int>::type = 0>
-    any(T&& t, const Alloc& a = {}) : Alloc(a) {
+    any(T&& t) {
+        emplace<T>(std::forward<T>(t));
+    }
+    template <typename T, typename std::enable_if<!anyimpl::is_any<typename std::decay<T>::type>::value, int>::type = 0>
+    any(std::allocator_arg_t, const Alloc& a, T&& t) : Alloc(a) {
         emplace<T>(std::forward<T>(t));
     }
     template <typename T, typename std::enable_if<!anyimpl::is_any<typename std::decay<T>::type>::value, int>::type = 0>

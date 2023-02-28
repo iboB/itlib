@@ -74,6 +74,7 @@ TEST_CASE("pmr_allocator ctors") {
     {
         auto mrs = std::pmr::get_default_resource();
         itlib::pmr_allocator<> a(mrs);
+        CHECK(a.resource() == mrs);
         itlib::pmr_allocator b;
         CHECK(a == b);
     }
@@ -81,6 +82,15 @@ TEST_CASE("pmr_allocator ctors") {
         itlib::pmr_allocator<int> a;
         itlib::pmr_allocator<float> b(a);
         CHECK(a == b);
+    }
+    {
+        auto mrs = std::pmr::get_default_resource();
+        itlib::pmr_allocator<> a(mrs);
+
+        std::pmr::monotonic_buffer_resource mon(1024);
+        itlib::pmr_allocator<> b(&mon);
+        CHECK(b.resource() == &mon);
+        CHECK(a != b);
     }
 }
 #endif
