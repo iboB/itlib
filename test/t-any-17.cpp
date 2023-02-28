@@ -32,16 +32,23 @@ TEST_CASE("allocator aware") {
     std::pmr::vector<pmr_any> vec(itlib::pmr_allocator<>{&buf});
     CHECK(vec.empty());
     CHECK(vec.get_allocator().resource() == &buf);
-    auto& back = vec.emplace_back();
-    CHECK(back.get_allocator() == vec.get_allocator());
-    CHECK(vec.size() == 1);
-    CHECK_FALSE(back.has_value());
 
-    std::pmr::vector<pmr_any> vec_d;
-    auto& back_d = vec_d.emplace_back();
-    CHECK(back_d.get_allocator() == vec_d.get_allocator());
+    {
+        auto& back = vec.emplace_back();
+        CHECK(back.get_allocator() == vec.get_allocator());
+        CHECK(vec.size() == 1);
+        CHECK_FALSE(back.has_value());
 
-    CHECK(back.get_allocator() != back_d.get_allocator());
+        std::pmr::vector<pmr_any> vec_d;
+        auto& back_d = vec_d.emplace_back();
+        CHECK(back_d.get_allocator() == vec_d.get_allocator());
+
+        CHECK(back.get_allocator() != back_d.get_allocator());
+    }
+
+    auto& back = vec.emplace_back(std::string("foobar"));
+    CHECK(back.has_value());
+    CHECK(*back.tdata<std::string>() == "foobar");
 }
 
 #endif
