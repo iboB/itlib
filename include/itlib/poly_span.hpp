@@ -1,4 +1,4 @@
-// itlib-poly_span v1.00
+// itlib-poly_span v1.01
 //
 // A class similar to C++20's span which offers a polymorphic view to a block
 // of data

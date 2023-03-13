@@ -1,4 +1,4 @@
-// itlib-stride_span v1.00
+// itlib-stride_span v1.01
 //
 // A C++11 implementation C++20's of std::span with a dynamic extent
 // and an associated stride.
@@ -37,7 +37,7 @@
 //
 // Simply include this file wherever you need.
 //
-// This class is designed very similar to std::span from C++20 witha a dynamic
+// This class is designed very similar to std::span from C++20 with a dynamic
 // extent. For a reference of std::span see here:
 // https://en.cppreference.com/w/cpp/container/span
 //
