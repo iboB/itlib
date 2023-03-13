@@ -194,7 +194,7 @@ public:
     template <typename CRT>
     class t_iterator
     {
-        byte_t* p = 0;
+        byte_t* p = nullptr;
         size_t stride = 1;
         poly_func_t poly_func = nullptr;
 

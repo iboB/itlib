@@ -190,7 +190,7 @@ public:
     template <typename CT>
     class t_iterator
     {
-        byte_t* p = 0;
+        byte_t* p = nullptr;
         size_t stride = sizeof(T);
 
         friend class stride_span;
