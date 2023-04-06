@@ -1,4 +1,4 @@
-// itlib-static-vector v1.06dev
+// itlib-static-vector v1.07
 //
 // std::vector-like class with a fixed capacity
 //
@@ -29,7 +29,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.07 (2023-xx-xx) Added resize with initializer
+//  1.07 (2023-04-06) Added resize with initializer
 //  1.06 (2023-01-17) Shim allocator arg to constructors for template code
 //                    All standard overloads of insert
 //                    All standard overloads of erase
