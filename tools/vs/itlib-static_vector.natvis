@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
   <Type Name="itlib::static_vector&lt;*&gt;">
-    <DisplayString>{{size = {m_size}}}</DisplayString>
+    <DisplayString>{{size = {m_size} / {sizeof(m_data)/sizeof(m_data[0])}}</DisplayString>
     <Expand>
-      <Item Name="[size]" ExcludeView="simple">m_size</Item>
-      <Item Name="[capacity]" ExcludeView="simple">sizeof(m_data)/sizeof(m_data[0])</Item>
       <ArrayItems>
         <Size>m_size</Size>
         <ValuePointer>($T1*)(m_data)</ValuePointer>
