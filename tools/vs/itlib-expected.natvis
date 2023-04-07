@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (c) Borislav Stanimirov
+SPDX-License-Identifier: MIT
+-->
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="itlib::expected&lt;*,*&gt;">
+    <!-- Optional with T& (this is first so the next one can override it if possible) -->
+    <Intrinsic Optional="true" Name="has_val" Expression="!!m_value"/>
+    <!-- Optional with a value type T -->
+    <Intrinsic Optional="true" Name="has_val" Expression="m_has_value"/>
+    <DisplayString Condition="has_val()">{{value = {m_value}}}</DisplayString>
+    <DisplayString>{{error = {m_error}}}</DisplayString>
+    <Expand>
+      <Item Condition="has_val()" Name="value">m_value</Item>
+      <Item Condition="!has_val()" Name="error">m_error</Item>
+    </Expand>
+  </Type>
+  <Type Name="itlib::expected&lt;*,void&gt;">
+    <!-- Optional with T& (this is first so the next one can override it if possible) -->
+    <Intrinsic Optional="true" Name="has_val" Expression="!!m_value"/>
+    <!-- Optional with a value type T -->
+    <Intrinsic Optional="true" Name="has_val" Expression="m_has_value"/>
+    <DisplayString Condition="has_val()">{{value = {m_value}}}</DisplayString>
+    <DisplayString>unexpected</DisplayString>
+    <Expand>
+      <Item Condition="has_val()" Name="value">m_value</Item>
+    </Expand>
+  </Type>
+  <Type Name="itlib::expected&lt;void,*&gt;">
+    <!-- Optional with T& (this is first so the next one can override it if possible) -->
+    <DisplayString Condition="m_has_value">expected</DisplayString>
+    <DisplayString>{{error = {m_error}}}</DisplayString>
+    <Expand>
+      <Item Condition="!m_has_value" Name="error">m_error</Item>
+    </Expand>
+  </Type>
+  <Type Name="itlib::expected&lt;void,void&gt;">
+    <!-- Optional with T& (this is first so the next one can override it if possible) -->
+    <DisplayString Condition="m_has_value">expected</DisplayString>
+    <DisplayString>unexpected</DisplayString>
+  </Type>
+</AutoVisualizer>
