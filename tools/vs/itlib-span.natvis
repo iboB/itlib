@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (c) Borislav Stanimirov
+SPDX-License-Identifier: MIT
+-->
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
   <Type Name="itlib::span&lt;*&gt;">
     <DisplayString>{{size = {m_end - m_begin}}}</DisplayString>

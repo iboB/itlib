@@ -4,11 +4,13 @@ Copyright (c) Borislav Stanimirov
 SPDX-License-Identifier: MIT
 -->
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-  <Type Name="itlib::pod_vector&lt;*&gt;">
-    <DisplayString>{{size = {m_end - m_begin}}}</DisplayString>
+  <Type Name="itlib::small_vector&lt;*&gt;">
+    <Intrinsic Name="is_small" Expression="(void*)m_begin == (void*)m_static_data"/>
+    <DisplayString Condition="is_small()">{{size = {m_end - m_begin}, small}</DisplayString>
+    <DisplayString>{{size = {m_end - m_begin}, dynamic}</DisplayString>
     <Expand>
       <Item Name="[capacity]" ExcludeView="simple">m_capacity</Item>
-      <Item Name="[allocator]" ExcludeView="simple">*($T2*)this</Item>
+      <Item Name="[allocator]" ExcludeView="simple">*($T4*)this</Item>
       <ArrayItems>
         <Size>m_end - m_begin</Size>
         <ValuePointer>($T1*)(m_begin)</ValuePointer>
