@@ -1,4 +1,4 @@
-// itlib-poly_span v1.01
+// itlib-poly_span v1.02
 //
 // A class similar to C++20's span which offers a polymorphic view to a block
 // of data
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2023-04-21) Disable ub sanitizer for poly func
 //  1.01 (2023-02-27) Proper iterator support
 //  1.00 (2022-05-19) Initial release
 //
@@ -97,6 +98,14 @@
 #   define I_ITLIB_POLY_SPAN_BOUNDS_CHECK(i) assert((i) < this->size())
 #endif
 
+#if !defined(I_ITLIB_NO_SANITIZE)
+#   if defined(__GNUC__)
+#       define I_ITLIB_NO_SANITIZE(...)  __attribute__((no_sanitize(__VA_ARGS__)))
+#   else
+#       define I_ITLIB_NO_SANITIZE(...)
+#   endif
+#endif
+
 namespace itlib
 {
 
@@ -138,12 +147,14 @@ public:
         return !!m_begin;
     }
 
+    I_ITLIB_NO_SANITIZE("undefined")
     const RT at(size_t i) const
     {
         I_ITLIB_POLY_SPAN_BOUNDS_CHECK(i);
         return m_poly_func(m_begin + m_stride * i);
     }
 
+    I_ITLIB_NO_SANITIZE("undefined")
     RT at(size_t i)
     {
         I_ITLIB_POLY_SPAN_BOUNDS_CHECK(i);
@@ -208,6 +219,7 @@ public:
         using reference = CRT;
 
         t_iterator() noexcept = default;
+        I_ITLIB_NO_SANITIZE("undefined")
         CRT operator*() const noexcept { return poly_func(p); }
         t_iterator& operator++() noexcept { p += stride; return *this; }
         t_iterator& operator--() noexcept { p -= stride; return *this; }
