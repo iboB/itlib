@@ -1,4 +1,4 @@
-// itlib-mem-streambuf v1.02
+// itlib-mem-streambuf v1.03
 //
 // std::streambuf implementations for working with contiguous memory
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.03 (2023-04-21) Minor rearangement to avoid ub of adding val to nullptr
 //  1.02 (2022-02-01) Switched static assert from is_pod to is_trivial
 //  1.01 (2021-11-18) Fixed mem_ostreambuf bug when used with containers whose
 //                    data() returns non-null when empty
@@ -152,12 +153,17 @@ private:
         return ch;
     }
 
+    std::streamsize remaining_buf_size() const noexcept {
+        // somewhat hacky check of size
+        return this->epptr() - this->pptr();
+    }
+
     std::streamsize xsputn(const char_type* s, std::streamsize num) override
     {
-        // hacky check of size
-        if (this->pptr() + num > this->epptr())
+        auto rem = remaining_buf_size();
+        if (rem < num)
         {
-            cap_resize_by(this->pptr() + num - this->epptr());
+            cap_resize_by(num - rem);
         }
 
         memcpy(this->pptr(), s, num * sizeof(char_type));
