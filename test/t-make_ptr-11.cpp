@@ -48,7 +48,8 @@ TEST_CASE("[make-ptr:make_aliased]")
     // null
     {
         std::shared_ptr<vec> ptr;
-        auto alias = itlib::make_aliased(ptr, &ptr->y);
+        int val = 5;
+        auto alias = itlib::make_aliased(ptr, &val);
         CHECK_FALSE(alias);
         CHECK(alias.use_count() == 0);
     }
