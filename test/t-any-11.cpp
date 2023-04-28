@@ -68,3 +68,54 @@ TEST_CASE("allocator aware") {
     auto& back = vec.back();
     CHECK(back.has_value() == false);
 }
+
+TEST_CASE("any cast") {
+    {
+        CHECK_FALSE(itlib::any_cast<std::string>(nullptr));
+
+        itlib::any<>* a = nullptr;
+        CHECK_FALSE(itlib::any_cast<std::string>(a));
+    }
+
+    {
+        itlib::any<> a(5);
+        CHECK_FALSE(itlib::any_cast<std::string>(&a));
+        auto pi = itlib::any_cast<int>(&a);
+        CHECK(pi);
+        CHECK(*pi == 5);
+
+        *pi = 6;
+        CHECK_THROWS_AS(itlib::any_cast<std::string>(a), std::bad_cast);
+
+        CHECK(itlib::any_cast<int>(a) == 6);
+
+        itlib::any_cast<int&>(a) = 42;
+
+        CHECK(itlib::any_cast<const int>(a) == 42);
+
+        const auto& ca = a;
+
+        CHECK(itlib::any_cast<int>(ca) == 42);
+        CHECK(&itlib::any_cast<const int&>(ca) == pi);
+    }
+
+    {
+        itlib::any<> a = std::string("abc");
+        CHECK_FALSE(itlib::any_cast<char>(&a));
+        auto pstr = itlib::any_cast<std::string>(&a);
+        CHECK(pstr);
+        CHECK(*pstr == "abc");
+
+        itlib::any_cast<std::string&>(a) = "xyz";
+        CHECK(*pstr == "xyz");
+
+        auto take_str = itlib::any_cast<std::string>(std::move(a));
+        CHECK(take_str == "xyz");
+        CHECK(pstr->empty());
+
+        itlib::any_cast<std::string&>(a) = "mnp";
+        take_str = itlib::any_cast<std::string&&>(std::move(a));
+        CHECK(take_str == "mnp");
+        CHECK(pstr->empty());
+    }
+}

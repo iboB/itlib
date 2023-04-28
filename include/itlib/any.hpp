@@ -1,4 +1,4 @@
-// itlib-any v1.01
+// itlib-any v1.02
 //
 // An alternative implementation of C++17's std::any
 //
@@ -28,6 +28,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2023-xx-xx) * Support for typied and any_cast
+//                    * Fixed tdata<const T>
 //  1.01 (2023-02-28) Fixed allocator awareness
 //  1.00 (2023-02-14) Initial release
 //
@@ -91,6 +93,8 @@ struct obj_block {
     virtual void* data() noexcept = 0;
 
     virtual void clone_to(obj_block* buf) const = 0;
+
+    virtual const std::type_info& type() const noexcept = 0;
 };
 
 template <typename T>
@@ -104,7 +108,7 @@ struct obj_block_for final : public obj_block {
 
     ~obj_block_for() = default;
 
-    void* data() noexcept override {
+    virtual void* data() noexcept override {
         return &m_data;
     }
 
@@ -120,6 +124,10 @@ struct obj_block_for final : public obj_block {
 
     virtual void clone_to(obj_block* buf) const override {
         do_clone_to<>(buf);
+    }
+
+    virtual const std::type_info& type() const noexcept override {
+        return typeid(T);
     }
 };
 
@@ -194,7 +202,7 @@ public:
     template <typename T>
     T* tdata() noexcept { return static_cast<T*>(data()); }
     template <typename T>
-    const T* tdata() const noexcept { return static_cast<T*>(data()); }
+    const T* tdata() const noexcept { return static_cast<const T*>(data()); }
 
     Alloc get_allocator() const noexcept { return *this; }
 
@@ -241,11 +249,52 @@ public:
         }
     }
 
+    const std::type_info& type() const noexcept {
+        if (m_block) return m_block->type();
+        return typeid(void);
+    }
+
 private:
     void free_block(size_t size, size_t alignment) noexcept {
         Alloc::deallocate_bytes(m_block, size, alignment);
         m_block = nullptr;
     }
 };
+
+template <typename T>
+const T* any_cast(nullptr_t) { return nullptr; }
+
+template <typename T, typename Alloc>
+const T* any_cast(const any<Alloc>* a) {
+    if (!a) return nullptr;
+    if (typeid(T) != a->type()) return nullptr;
+    return a->tdata<T>();
+}
+
+template <typename T, typename Alloc>
+T* any_cast(any<Alloc>* a) {
+    if (!a) return nullptr;
+    if (typeid(T) != a->type()) return nullptr;
+    return a->tdata<T>();
+}
+
+namespace anyimpl {
+template <typename T, typename A>
+T do_cast(A& a) {
+    using U = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+    auto ret = any_cast<U>(&a);
+    if (!ret) throw std::bad_cast();
+    return *ret;
+}
+}
+
+template <typename T, typename Alloc>
+T any_cast(const any<Alloc>& a) { return anyimpl::do_cast<T>(a); }
+
+template <typename T, typename Alloc>
+T any_cast(any<Alloc>& a) { return anyimpl::do_cast<T>(a); }
+
+template <typename T, typename Alloc>
+T any_cast(any<Alloc>&& a) { return std::move(anyimpl::do_cast<T&>(a)); }
 
 }
