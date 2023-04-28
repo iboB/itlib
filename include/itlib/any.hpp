@@ -268,14 +268,14 @@ template <typename T, typename Alloc>
 const T* any_cast(const any<Alloc>* a) {
     if (!a) return nullptr;
     if (typeid(T) != a->type()) return nullptr;
-    return a->tdata<T>();
+    return a->template tdata<T>();
 }
 
 template <typename T, typename Alloc>
 T* any_cast(any<Alloc>* a) {
     if (!a) return nullptr;
     if (typeid(T) != a->type()) return nullptr;
-    return a->tdata<T>();
+    return a->template tdata<T>();
 }
 
 namespace anyimpl {
