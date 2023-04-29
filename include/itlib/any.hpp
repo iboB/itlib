@@ -28,7 +28,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.02 (2023-xx-xx) * Support for typied and any_cast
+//  1.02 (2023-04-29) * Support for typied and any_cast
 //                    * Fixed tdata<const T>
 //  1.01 (2023-02-28) Fixed allocator awareness
 //  1.00 (2023-02-14) Initial release
