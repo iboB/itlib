@@ -1,4 +1,4 @@
-// itlib-atomic-shared-ptr-storage v1.00
+// itlib-atomic-shared-ptr-storage v1.01
 //
 // A saner alternative to std::atomic<std::shared_ptr<T>>
 //
@@ -28,7 +28,8 @@
 //
 //                  VERSION HISTORY
 //
-//  1.00 (2020-13-12) Initial release
+//  1.01 (2023-04-29) Disable MSVC warning 4243 (padding due do alignment)
+//  1.00 (2022-13-12) Initial release
 //
 //
 //                  DOCUMENTATION
@@ -81,6 +82,10 @@ struct asps_spinlock {
     };
 };
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4324)
+#endif
 template <typename T>
 class alignas(64) asps_holder {
     using sptr = std::shared_ptr<T>;
@@ -125,6 +130,9 @@ public:
         }
     }
 };
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 }
 }
