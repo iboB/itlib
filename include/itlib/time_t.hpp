@@ -1,11 +1,11 @@
-// itlib-time_t v1.01
+// itlib-time_t v1.02
 //
 // A thin wrapper of std::time_t which provides thread safe std::tm getters and
 // type-safe (std::chrono::duration-based) arithmetic
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2020-2021 Borislav Stanimirov
+// Copyright(c) 2020-2023 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2023-04-29) Fix MSVC warning for assignment in while
 //  1.01 (2021-04-29) Added named ctors: now, from_gmtime, from_localtime
 //  1.00 (2020-10-36) Initial release
 //
@@ -169,7 +170,7 @@ inline std::string strftime(const char* format, const std::tm& tm)
     std::string ret;
     ret.resize(128);
     size_t len;
-    while (!(len = std::strftime(&ret.front(), ret.size(), format, &tm))) ret.resize(2 * ret.size());
+    while ((len = std::strftime(&ret.front(), ret.size(), format, &tm)) == 0) ret.resize(2 * ret.size());
     ret.resize(len);
     return ret;
 }
