@@ -52,17 +52,17 @@ TEST_CASE("[stride_span] construction and iteration")
         CHECK(eints[0] == 1);
 
         int sum = 0;
-        for (auto i : eints)
+        for (auto ie : eints)
         {
-            sum += i;
+            sum += ie;
         }
         CHECK(sum == 10);
 
         sum = 0;
-        for (auto i = eints.rbegin(); i != eints.rend(); ++i)
+        for (auto ie = eints.rbegin(); ie != eints.rend(); ++ie)
         {
             sum *= 10;
-            sum += *i;
+            sum += *ie;
         }
         CHECK(sum == 4321);
 
@@ -85,17 +85,17 @@ TEST_CASE("[stride_span] construction and iteration")
         CHECK(eints[0] == 11);
 
         int sum = 0;
-        for (auto i : eints)
+        for (auto ie : eints)
         {
-            sum += i;
+            sum += ie;
         }
         CHECK(sum == 110);
 
         sum = 0;
-        for (auto i = eints.rbegin(); i != eints.rend(); ++i)
+        for (auto ie = eints.rbegin(); ie != eints.rend(); ++ie)
         {
             sum *= 100;
-            sum += *i;
+            sum += *ie;
         }
         CHECK(sum == 44332211);
     }

@@ -1,3 +1,6 @@
+// Copyright (c) Borislav Stanimirov
+// SPDX-License-Identifier: MIT
+//
 #include <doctest/doctest.h>
 
 // we know it's deprecated
@@ -55,16 +58,16 @@ TEST_CASE("[memory_view] test")
     CHECK(slice.size() == 4);
 
     auto sb = slice.begin();
-    for (auto i : iview)
+    for (auto iv : iview)
     {
-        CHECK(i + 6 == *sb);
+        CHECK(iv + 6 == *sb);
         ++sb;
     }
 
     sb = vecview.begin();
-    for (auto i : slice)
+    for (auto is : slice)
     {
-        CHECK(i - 1 == *sb);
+        CHECK(is - 1 == *sb);
         ++sb;
     }
 }
@@ -116,16 +119,16 @@ TEST_CASE("[const_memory_view] test")
     CHECK(slice.size() == 4);
 
     auto sb = slice.begin();
-    for (auto i : iview)
+    for (auto iv : iview)
     {
-        CHECK(i + 6 == *sb);
+        CHECK(iv + 6 == *sb);
         ++sb;
     }
 
     sb = vecview.begin();
-    for (auto i : slice)
+    for (auto is : slice)
     {
-        CHECK(i - 1 == *sb);
+        CHECK(is - 1 == *sb);
         ++sb;
     }
 }

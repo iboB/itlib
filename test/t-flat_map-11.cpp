@@ -1,3 +1,6 @@
+// Copyright (c) Borislav Stanimirov
+// SPDX-License-Identifier: MIT
+//
 #include <doctest/doctest.h>
 
 #include <itlib/flat_map.hpp>
@@ -326,15 +329,15 @@ TEST_CASE("[flat_map] static_vector test")
     ++ifit;
     CHECK(ifit == smap.end());
 
-    auto res = smap.insert(std::make_pair(6, 3));
+    auto res = smap.insert(std::make_pair(6, '\003'));
     CHECK(res.second);
     CHECK(res.first == smap.begin() + 1);
 
-    res = smap.emplace(3, 5);
+    res = smap.emplace(3, '\005');
     CHECK(res.second);
     CHECK(res.first == smap.begin() + 1);
 
-    res = smap.emplace(6, 8);
+    res = smap.emplace(6, '\010');
     CHECK(!res.second);
     CHECK(res.first == smap.begin() + 2);
 

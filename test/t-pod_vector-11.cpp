@@ -1,7 +1,14 @@
+// Copyright (c) Borislav Stanimirov
+// SPDX-License-Identifier: MIT
+//
 #include <doctest/doctest.h>
 
 #include <itlib/pod_vector.hpp>
 #include <vector>
+
+#if defined(_MSC_VER)
+#pragma warning(disable : 4127)
+#endif
 
 int32_t mallocs, frees, reallocs;
 
