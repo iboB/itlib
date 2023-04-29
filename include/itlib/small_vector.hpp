@@ -1,4 +1,4 @@
-// itlib-small-vector v2.03
+// itlib-small-vector v2.04
 //
 // std::vector-like class with a static buffer for initial capacity
 //
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  2.04 (2022-04-29) Minor: Disable MSVC warning for constant conditional
 //  2.03 (2022-10-31) Minor: Removed unused local var
 //  2.02 (2022-09-24) Minor: Fixed leftover arguments in error handling macros
 //  2.01 (2022-08-26) Minor: renames, doc
@@ -552,6 +553,10 @@ public:
     {
         destroy_all();
 
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4127) // conditional expression is constant
+#endif
         if (RevertToStaticBelow > 0 && !is_static())
         {
             atraits::deallocate(get_alloc(), m_begin, m_capacity);
@@ -562,6 +567,9 @@ public:
         {
             m_end = m_begin;
         }
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
     }
 
     iterator insert(const_iterator position, const value_type& val)
