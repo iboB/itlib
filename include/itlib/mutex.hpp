@@ -34,7 +34,7 @@
 //                  DOCUMENTATION
 //
 // Simply include this file wherever you need.
-// It defines the class several mutex types to extend the existing standard
+// It defines several mutex types to extend the existing standard
 // mutexes with additional features
 //
 // Nomenclature:
