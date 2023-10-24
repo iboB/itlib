@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.5)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     # dev_mode is used below to make life simpler for developers
@@ -12,7 +12,9 @@ else()
     set(dev_mode OFF)
 endif()
 
-project(itlib)
+project(itlib
+    LANGUAGES CXX
+)
 
 if(dev_mode)
     include(./dev.cmake)
