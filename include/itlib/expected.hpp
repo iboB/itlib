@@ -136,7 +136,7 @@
 //
 //                  TESTS
 //
-// You can find unit tests for expected in its official repo:
+// You can find unit tests in the official repo:
 // https://github.com/iboB/itlib/blob/master/test/
 //
 #pragma once

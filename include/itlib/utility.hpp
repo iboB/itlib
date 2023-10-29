@@ -47,6 +47,13 @@
 // * make_nullptr:
 //      A function to make a null pointer from a (potentially incomplete) type
 //      Equivalent to static_cast<T*>(nullptr), but with a clearer intent
+//
+//
+//                  TESTS
+//
+// You can find unit tests in the official repo:
+// https://github.com/iboB/itlib/blob/master/test/
+//
 #pragma once
 #include <type_traits>
 #include <cstdint>

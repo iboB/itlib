@@ -43,7 +43,7 @@
 //
 //                  TESTS
 //
-// You can find unit tests for atomic in its official repo:
+// You can find unit tests in the official repo:
 // https://github.com/iboB/itlib/blob/master/test/
 #pragma once
 #include <atomic>
