@@ -1,4 +1,4 @@
-// itlib-throw_ex v0.10 beta
+// itlib-throw_ex v0.11 beta
 //
 // Utility to throw compose and throw exceptions on a single line
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  0.11 (2023-10-30) Disable MSVC warning 4722 (destructor never returns)
 //  0.10 (2023-10-24) Initial release
 //
 //
@@ -42,6 +43,11 @@
 //
 #pragma once
 #include <sstream>
+
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4722) // destructor never returns, potential memory leak
+#endif
 
 namespace itlib {
 
@@ -73,4 +79,8 @@ public:
     }
 };
 
-}
+} // namespace itlib
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
