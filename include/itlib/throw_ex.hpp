@@ -1,6 +1,6 @@
 // itlib-throw_ex v0.11 beta
 //
-// Utility to throw compose and throw exceptions on a single line
+// Utility to compose and throw exceptions on a single line
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
