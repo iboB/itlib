@@ -17,15 +17,15 @@ jobs:
         if: matrix.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
       - name: Configure ASAN
-        run: cmake . -DCMAKE_BUILD_TYPE=${{ matrix.type }} -DITLIB_ASAN=1
+        run: cmake . -DCMAKE_BUILD_TYPE=${{ matrix.type }} -DSAN_ADDR=1
       - name: Build ASAN
         run: cmake --build . --config ${{ matrix.type }}
       - name: Test ASAN
         run: ctest -C ${{ matrix.type }} --output-on-failure
-        env:          
+        env:
           UBSAN_OPTIONS: halt_on_error=1
       - name: Configure TSAN
-        run: cmake . -DCMAKE_BUILD_TYPE=${{ matrix.type }} -DITLIB_ASAN=0 -DITLIB_TSAN=1
+        run: cmake . -DCMAKE_BUILD_TYPE=${{ matrix.type }} -DSAN_ADDR=0 -DSAN_THREAD=1
       - name: Build TSAN
         run: cmake --build . --config ${{ matrix.type }}
       - name: Test TSAN
