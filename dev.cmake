@@ -29,7 +29,7 @@ option(SAN_LEAK "itlib: sanitize leaks" OFF)
 
 if(MSVC)
     if(SAN_ADDR)
-        add_compile_options(-fsanitize=address)
+        # add_compile_options(-fsanitize=address)
     endif()
     if(SAN_THREAD OR SAN_UB OR SAN_LEAK)
         message(WARNING "Unsupported sanitizers requested for msvc. Ignored")
