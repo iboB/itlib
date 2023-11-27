@@ -1,4 +1,4 @@
-// itlib-utility v1.01
+// itlib-utility v1.02
 //
 // Utility functions to extend <utility>
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2023-11-27) Added bit_cast
 //  1.01 (2023-02-08) Added make_nullptr
 //  1.00 (2022-11-28) Initial release
 //
@@ -47,6 +48,9 @@
 // * make_nullptr:
 //      A function to make a null pointer from a (potentially incomplete) type
 //      Equivalent to static_cast<T*>(nullptr), but with a clearer intent
+// * bit_cast:
+//      A function which allows you to reinterpret_cast between types of the
+//      same size without UB. The same as C++20's std::bit_cast
 //
 //
 //                  TESTS
@@ -57,6 +61,7 @@
 #pragma once
 #include <type_traits>
 #include <cstdint>
+#include <cstring>
 
 namespace itlib
 {
@@ -78,5 +83,13 @@ const Owner* owner_from_member(const Member& member, Member(Owner::* ptr)) noexc
 
 template <typename T>
 T* make_nullptr() { return static_cast<T*>(nullptr); }
+
+template <typename Dst, typename Src>
+constexpr Dst bit_cast(const Src& src) noexcept {
+    static_assert(sizeof(Dst) == sizeof(Src), "bit_cast requires types of equal size");
+    Dst dst;
+    std::memcpy(&dst, &src, sizeof(Src));
+    return dst;
+}
 
 }

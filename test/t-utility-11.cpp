@@ -44,3 +44,9 @@ TEST_CASE("make_nullptr") {
     CHECK_FALSE(in);
     static_assert(std::is_same<incomplete*, decltype(in)>::value, "must be same type");
 }
+
+TEST_CASE("bit_cast") {
+    float f = 2.5f;
+    auto i = itlib::bit_cast<uint32_t>(f);
+    CHECK(i == 0x40200000);
+}
