@@ -1,4 +1,4 @@
-// itlib-type_traits v1.01
+// itlib-type_traits v1.02
 //
 // Additional helper type traits extending the standard <type_traits>
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2023-11-27) Added is_noop_convertible
 //  1.01 (2023-03-10) Added type_identity
 //  1.00 (2020-12-28) First pulic release
 //
@@ -44,6 +45,8 @@
 //      static_assert(is_instantiation_of<std::vector, MyVec>::value,
 //          "MyVec must be a std::vector");
 // * type_identity<Type> - a reimplementation of C++20's std::type_identity
+// * is_noop_convertible<A, B> - checks whether two types are binary the same -
+//      i.e. whether casting from one to the other is a noop
 //
 // With C++17 all value traits have a _v template constant
 // and all type traits have a _t type alias.
@@ -72,6 +75,13 @@ struct type_identity {
     using type = T;
 };
 
+template <typename A, typename B>
+struct is_noop_convertible : std::integral_constant<bool,
+        sizeof(A) == sizeof(B)
+        && std::is_scalar<A>::value
+        && std::is_scalar<B>::value
+        && std::is_floating_point<A>::value == std::is_floating_point<B>::value>
+{};
 
 #if __cplusplus >= 201700
 template <template <typename...> class Template, typename Type>
@@ -79,6 +89,9 @@ inline constexpr bool is_instantiation_of_v = is_instantiation_of<Template, Type
 
 template <typename T>
 using type_identity_t = typename type_identity<T>::type;
+
+template <typename A, typename B>
+inline constexpr bool is_noop_convertible_v = is_noop_convertible<A, B>::value;
 #endif
 
 }
