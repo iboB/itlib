@@ -76,15 +76,18 @@ struct type_identity {
 };
 
 template <typename From, typename To>
-struct is_noop_convertible : std::integral_constant<bool,
-        sizeof(From) == sizeof(To)
-        && std::is_scalar<From>::value
-        && std::is_scalar<To>::value
-        && std::is_floating_point<From>::value == std::is_floating_point<To>::value
+struct is_noop_convertible {
+    using from_t = typename std::remove_cv<From>::type;
+    using to_t = typename std::remove_cv<To>::type;
+
+    static constexpr bool value = sizeof(from_t) == sizeof(to_t)
+        && std::is_scalar<from_t>::value
+        && std::is_scalar<to_t>::value
+        && std::is_floating_point<from_t>::value == std::is_floating_point<to_t>::value
         // bool -> int8 is a noop, but int8 -> bool is not
-        && (std::is_same<To, bool>::value ? std::is_same<From, bool>::value : true)
-    >
-{};
+        && (std::is_same<to_t, bool>::value ? std::is_same<from_t, bool>::value : true)
+        ;
+};
 
 #if __cplusplus >= 201700
 template <template <typename...> class Template, typename Type>

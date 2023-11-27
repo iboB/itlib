@@ -35,16 +35,20 @@ struct S32 { int x; };
 
 TEST_CASE("is_noop_convertible") {
     CCHECK(itlib::is_noop_convertible<int, int>::value);
+    CCHECK(itlib::is_noop_convertible<const int, int>::value);
     CCHECK(itlib::is_noop_convertible<int, unsigned int>::value);
     CCHECK(itlib::is_noop_convertible<uint8_t, char>::value);
     CCHECK(itlib::is_noop_convertible<int8_t, char>::value);
-    CCHECK(itlib::is_noop_convertible<uint8_t, char>::value);
+    CCHECK(itlib::is_noop_convertible<uint8_t, const char>::value);
     CCHECK(itlib::is_noop_convertible<E32, int>::value);
+    CCHECK(itlib::is_noop_convertible<const E32, int>::value);
     CCHECK(itlib::is_noop_convertible<void*, size_t>::value);
     CCHECK(itlib::is_noop_convertible<void*, intptr_t>::value);
     CCHECK(itlib::is_noop_convertible<double, double>::value);
     CCHECK(itlib::is_noop_convertible<bool, bool>::value);
     CCHECK(itlib::is_noop_convertible<bool, int8_t>::value);
+    CCHECK(itlib::is_noop_convertible<bool, const bool>::value);
+    CCHECK(itlib::is_noop_convertible<const bool, bool>::value);
 
     CCHECK_FALSE(itlib::is_noop_convertible<int, float>::value);
     CCHECK_FALSE(itlib::is_noop_convertible<E32, float>::value);
@@ -52,4 +56,5 @@ TEST_CASE("is_noop_convertible") {
     CCHECK_FALSE(itlib::is_noop_convertible<void*, float>::value);
     CCHECK_FALSE(itlib::is_noop_convertible<void*, double>::value);
     CCHECK_FALSE(itlib::is_noop_convertible<int8_t, bool>::value);
+    CCHECK_FALSE(itlib::is_noop_convertible<int8_t, const bool>::value);
 }
