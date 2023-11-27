@@ -14,7 +14,7 @@ TEST_CASE("[span] construction")
         span<int> e;
         CHECK(!e);
         CHECK(e.size() == 0);
-        CHECK(e.byte_size() == 0);
+        CHECK(e.size_bytes() == 0);
         CHECK(e.begin() == e.end());
         CHECK(e.cbegin() == e.cend());
         CHECK(e.rbegin() == e.rend());
@@ -26,7 +26,7 @@ TEST_CASE("[span] construction")
         span<const int> e;
         CHECK(!e);
         CHECK(e.size() == 0);
-        CHECK(e.byte_size() == 0);
+        CHECK(e.size_bytes() == 0);
         CHECK(e.begin() == e.end());
         CHECK(e.cbegin() == e.cend());
         CHECK(e.rbegin() == e.rend());
@@ -34,12 +34,12 @@ TEST_CASE("[span] construction")
         CHECK(e.data() == nullptr);
     }
 
-    int i[] = {0,2,3,4};
+    int i[] = { 0,2,3,4 };
     {
         span<int> ints(i);
         CHECK(ints);
         CHECK(ints.size() == 4);
-        CHECK(ints.byte_size() == 16);
+        CHECK(ints.size_bytes() == 16);
         CHECK(ints.begin() + 4 == ints.end());
         CHECK(ints.cbegin() + 4 == ints.cend());
         CHECK(ints.rbegin() + 4 == ints.rend());
@@ -60,7 +60,7 @@ TEST_CASE("[span] construction")
         CHECK(ints.data() == i);
     }
 
-    std::vector<int> vec = {1, 2, 3};
+    std::vector<int> vec = { 1, 2, 3 };
     {
         span<int> ints(vec);
         CHECK(ints);
@@ -79,7 +79,7 @@ TEST_CASE("[span] make_span")
 {
     using namespace itlib;
 
-    std::vector<int> vec = {1, 2, 3};
+    std::vector<int> vec = { 1, 2, 3 };
 
     {
         auto s = make_span(vec);
@@ -106,7 +106,7 @@ TEST_CASE("[span] make_span")
         CHECK(s.data() == vec.data());
     }
 
-    const std::vector<int> cvec = {5, 6, 7, 8};
+    const std::vector<int> cvec = { 5, 6, 7, 8 };
 
     {
         auto s = make_span(cvec);
@@ -133,7 +133,7 @@ TEST_CASE("[span] funcs")
 {
     using namespace itlib;
 
-    std::vector<int> vec = {1, 2, 3};
+    std::vector<int> vec = { 1, 2, 3 };
     CHECK(ifunc(vec) == 3);
 
     auto s = make_span(vec);
@@ -144,7 +144,7 @@ TEST_CASE("[span] copy-ctor and assign")
 {
     using namespace itlib;
 
-    std::vector<int> vec = {1, 2, 3};
+    std::vector<int> vec = { 1, 2, 3 };
     auto s = make_span(vec);
 
     auto s2 = s;
@@ -209,7 +209,7 @@ void test_slicing(const S& span)
 TEST_CASE("[span] slicing")
 {
     using namespace itlib;
-    std::vector<int> ivec = {6, 7, 8, 9, 10};
+    std::vector<int> ivec = { 6, 7, 8, 9, 10 };
     auto s = make_span(ivec);
     test_slicing(s);
     span<const int> cs = s;
@@ -220,7 +220,7 @@ TEST_CASE("[span] bytes")
 {
     using namespace itlib;
     {
-        std::vector<uint32_t> ivec = {0, 0xFFFFFFFF, 0x12345678};
+        std::vector<uint32_t> ivec = { 0, 0xFFFFFFFF, 0x12345678 };
         auto vs = make_span(ivec);
         auto bs = vs.as_bytes();
         CHECK(bs.size() == 12);
@@ -228,8 +228,8 @@ TEST_CASE("[span] bytes")
         CHECK(bs[4] == 0xFF);
         uint32_t lasti;
         auto last4 = bs.last(4);
-        REQUIRE(sizeof(lasti) == last4.byte_size());
-        memcpy(&lasti, last4.data(), last4.byte_size());
+        REQUIRE(sizeof(lasti) == last4.size_bytes());
+        memcpy(&lasti, last4.data(), last4.size_bytes());
         CHECK(lasti == 0x12345678);
 
         auto wbs = vs.as_writable_bytes();

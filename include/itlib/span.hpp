@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2023-11-27) byte_size() renamed to size_bytes() for C++20 compatibility
 //  1.00 (2022-05-16) Initial release
 //
 //
@@ -45,7 +46,7 @@
 // * no Iter-Iter range construction (no good way to safely implement without
 //   C++20)
 // * additional methods remove_prefix/suffix like in std::string_view
-// * additional method byte_size
+// * additional method as_bytes, as_writable_bytes
 //
 //                  Configuration
 //
@@ -281,19 +282,19 @@ public:
     }
 
     // byte access
-    size_t byte_size() const noexcept
+    size_t size_bytes() const noexcept // C++20 compat
     {
         return size() * sizeof(T);
     }
 
     span<const uint8_t> as_bytes() const noexcept
     {
-        return span<const uint8_t>(reinterpret_cast<const uint8_t*>(m_begin), byte_size());
+        return span<const uint8_t>(reinterpret_cast<const uint8_t*>(m_begin), size_bytes());
     }
 
     span<byte_t> as_writable_bytes() noexcept
     {
-        return span<byte_t>(reinterpret_cast<byte_t*>(m_begin), byte_size());
+        return span<byte_t>(reinterpret_cast<byte_t*>(m_begin), size_bytes());
     }
 
     // slicing
