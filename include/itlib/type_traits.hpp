@@ -75,12 +75,15 @@ struct type_identity {
     using type = T;
 };
 
-template <typename A, typename B>
+template <typename From, typename To>
 struct is_noop_convertible : std::integral_constant<bool,
-        sizeof(A) == sizeof(B)
-        && std::is_scalar<A>::value
-        && std::is_scalar<B>::value
-        && std::is_floating_point<A>::value == std::is_floating_point<B>::value>
+        sizeof(From) == sizeof(To)
+        && std::is_scalar<From>::value
+        && std::is_scalar<To>::value
+        && std::is_floating_point<From>::value == std::is_floating_point<To>::value
+        // bool -> int8 is a noop, but int8 -> bool is not
+        && (std::is_same<To, bool>::value ? std::is_same<From, bool>::value : true)
+    >
 {};
 
 #if __cplusplus >= 201700

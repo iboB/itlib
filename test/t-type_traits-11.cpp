@@ -43,10 +43,13 @@ TEST_CASE("is_noop_convertible") {
     CCHECK(itlib::is_noop_convertible<void*, size_t>::value);
     CCHECK(itlib::is_noop_convertible<void*, intptr_t>::value);
     CCHECK(itlib::is_noop_convertible<double, double>::value);
+    CCHECK(itlib::is_noop_convertible<bool, bool>::value);
+    CCHECK(itlib::is_noop_convertible<bool, int8_t>::value);
 
     CCHECK_FALSE(itlib::is_noop_convertible<int, float>::value);
     CCHECK_FALSE(itlib::is_noop_convertible<E32, float>::value);
     CCHECK_FALSE(itlib::is_noop_convertible<int, S32>::value);
     CCHECK_FALSE(itlib::is_noop_convertible<void*, float>::value);
     CCHECK_FALSE(itlib::is_noop_convertible<void*, double>::value);
+    CCHECK_FALSE(itlib::is_noop_convertible<int8_t, bool>::value);
 }
