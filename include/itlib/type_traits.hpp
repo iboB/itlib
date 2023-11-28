@@ -28,7 +28,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.01 (2023-11-27) Added is_noop_convertible
+//  1.02 (2023-11-27) Added is_noop_convertible
 //  1.01 (2023-03-10) Added type_identity
 //  1.00 (2020-12-28) First pulic release
 //

@@ -28,7 +28,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.01 (2023-11-27) Added bit_cast
+//  1.02 (2023-11-27) Added bit_cast
 //  1.01 (2023-02-08) Added make_nullptr
 //  1.00 (2022-11-28) Initial release
 //

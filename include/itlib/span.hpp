@@ -1,10 +1,10 @@
-// itlib-span v1.00
+// itlib-span v1.01
 //
 // A C++11 implementation C++20's of std::span with a dynamic extent
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2022 Borislav Stanimirov
+// Copyright(c) 2022-2023 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
