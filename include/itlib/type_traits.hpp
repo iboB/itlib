@@ -96,8 +96,8 @@ inline constexpr bool is_instantiation_of_v = is_instantiation_of<Template, Type
 template <typename T>
 using type_identity_t = typename type_identity<T>::type;
 
-template <typename A, typename B>
-inline constexpr bool is_noop_convertible_v = is_noop_convertible<A, B>::value;
+template <typename From, typename To>
+inline constexpr bool is_noop_convertible_v = is_noop_convertible<From, To>::value;
 #endif
 
 }
