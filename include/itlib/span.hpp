@@ -1,4 +1,4 @@
-// itlib-span v1.01
+// itlib-span v1.02
 //
 // A C++11 implementation C++20's of std::span with a dynamic extent
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2023-11-29) fix constness of various methods as per C++20
 //  1.01 (2023-11-27) byte_size() renamed to size_bytes() for C++20 compatibility
 //  1.00 (2022-05-16) Initial release
 //
@@ -110,7 +111,7 @@ public:
     template <typename U, typename = typename std::enable_if<
         std::is_same<T, U>::value ||
         std::is_same<T, const U>::value, int>::type>
-    span(U* begin, U* end)
+    span(U* begin, U* end) noexcept
         : m_begin(begin)
         , m_end(end)
     {}
@@ -118,7 +119,7 @@ public:
     template <typename U, typename = typename std::enable_if<
         std::is_same<T, U>::value ||
         std::is_same<T, const U>::value, int>::type>
-    span(U* begin, size_t size)
+    span(U* begin, size_t size) noexcept
         : span(begin, begin + size)
     {}
 
@@ -129,7 +130,7 @@ public:
     template <typename Container, typename = typename std::enable_if<
         std::is_same<T*, decltype(std::declval<Container>().data())>::value ||
         std::is_same<T*, decltype(std::declval<const Container>().data())>::value, int>::type>
-    span(Container& c)
+    span(Container& c) noexcept
         : span(c.data(), c.size())
     {}
 
@@ -137,12 +138,12 @@ public:
     template <typename U, typename = typename std::enable_if<
         std::is_same<T, U>::value ||
         std::is_same<T, const U>::value, int>::type>
-    span(const span<U>& s)
+    span(const span<U>& s) noexcept
         : span(s.data(), s.size())
     {}
 
     template <size_t N>
-    span(T(&ar)[N])
+    span(T(&ar)[N]) noexcept
         : span(ar, N)
     {}
 
@@ -162,70 +163,39 @@ public:
     span(span&&) noexcept = default;
     span& operator=(span&&) noexcept = default;
 
-    explicit operator bool() const
+    explicit operator bool() const noexcept
     {
         return !!m_begin;
     }
 
-    const T& at(size_t i) const
+    T& at(size_t i) const noexcept
     {
         I_ITLIB_SPAN_BOUNDS_CHECK(i);
         return *(m_begin + i);
     }
 
-    T& at(size_t i)
-    {
-        I_ITLIB_SPAN_BOUNDS_CHECK(i);
-        return *(m_begin + i);
-    }
-
-    const T& operator[](size_t i) const
+    T& operator[](size_t i) const noexcept
     {
         return at(i);
     }
 
-    T& operator[](size_t i)
-    {
-        return at(i);
-    }
-
-    const T& front() const
+    T& front() const noexcept
     {
         return at(0);
     }
 
-    T& front()
-    {
-        return at(0);
-    }
-
-    const T& back() const
+    T& back() const noexcept
     {
         return at(size() - 1);
     }
 
-    T& back()
-    {
-        return at(size() - 1);
-    }
-
-    const T* data() const noexcept
-    {
-        return m_begin;
-    }
-
-    T* data() noexcept
+    T* data() const noexcept
     {
         return m_begin;
     }
 
     // iterators
-    iterator begin() noexcept
-    {
-        return m_begin;
-    }
-
-    const_iterator begin() const noexcept
+    iterator begin() const noexcept
     {
         return m_begin;
     }
@@ -235,12 +205,7 @@ public:
         return m_begin;
     }
 
-    iterator end() noexcept
-    {
-        return m_end;
-    }
-
-    const_iterator end() const noexcept
+    iterator end() const noexcept
     {
         return m_end;
     }
@@ -250,22 +215,22 @@ public:
         return m_end;
     }
 
-    reverse_iterator rbegin() noexcept
+    reverse_iterator rbegin() const noexcept
     {
         return reverse_iterator(end());
     }
 
-    const_reverse_iterator rbegin() const noexcept
+    const_reverse_iterator crbegin() const noexcept
     {
         return const_reverse_iterator(end());
     }
 
-    reverse_iterator rend() noexcept
+    reverse_iterator rend() const noexcept
     {
         return reverse_iterator(begin());
     }
 
-    const_reverse_iterator rend() const noexcept
+    const_reverse_iterator crend() const noexcept
     {
         return const_reverse_iterator(begin());
     }
@@ -292,7 +257,7 @@ public:
         return span<const uint8_t>(reinterpret_cast<const uint8_t*>(m_begin), size_bytes());
     }
 
-    span<byte_t> as_writable_bytes() noexcept
+    span<byte_t> as_writable_bytes() const noexcept
     {
         return span<byte_t>(reinterpret_cast<byte_t*>(m_begin), size_bytes());
     }
@@ -332,25 +297,25 @@ private:
 };
 
 template <typename T>
-span<T> make_span(T* begin, T* end)
+span<T> make_span(T* begin, T* end) noexcept
 {
     return span<T>(begin, end);
 }
 
 template <typename T>
-span<T> make_span(T* begin, size_t size)
+span<T> make_span(T* begin, size_t size) noexcept
 {
     return span<T>(begin, size);
 }
 
 template <typename Container, typename Ptr = decltype(std::declval<Container>().data())>
-auto make_span(Container& c) -> span<typename std::remove_pointer<Ptr>::type>
+auto make_span(Container& c) noexcept -> span<typename std::remove_pointer<Ptr>::type>
 {
     return span<typename std::remove_pointer<Ptr>::type>(c);
 }
 
 template <typename T, size_t N>
-span<T> make_span(T(&ar)[N])
+span<T> make_span(T(&ar)[N]) noexcept
 {
     return span<T>(ar);
 }
