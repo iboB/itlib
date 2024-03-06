@@ -1,11 +1,11 @@
-// itlib-pod-vector v1.07
+// itlib-pod-vector v1.08
 //
 // A vector of PODs. Similar to std::vector, but doesn't call constructors or
 // destructors and instead uses memcpy and memmove to manage the data
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2020-2023 Borislav Stanimirov
+// Copyright(c) 2020-2024 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -29,6 +29,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.08 (2024-03-06) Return bool from void resizing methods to indicate
+//                    whether iterators were invalidated
 //  1.07 (2023-01-18) Use std::copy and std::fill. This does help compilers
 //                    generate better code (expecially MSVC)
 //  1.06 (2022-08-26) Inherit from allocator to make use of EBO
@@ -59,6 +61,14 @@
 // pod_vector also allows "recast" where you can convert pod_vector<T> to
 // pod_vector<U>. This is very useful when operating with signed/unsigned char
 // for example.
+//
+// Since this is much more probable than with std::vector, pod_vector's
+// void resizing methods return bool to indicate whether the iterators were
+// invalidated (they won't be if the realloc/_expand was successful):
+// * reserve
+// * resize
+// * shrink_to_fit
+//
 //
 // except for the methods which are the same as std::vector, itlib::pod_vector
 // also provides the following:
@@ -428,9 +438,11 @@ public:
         return e2b(size());
     }
 
-    void reserve(size_t desired_capacity)
+    bool reserve(size_t desired_capacity)
     {
-        if (desired_capacity <= m_capacity) return;
+        if (desired_capacity <= m_capacity) return false;
+
+        auto old_begin = m_begin;
 
         auto new_cap = get_new_capacity(desired_capacity);
         auto s = size();
@@ -470,6 +482,8 @@ public:
         }
 
         m_end = m_begin + s;
+
+        return old_begin != m_begin;
     }
 
     size_t capacity() const noexcept
@@ -477,19 +491,21 @@ public:
         return m_capacity;
     }
 
-    void shrink_to_fit()
+    bool shrink_to_fit()
     {
         const auto s = size();
 
-        if (s == m_capacity) return;
+        if (s == m_capacity) return false;
 
         if (s == 0)
         {
             a_free_begin();
             m_capacity = 0;
             m_begin = m_end = nullptr;
-            return;
+            return true;
         }
+
+        auto old_begin = m_begin;
 
         if (Alloc::has_expand())
         {
@@ -509,6 +525,8 @@ public:
         }
 
         m_end = m_begin + s;
+
+        return old_begin != m_begin;
     }
 
     // modifiers
@@ -586,21 +604,23 @@ public:
         shrink_at(m_end - 1, 1);
     }
 
-    void resize(size_type n, const value_type& val)
+    bool resize(size_type n, const value_type& val)
     {
-        reserve(n);
+        bool ret = reserve(n);
         fill(m_end, n, val);
         m_end = m_begin + n;
+        return ret;
     }
 
-    void resize(size_type n)
+    bool resize(size_type n)
     {
-        reserve(n);
+        bool ret = reserve(n);
         if (n > size() && Alloc::zero_fill_new())
         {
             std::memset(m_end, 0, e2b(n - size()));
         }
         m_end = m_begin + n;
+        return ret;
     }
 
     void swap(pod_vector& other)

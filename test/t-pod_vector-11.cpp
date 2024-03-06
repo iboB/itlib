@@ -35,7 +35,7 @@ void basic_test()
         CHECK(ivec.empty());
 
         auto d = ivec.data();
-        ivec.reserve(2);
+        CHECK(ivec.reserve(2));
         CHECK(ivec.capacity() == 2);
         CHECK(d != ivec.data());
         CHECK(ivec.size() == 0);
@@ -55,7 +55,7 @@ void basic_test()
         CHECK(ivec.cbegin() == ivec.cend());
         CHECK(ivec.empty());
 
-        ivec.shrink_to_fit();
+        CHECK(ivec.shrink_to_fit());
         CHECK(ivec.size() == 0);
         CHECK(ivec.capacity() == 0);
         CHECK(!ivec.begin());
@@ -188,7 +188,7 @@ void basic_test()
         CHECK(svec2.empty());
         CHECK(svec == svec2);
 
-        svec.resize(svec.capacity());
+        CHECK_FALSE(svec.resize(svec.capacity()));
         CHECK(svec.size() == svec.capacity());
 
         for (auto& s : svec) {
@@ -211,7 +211,7 @@ void basic_test()
         CHECK(cvec.front() == L'b');
         CHECK(cvec.back() == L'z');
 
-        cvec.resize(1);
+        CHECK_FALSE(cvec.resize(1));
         CHECK(cvec.size() == 1);
         CHECK(cvec.front() == L'b');
         CHECK(cvec.back() == L'b');
@@ -289,7 +289,7 @@ void empty_test()
         CHECK(foo.capacity() == 4);
         CHECK(foo.data() != nullptr);
 
-        foo.shrink_to_fit();
+        CHECK(foo.shrink_to_fit());
         CHECK(foo.capacity() == 0);
         CHECK(foo.data() == nullptr);
     }
@@ -595,7 +595,7 @@ void align_test()
 
         pod_vector<T, Alloc> x;
         CHECK(x.data() == nullptr);
-        x.resize(2);
+        CHECK(x.resize(2));
         CHECK(ptrval(x.data()) % alignof(T) == 0);
         x.reserve(10);
         CHECK(ptrval(x.data()) % alignof(T) == 0);
