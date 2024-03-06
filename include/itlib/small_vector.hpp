@@ -1,11 +1,11 @@
-// itlib-small-vector v2.04
+// itlib-small-vector v2.05
 //
 // std::vector-like class with a static buffer for initial capacity
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2016-2018 Chobolabs Inc.
-// Copyright(c) 2020-2022 Borislav Stanimirov
+// Copyright(c) 2020-2024 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  2.05 (2024-03-06) Minor: Return bool from shrink_to_fit
 //  2.04 (2022-04-29) Minor: Disable MSVC warning for constant conditional
 //  2.03 (2022-10-31) Minor: Removed unused local var
 //  2.02 (2022-09-24) Minor: Fixed leftover arguments in error handling macros
@@ -89,8 +90,14 @@
 // * a method is added `revert_to_static()` which reverts to the static buffer
 //   if possible and does nothing if the size doesn't allow it
 //
+// Additionally, the following methods are added:
+//
+// * is_static() returns whether the vector is currently using its static buffer
+//
 // Other notes:
 //
+// * shrink_to_fit() returns a bool indicating whether the vector was shrunk (and the
+//   iterators invalidated)
 // * the default value for RevertToStaticBelow is zero. This means that once a dynamic
 //   buffer is allocated the data will never be put into the static one, even if the
 //   size allows it. Even if clear() is called. The only way to do so is to call
@@ -501,12 +508,12 @@ public:
         return m_capacity;
     }
 
-    void shrink_to_fit()
+    bool shrink_to_fit()
     {
         const auto s = size();
 
-        if (s == m_capacity) return; // we're at max
-        if (is_static()) return; // can't shrink static buf
+        if (s == m_capacity) return false; // we're at max
+        if (is_static()) return false; // can't shrink static buf
 
         auto old_begin = m_begin;
         auto old_end = m_end;
@@ -533,11 +540,12 @@ public:
         }
 
         atraits::deallocate(get_alloc(), old_begin, old_cap);
+        return true;
     }
 
     // only revert if possible
     // otherwise don't shrink
-    // return true if reverted
+    // return true if the the vector is now static
     bool revert_to_static()
     {
         const auto s = size();

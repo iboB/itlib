@@ -84,17 +84,18 @@ TEST_CASE("[small_vector] static")
         CHECK(iret == ivec.end() - 1);
         iret = ivec.insert(ivec.begin(), {1, 2});
         CHECK(iret == ivec.begin());
+        CHECK(ivec.is_static());
 
         int ints[] = {1, 2, 53, 12, 90, 3, 17, 6};
         CHECK(ivec.size() == 8);
         CHECK(memcmp(ivec.data(), ints, sizeof(ints)) == 0);
 
-        ivec.shrink_to_fit();
+        CHECK_FALSE(ivec.shrink_to_fit());
         CHECK(ivec.size() == 8);
         CHECK(ivec.capacity() == 10);
         CHECK(d == ivec.data());
 
-        ivec.revert_to_static();
+        CHECK(ivec.revert_to_static());
         CHECK(ivec.size() == 8);
         CHECK(ivec.capacity() == 10);
         CHECK(d == ivec.data());
@@ -443,7 +444,7 @@ TEST_CASE("[small_vector] static-dynamic")
     CHECK(ivec.size() == 4);
     CHECK(ivec.data() == dyn_data);
 
-    ivec.revert_to_static();
+    CHECK(ivec.revert_to_static());
     CHECK(ivec.size() == 4);
     CHECK(ivec.capacity() == 5);
     CHECK(ivec.data() == static_data);
@@ -454,7 +455,7 @@ TEST_CASE("[small_vector] static-dynamic")
     CHECK(ivec.size() == 4);
     CHECK(ivec.capacity() == 10);
 
-    ivec.shrink_to_fit();
+    CHECK(ivec.shrink_to_fit());
     CHECK(ivec.size() == 4);
     CHECK(ivec.capacity() == 5);
     CHECK(ivec.data() == static_data);
