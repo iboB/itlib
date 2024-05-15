@@ -44,6 +44,8 @@ TEST_CASE("[stride_span] construction and iteration")
         CHECK(eints.size() == 4);
         CHECK(eints.end() - eints.begin() == 4);
         CHECK(eints.begin() + 4 == eints.end());
+        CHECK(eints.begin().ptr() == i);
+        CHECK((eints.begin() + 1).ptr() == i + 2);
         CHECK(*eints.rbegin() == 4);
 
         CHECK(eints.front() == 1);

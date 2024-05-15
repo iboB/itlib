@@ -1,11 +1,11 @@
-// itlib-stride_span v1.01
+// itlib-stride_span v1.02
 //
 // A C++11 implementation C++20's of std::span with a dynamic extent
 // and an associated stride.
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2022-2023 Borislav Stanimirov
+// Copyright(c) 2022-2024 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2024-05-15) Add ptr() to iterators for direct access to the pointer
 //  1.01 (2023-02-27) Proper iterator support
 //  1.00 (2022-05-15) Initial release
 //
@@ -205,6 +206,7 @@ public:
         t_iterator() noexcept = default;
         CT& operator*() const noexcept { return *reinterpret_cast<T*>(p); }
         CT* operator->() const noexcept { return reinterpret_cast<T*>(p); }
+        CT* ptr() const noexcept { return reinterpret_cast<T*>(p); }
         t_iterator& operator++() noexcept { p += stride; return *this; }
         t_iterator& operator--() noexcept { p -= stride; return *this; }
         t_iterator& operator+=(const ptrdiff_t diff) noexcept { p += diff * stride; return *this; }
