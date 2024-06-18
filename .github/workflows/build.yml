@@ -6,7 +6,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        type: [Debug, RelWithDebInfo]
+        preset: [debug, release]
     steps:
       - name: Clone
         uses: actions/checkout@v4
@@ -19,16 +19,16 @@ jobs:
         if: matrix.os == 'windows-latest'
         uses: ilammy/msvc-dev-cmd@v1
       - name: Configure ASAN
-        run: cmake . -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.type }} -DSAN_ADDR=1
+        run: cmake --preset=${{ matrix.preset }}-asan -B asan
       - name: Build ASAN
-        run: cmake --build .
+        run: cmake --build asan
       - name: Test ASAN
-        run: ctest --output-on-failure
+        run: ctest --test-dir asan --output-on-failure
         env:
           UBSAN_OPTIONS: halt_on_error=1
       - name: Configure TSAN
-        run: cmake . -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.type }} -DSAN_ADDR=0 -DSAN_THREAD=1
+        run: cmake --preset=${{ matrix.preset }}-tsan -B tsan
       - name: Build TSAN
-        run: cmake --build .
+        run: cmake --build tsan
       - name: Test TSAN
-        run: ctest -L tsan --output-on-failure
+        run: ctest --test-dir tsan -L tsan --output-on-failure

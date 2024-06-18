@@ -1,0 +1,92 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true
+      }
+    },
+    {
+      "name": "base-debug",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "base-release",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "RelWithDebInfo" }
+    },
+    {
+      "name": "static",
+      "hidden": true,
+      "cacheVariables": { "BUILD_SHARED_LIBS": "OFF" }
+    },
+    {
+      "name": "asan",
+      "hidden": true,
+      "cacheVariables": { "SAN_ADDR": true }
+    },
+    {
+      "name": "ubsan",
+      "hidden": true,
+      "cacheVariables": { "SAN_UB": true }
+    },
+    {
+      "name": "lsan",
+      "hidden": true,
+      "cacheVariables": { "SAN_LEAK": true }
+    },
+    {
+      "name": "tsan",
+      "hidden": true,
+      "cacheVariables": { "SAN_THREAD": true }
+    },
+
+    {
+      "name": "debug",
+      "inherits": "base-debug"
+    },
+    {
+      "name": "release",
+      "inherits": "base-release"
+    },
+
+    {
+      "name": "debug-static",
+      "inherits": ["base-debug", "static"]
+    },
+    {
+      "name": "release-static",
+      "inherits": ["base-release", "static"]
+    },
+
+    {
+      "name": "debug-asan",
+      "inherits": ["base-debug", "asan"]
+    },
+    {
+      "name": "release-asan",
+      "inherits": ["base-release", "asan"]
+    },
+    {
+      "name": "debug-tsan",
+      "inherits": ["base-debug", "tsan"]
+    },
+    {
+      "name": "release-tsan",
+      "inherits": ["base-release", "tsan"]
+    },
+    {
+      "name": "debug-aublsan",
+      "description": "combining addr, ub and leak sanitizers is widely supported on many platforms",
+      "inherits": ["base-debug", "asan", "ubsan", "lsan"]
+    }
+  ]
+}
