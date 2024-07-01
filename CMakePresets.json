@@ -87,6 +87,29 @@
       "name": "debug-aublsan",
       "description": "combining addr, ub and leak sanitizers is widely supported on many platforms",
       "inherits": ["base-debug", "asan", "ubsan", "lsan"]
+    },
+
+    {
+      "name": "android",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_SYSTEM_NAME": "Android",
+        "CMAKE_SYSTEM_VERSION": "28",
+        "CMAKE_ANDROID_ARCH_ABI": "arm64-v8a",
+        "CMAKE_ANDROID_NDK": {
+          "value": "$env{ANDROID_NDK_ROOT}",
+          "type": "PATH"
+        },
+        "CMAKE_ANDROID_STL_TYPE": "c++_static"
+      }
+    },
+    {
+      "name": "debug-android",
+      "inherits": ["debug", "android"]
+    },
+    {
+      "name": "release-android",
+      "inherits": ["release", "android"]
     }
   ]
 }

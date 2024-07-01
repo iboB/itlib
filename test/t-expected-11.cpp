@@ -55,7 +55,7 @@ TEST_CASE("i/d")
     static_assert(std::is_same<ide::value_type, int>::value, "is_same");
     static_assert(std::is_same<ide::error_type, double>::value, "is_same");
 
-    ide a = 2.3;
+    ide a = 2.3; // must be cast to int
     CHECK(a.value_or(5) == 2);
 
     ide b = unexpected(7);
