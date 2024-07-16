@@ -1,9 +1,12 @@
+# Copyright (c) Borislav Stanimirov
+# SPDX-License-Identifier: MIT
+#
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 include(./get_cpm.cmake)
 
-CPMAddPackage(gh:iboB/icm@1.4.4)
-CPMAddPackage(gh:iboB/doctest-util@0.1.1)
+CPMAddPackage(gh:iboB/icm@1.5.1)
+CPMAddPackage(gh:iboB/doctest-util@0.1.2)
 
 include(${icm_SOURCE_DIR}/icm_build_failure_testing.cmake)
 
@@ -58,6 +61,7 @@ add_itlib_test(dynamic_bitset)
 add_itlib_test(expected)
 add_itlib_test(flat_map)
 add_itlib_test(flat_set)
+add_itlib_test(generator)
 add_itlib_test(make_ptr)
 add_itlib_test(memory_view)
 add_itlib_test(mem_streambuf)
