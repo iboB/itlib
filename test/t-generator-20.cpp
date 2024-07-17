@@ -52,10 +52,14 @@ TEST_CASE("simple") {
     );
     CHECK(i == 102);
 
-    auto tr = range(101, 105);
-    CHECK_NOTHROW(tr.next());
-    CHECK_NOTHROW(tr.next());
-    CHECK_THROWS_WITH_AS(tr.next(), "test exception", std::runtime_error);
+    r = range(101, 105);
+    CHECK_NOTHROW(r.next());
+    CHECK_NOTHROW(r.next());
+    CHECK_THROWS_WITH_AS(r.next(), "test exception", std::runtime_error);
+
+    CHECK(!!r);
+    r.reset();
+    CHECK_FALSE(r);
 }
 
 template <typename T>

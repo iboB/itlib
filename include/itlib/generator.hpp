@@ -28,7 +28,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.00 (2024-07-xx) Initial release
+//  1.00 (2024-07-17) Initial release
 //
 //
 //                  DOCUMENTATION
@@ -37,7 +37,9 @@
 // It defines the class generator which allows you to write simple coroutine-
 // based generators.
 //
-// Example:
+// The library provides two interfaces for consuming the generated values.
+//
+// The first is a range-for iterator-like interface. Example:
 //
 // itlib::generator<int> range(int begin, int end) {
 //     for (int i = begin; i < end; ++i) {
@@ -48,6 +50,22 @@
 // for (int i : range(0, 10)) {
 //    std::cout << i << std::endl;
 // }
+//
+// The range-for interface would copy the return values if they are not
+// references. Unfortunately this is required to make operator* work as if
+// it's a real iterator (safely called multiple times)
+//
+// In case you want to avoid the copies, prefer using the next() interface:
+//
+// auto r = range(0, 10);
+// while (true) {
+//     auto v = r.next();
+//     if (!v) break;
+//     // v is std::optional<int>, you can move the value out of it
+//     std::cout << *v << std::endl;
+// }
+//
+// Both interfaces support reference generated values.
 //
 //                  TESTS
 //
@@ -121,8 +139,25 @@ public:
 
     using handle_t = std::coroutine_handle<promise_type>;
 
+    generator(generator&& other) noexcept : m_handle(std::exchange(other.m_handle, nullptr)) {}
+
+    generator& operator=(generator&& other) noexcept {
+        if (m_handle) m_handle.destroy();
+        m_handle = std::exchange(other.m_handle, nullptr);
+        return *this;
+    }
+
     ~generator() {
         if (m_handle) m_handle.destroy();
+    }
+
+    void reset() noexcept {
+        if (m_handle) m_handle.destroy();
+        m_handle = nullptr;
+    }
+
+    explicit operator bool() const noexcept {
+        return !!m_handle;
     }
 
     // next (optional-based) interface
