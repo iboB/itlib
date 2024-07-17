@@ -61,35 +61,33 @@
 
 namespace itlib {
 
-namespace genimpl {
-// tempting to include expected here so we could have optional of ref and
-// ditch the T& specialization
-// ... but we promised to make standalone libs
+// why std::optional still doesn't have T& specialization is beyond me
+// it's tempting to include expected here so we could have optional of ref and
+// ditch our T& specialization, but we promised to make standalone libs
 
 template <typename T>
-class val_holder : public std::optional<T> {};
+class generator_value : public std::optional<T> {};
 
 template <typename T>
-class val_holder<T&> {
-    T* val = nullptr;
+class generator_value <T&> {
+    T* m_val = nullptr;
 public:
-    void emplace(T& v) noexcept { val = &v; }
-    void reset() noexcept { val = nullptr; }
-    T& operator*() noexcept { return *val; }
-    bool has_value() const noexcept { return val != nullptr; }
+    void emplace(T& v) noexcept { m_val = &v; }
+    void reset() noexcept { m_val = nullptr; }
+    T& operator*() noexcept { return *m_val; }
+    bool has_value() const noexcept { return m_val != nullptr; }
     explicit operator bool() const noexcept { return has_value(); }
 };
-
-} // namespace genimpl
 
 template <typename T>
 class generator {
 public:
+    // return const ref in case we're generating values, otherwise keep the ref type
     using value_ret_t = std::conditional_t<std::is_reference_v<T>, T, const T&>;
 
-    class promise_type {
-        genimpl::val_holder<T> m_val;
-    public:
+    struct promise_type {
+        generator_value<T> m_val;
+
         promise_type() noexcept = default;
 
         ~promise_type() = default;
@@ -99,25 +97,89 @@ public:
         std::suspend_always initial_suspend() noexcept { return {}; }
         std::suspend_always final_suspend() noexcept { return {}; }
         std::suspend_always yield_value(T value) noexcept { // assume T is noexcept move constructible
-            m_val = std::move(value);
+            if constexpr (std::is_reference_v<T>) {
+                m_val.emplace(value);
+            }
+            else {
+                m_val.emplace(std::move(value));
+            }
             return {};
         }
         void return_void() noexcept {}
         void unhandled_exception() { throw; }
 
-        value_ret_t val() const noexcept {
+        value_ret_t val() & noexcept {
             return *m_val;
         }
+        T&& val() && noexcept {
+            return std::move(*m_val);
+        }
+        void clear_value() noexcept {
+            m_val.reset();
+        }
     };
+
+    using handle_t = std::coroutine_handle<promise_type>;
 
     ~generator() {
         if (m_handle) m_handle.destroy();
     }
 
-    // std::optional interface
-    genimpl::val_holder<T> next() {}
+    // next (optional-based) interface
+
+    // NOTE: this won't return true until next() has returned an empty optional at least once
+    bool done() const noexcept {
+        return m_handle.done();
+    }
+
+    generator_value<T> next() {
+        if (done()) return {};
+        m_handle.promise().clear_value();
+        m_handle.resume();
+        return std::move(m_handle.promise().m_val);
+    }
+
+    // iterator-like/range-for interface
+
+    // emphasize that this is not a real iterator
+    class pseudo_iterator {
+        handle_t m_handle;
+    public:
+        using value_type = std::decay_t<T>;
+        using reference = value_ret_t;
+
+        pseudo_iterator() noexcept = default;
+        explicit pseudo_iterator(handle_t handle) noexcept : m_handle(handle) {}
+
+        reference operator*() const noexcept {
+            return m_handle.promise().val();
+        }
+
+        pseudo_iterator& operator++() {
+            m_handle.promise().clear_value();
+            m_handle.resume();
+            return *this;
+        }
+
+        struct end_t {};
+
+        // we're not really an iterator, but we can pretend to be one
+        friend bool operator==(const pseudo_iterator& i, end_t) noexcept { return i.m_handle.done(); }
+        friend bool operator==(end_t, const pseudo_iterator& i) noexcept { return i.m_handle.done(); }
+        friend bool operator!=(const pseudo_iterator& i, end_t) noexcept { return !i.m_handle.done(); }
+        friend bool operator!=(end_t, const pseudo_iterator& i) noexcept { return !i.m_handle.done(); }
+    };
+
+    pseudo_iterator begin() {
+        m_handle.resume();
+        return pseudo_iterator{m_handle};
+    }
+
+    pseudo_iterator::end_t end() {
+        return {};
+    }
+
 private:
-    using handle_t = std::coroutine_handle<promise_type>;
     handle_t m_handle;
     explicit generator(handle_t handle) noexcept : m_handle(handle) {}
 };
