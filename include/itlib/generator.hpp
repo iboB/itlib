@@ -1,4 +1,4 @@
-// itlib-generator v1.00
+// itlib-generator v1.01
 //
 // Simple coroutine generator class for C++20 and later
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.01 (2024-07-18) Add missing header for newer, more stringent compilers
 //  1.00 (2024-07-17) Initial release
 //
 //
@@ -76,6 +77,7 @@
 #include <coroutine>
 #include <type_traits>
 #include <optional>
+#include <utility>
 
 namespace itlib {
 
