@@ -135,7 +135,7 @@ public:
     {
         std::tm ret = {};
         auto mt = std::time_t(*this);
-#if defined(_MSC_VER)
+#if defined(_WIN32)
         gmtime_s(&ret, &mt);
 #else
         gmtime_r(&mt, &ret);
@@ -147,7 +147,7 @@ public:
     {
         std::tm ret = {};
         auto mt = std::time_t(*this);
-#if defined(_MSC_VER)
+#if defined(_WIN32)
         localtime_s(&ret, &mt);
 #else
         localtime_r(&mt, &ret);

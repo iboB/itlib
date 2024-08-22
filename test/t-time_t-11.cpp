@@ -62,7 +62,7 @@ TEST_CASE("[time_t] tm")
     CHECK(lt.tm_year == 101);
     CHECK((lt.tm_wday == 0 || lt.tm_wday == 1));
 
-#if !defined(__APPLE__)
+#if !defined(__APPLE__) && !defined(__MINGW32__)
     // macs have some weird problem with std::locale
     // but I don't have the time (or patience) to debug it now :)
     std::locale::global(std::locale("en_US.UTF8"));

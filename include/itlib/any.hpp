@@ -67,7 +67,7 @@ namespace anyimpl {
 struct default_allocator {
     void* allocate_bytes(std::size_t n, std::size_t a) {
         void* ret =
-#if defined(_MSC_VER)
+#if defined(_WIN32)
             _aligned_malloc(n, a);
 #else
             aligned_alloc(a, n);
@@ -76,7 +76,7 @@ struct default_allocator {
         return ret;
     }
     void deallocate_bytes(void* p, std::size_t /*n*/, std::size_t /*a*/) noexcept {
-#if defined(_MSC_VER)
+#if defined(_WIN32)
         _aligned_free(p);
 #else
         free(p);
