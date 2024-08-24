@@ -1,7 +1,7 @@
 // itlib-transparent_umap v1.00
 //
-// A a really transparent unordered map which includes the C++26 features
-// they forgot to add in C++20.
+// A a really transparent unordered map which includes the C++23 and C++26
+// features they forgot to add in C++20.
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
@@ -36,8 +36,8 @@
 //
 // Simply include this file wherever you need.
 // It defines the class itlib::transparent_umap which is is essentially a
-// std::unordered_map which includes the C++26 features they forgot to add in
-// C++20. Namely tansparent-aware overloads of:
+// std::unordered_map which includes the C++23 and 26 features they forgot to
+// add in C++20. Namely tansparent-aware overloads of:
 //
 // * try_emplace()
 // * operator[]
@@ -75,11 +75,11 @@ template <
     typename Alloc = std::allocator<std::pair<const Key, T>>
 > class transparent_umap : public std::unordered_map<Key, T, Hash, KeyEqual, Alloc> {
 public:
-    using base = std::unordered_map<Key, T, Hash, KeyEqual, Alloc>;
-    using base::unordered_map;
+    using super = std::unordered_map<Key, T, Hash, KeyEqual, Alloc>;
+    using super::unordered_map;
 
-    using iterator = base::iterator;
-    using const_iterator = base::const_iterator;
+    using iterator = super::iterator;
+    using const_iterator = super::const_iterator;
 
     // enable if transparent
     template <typename K, typename R>
@@ -96,7 +96,7 @@ public:
         , R
     >;
 
-    using base::try_emplace;
+    using super::try_emplace;
 
     template <typename K, typename... Args>
     enable_if_tr_c<K, std::pair<iterator, bool>> try_emplace(K&& key, Args&&... args) {
@@ -107,19 +107,20 @@ public:
 
     template <typename K, typename... Args>
     enable_if_tr<K, std::pair<iterator, bool>> try_emplace(const_iterator hint, K&& key, Args&&... args) {
+        // what does the hint even mean?
         auto f = this->find(key);
         if (f != this->end()) return { f, false };
         return this->emplace_hint(hint, std::forward<K>(key), T(std::forward<Args>(args)...));
     }
 
-    using base::operator[];
+    using super::operator[];
 
     template <typename K>
     enable_if_tr_c<K, T&> operator[](K&& key) {
         return this->try_emplace(std::forward<K>(key)).first->second;
     }
 
-    using base::at;
+    using super::at;
 
     template <typename K>
     enable_if_tr<K, T&> at(const K& key) {
