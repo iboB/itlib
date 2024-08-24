@@ -78,8 +78,8 @@ public:
     using base = std::unordered_map<Key, T, Hash, KeyEqual, Alloc>;
     using base::unordered_map;
 
-    using base::iterator;
-    using base::const_iterator;
+    using iterator = base::iterator;
+    using const_iterator = base::const_iterator;
 
     // enable if transparent
     template <typename K, typename R>
