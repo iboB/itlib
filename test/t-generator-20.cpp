@@ -11,7 +11,16 @@
 #include <span>
 
 itlib::generator<int> range(int begin, int end) {
+    // this absolutely pointless vector here is to trigger clang's ridiculous handling of coroutines
+    // if we simply rethrow in unhandled_exception(), for some reason it calls the destructors of locals twice
+    // having a local whose destructor is not safe to call twice will cause a crash
+    // if we don't crash here on clang, then generator works as expected
+    std::vector<int> store;
     for (int i = begin; i < end; ++i) {
+        store.emplace_back(i);
+    }
+
+    for (auto i : store) {
         if (i == 103) throw std::runtime_error("test exception");
         co_yield i;
     }

@@ -1,4 +1,4 @@
-// itlib-generator v1.01
+// itlib-generator v1.02
 //
 // Simple coroutine generator class for C++20 and later
 //
@@ -28,6 +28,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2024-07-18) Store exception to work around clang's ridiculous
+//                    and overly complicated handling of coroutines
 //  1.01 (2024-07-18) Add missing header for newer, more stringent compilers
 //  1.00 (2024-07-17) Initial release
 //
@@ -76,6 +78,7 @@
 #pragma once
 #include <coroutine>
 #include <type_traits>
+#include <exception>
 #include <optional>
 #include <utility>
 
@@ -107,6 +110,7 @@ public:
 
     struct promise_type {
         generator_value<T> m_val;
+        std::exception_ptr m_exception;
 
         promise_type() noexcept = default;
 
@@ -126,7 +130,9 @@ public:
             return {};
         }
         void return_void() noexcept {}
-        void unhandled_exception() { throw; }
+        void unhandled_exception() noexcept {
+            m_exception = std::current_exception();
+        }
 
         value_ret_t val() & noexcept {
             return *m_val;
@@ -171,8 +177,7 @@ public:
 
     generator_value<T> next() {
         if (done()) return {};
-        m_handle.promise().clear_value();
-        m_handle.resume();
+        safe_resume(m_handle);
         return std::move(m_handle.promise().m_val);
     }
 
@@ -193,8 +198,7 @@ public:
         }
 
         pseudo_iterator& operator++() {
-            m_handle.promise().clear_value();
-            m_handle.resume();
+            safe_resume(m_handle);
             return *this;
         }
 
@@ -208,7 +212,7 @@ public:
     };
 
     pseudo_iterator begin() {
-        m_handle.resume();
+        safe_resume(m_handle);
         return pseudo_iterator{m_handle};
     }
 
@@ -217,6 +221,15 @@ public:
     }
 
 private:
+    static void safe_resume(handle_t& h) {
+        auto& p = h.promise();
+        p.clear_value();
+        h.resume();
+        if (p.m_exception) {
+            std::rethrow_exception(p.m_exception);
+        }
+    }
+
     handle_t m_handle;
     explicit generator(handle_t handle) noexcept : m_handle(handle) {}
 };
