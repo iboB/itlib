@@ -1,4 +1,4 @@
-// itlib-transparent_umap v1.00
+// itlib-transparent_umap v0.10
 //
 // A a really transparent unordered map which includes the C++23 and C++26
 // features they forgot to add in C++20.
