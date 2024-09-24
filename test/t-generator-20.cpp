@@ -7,7 +7,9 @@
 #include <doctest/util/lifetime_counter.hpp>
 
 #include <stdexcept>
+#include <iterator>
 #include <vector>
+#include <string>
 #include <span>
 
 itlib::generator<int> range(int begin, int end) {
@@ -143,5 +145,31 @@ TEST_CASE("lifetime") {
         CHECK(ls.living == 3);
         CHECK(ls.copies == 0);
         CHECK(ls.m_ctr == 6);
+    }
+}
+
+struct non_copyable {
+    non_copyable(std::string v) : value(std::move(v)) {}
+    non_copyable(const non_copyable&) = delete;
+    non_copyable& operator=(const non_copyable&) = delete;
+    non_copyable(non_copyable&&) noexcept = default;
+    non_copyable& operator=(non_copyable&&) noexcept = default;
+    std::string value;
+};
+
+itlib::generator<non_copyable> non_copyable_range(int begin, int end) {
+    for (int i = begin; i < end; ++i) {
+        co_yield non_copyable(std::to_string(i));
+    }
+}
+
+TEST_CASE("yield non copyable") {
+    auto gen = non_copyable_range(10, 15);
+    std::vector<std::string> values;
+    int i = 10;
+    for (auto mi = std::make_move_iterator(gen.begin()); mi.base() != gen.end(); ++mi) {
+        auto elem = *mi;
+        CHECK(elem.value == std::to_string(i));
+        ++i;
     }
 }

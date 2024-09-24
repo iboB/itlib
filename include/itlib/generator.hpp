@@ -1,4 +1,4 @@
-// itlib-generator v1.02
+// itlib-generator v1.03
 //
 // Simple coroutine generator class for C++20 and later
 //
@@ -28,6 +28,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.03 (2024-09-24) Improve iterator-like interface when yielding
+//                    non-copyable values
 //  1.02 (2024-07-18) Store exception to work around clang's ridiculous
 //                    and overly complicated handling of coroutines
 //  1.01 (2024-07-18) Add missing header for newer, more stringent compilers
@@ -105,8 +107,8 @@ public:
 template <typename T>
 class generator {
 public:
-    // return const ref in case we're generating values, otherwise keep the ref type
-    using value_ret_t = std::conditional_t<std::is_reference_v<T>, T, const T&>;
+    // return ref in case we're generating values, otherwise keep the ref type
+    using value_ret_t = std::conditional_t<std::is_reference_v<T>, T, T&>;
 
     struct promise_type {
         generator_value<T> m_val;
@@ -189,6 +191,8 @@ public:
     public:
         using value_type = std::decay_t<T>;
         using reference = value_ret_t;
+
+        using difference_type = std::ptrdiff_t; // pointless here, but required for iterator traits and concepts
 
         pseudo_iterator() noexcept = default;
         explicit pseudo_iterator(handle_t handle) noexcept : m_handle(handle) {}
