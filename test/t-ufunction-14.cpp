@@ -14,14 +14,12 @@ TEST_CASE("Basic")
 {
     using namespace itlib;
 
-    auto uptr = std::make_unique<int>(53);
-    ufunction<void()> func([u = std::move(uptr)](){
+    ufunction<void()> func([u = std::make_unique<int>(53)](){
         CHECK(*u == 53);
     });
     func();
 
-    auto uptr2 = std::make_unique<int>(102);
-    func = [u = std::move(uptr2)]() {
+    func = [u = std::make_unique<int>(102)]() {
         CHECK(*u == 102);
     };
     func();

@@ -1,4 +1,4 @@
-// itlib-ufunction v1.01
+// itlib-ufunction v1.02
 //
 // Unique Function
 // Non-copyable and noexcept move-constructible replacement for std::function
@@ -30,6 +30,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.02 (2024-09-24) Allow binding to copies of source functions as per C++23
 //  1.01 (2022-09-23) Allow ufunction from a free function
 //  1.00 (2020-10-15) Initial release
 //
@@ -88,10 +89,10 @@ public:
     ufunction& operator=(ufunction&&) noexcept = default;
 
     template <typename FO>
-    ufunction(FO&& f) noexcept : function(copy_wrapper<FO>{std::move(f)}) {}
+    ufunction(FO f) noexcept : function(copy_wrapper<FO>{std::move(f)}) {}
 
     template <typename FO>
-    ufunction& operator=(FO&& f) noexcept
+    ufunction& operator=(FO f) noexcept
     {
         function::operator=(copy_wrapper<FO>{std::move(f)});
         return *this;
