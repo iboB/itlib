@@ -40,7 +40,7 @@ TEST_CASE("Basic")
     CHECK(func(4) == 9);
 
     auto f2 = std::move(func);
-    CHECK(!func);
+    CHECK_FALSE(func);
     CHECK(f2(1) == 6);
 }
 
@@ -63,4 +63,20 @@ TEST_CASE("from copy")
     itlib::ufunction<int(int, int)> f2(func);
     CHECK(f(1, 2) == 3);
     CHECK(f2(10, 20) == 30);
+}
+
+TEST_CASE("from null") {
+    {
+        itlib::ufunction<void()> f;
+        CHECK_FALSE(f);
+    }
+    {
+        itlib::ufunction<void()> f = nullptr;
+        CHECK_FALSE(f);
+    }
+    {
+        void (*fp)() = nullptr;
+        itlib::ufunction<void()> f = fp;
+        CHECK_FALSE(f);
+    }
 }
