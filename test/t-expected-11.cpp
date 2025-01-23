@@ -409,6 +409,7 @@ TEST_CASE("void basic")
     itlib::expected<void, int> y;
     CHECK(y);
     CHECK(y.has_value());
+    y.value(); // should compile and safely do nothing
 
     auto v = vfunc(true);
     CHECK(v.has_value());
@@ -527,6 +528,7 @@ TEST_CASE("eoptional")
     CHECK_FALSE(io);
     CHECK(io.has_error());
     CHECK(io.value_or(44) == 44);
+    io.error(); // should compile and safely do nothing
 
     io.emplace(5);
     CHECK(io);
@@ -574,10 +576,12 @@ TEST_CASE("eoptional void")
     CHECK(vo);
     CHECK(vo.has_value());
     CHECK(!vo.has_error());
+    vo.value(); // should compile and safely do nothing
 
     vo.clear();
     CHECK_FALSE(vo);
     CHECK(vo.has_error());
+    vo.error(); // should compile and safely do nothing
 
     itlib::eoptional<void> vo2 = itlib::unexpected();
     CHECK_FALSE(vo2);

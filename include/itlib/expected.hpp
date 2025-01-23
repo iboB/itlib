@@ -1,10 +1,10 @@
-// itlib-expected v1.02
+// itlib-expected v1.03
 //
 // A union-type of a value and an error
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2021-2022 Borislav Stanimirov
+// Copyright(c) 2021-2025 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.03 (2025-01-23) Add value and error "getters" in void specializations
 //  1.02 (2022-09-02) Specializations for ref and void values and void errors
 //  1.01 (2021-09-27) Fixed value_or which could return a ref to temporary
 //  1.00 (2021-09-26) Initial release
@@ -466,7 +467,11 @@ public:
     bool has_error() const { return !m_has_value; }
     explicit operator bool() const { return m_has_value; }
 
-    // value getters: none
+    // value "getter"
+
+    void value() const noexcept {
+        assert(has_value());
+    }
 
     // error getters
 
@@ -621,7 +626,11 @@ public:
     T* operator->() { return &value(); }
     const T* operator->() const { return &value(); }
 
-    // error getters: none
+    // error "getter"
+
+    void error() const noexcept {
+        assert(has_error());
+    }
 
 private:
     union
@@ -664,7 +673,11 @@ public:
     T& value_or(T& v) const { return has_value() ? value() : v; }
     T* operator->() const { return &value(); }
 
-    // error getters: none
+    // error "getter"
+
+    void error() const noexcept {
+        assert(has_error());
+    }
 
 private:
     value_type* m_value;
@@ -693,9 +706,17 @@ public:
     void clear() { m_has_value = false; }
     void emplace() { m_has_value = true; }
 
-    // value getters: none
+    // value "getter"
 
-    // error getters: none
+    void value() const noexcept {
+        assert(has_value());
+    }
+
+    // error "getter"
+
+    void error() const noexcept {
+        assert(has_error());
+    }
 
 private:
     bool m_has_value;
