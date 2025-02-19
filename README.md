@@ -74,6 +74,6 @@ You can use CMake to generate a project and run the tests locally.
 
 Copyright &copy; 2016-2019 [Chobolabs Inc.](http://www.chobolabs.com/)
 
-Copyright &copy; 2020-2024 Borislav Stanimirov
+Copyright &copy; 2020-2025 Borislav Stanimirov
 
 These libraries are distributed under the MIT Software License. See LICENSE.txt for further details or copy [here](http://opensource.org/licenses/MIT).
