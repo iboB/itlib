@@ -370,3 +370,31 @@ TEST_CASE("[flat_map] static_vector test")
     ifit = smap.find(6);
     CHECK(ifit == smap.end());
 }
+
+TEST_CASE("flat_map_ready_tag")
+{
+    using namespace itlib;
+
+#define BROKEN_DATA {{5, 4}, {3, 44}, {23, 11}, {3, 44}, {5, 4}, {23, 11}}
+
+    // Unsorted and with duplicated elements
+    std::vector<std::pair<int, int>> broken_data = BROKEN_DATA;
+
+    // Create flat_map with flat_map_ready_tag
+    flat_map<int, int> fm_ready(broken_data, flat_map_ready_tag{});
+
+    // Check that the container is unchanged
+    CHECK(fm_ready.container() == broken_data);
+
+    // Create flat_map with flat_map_ready_tag using initializer list
+    flat_map<int, int> fm_ready_init(BROKEN_DATA, flat_map_ready_tag{});
+
+    // Check that the container is unchanged
+    CHECK(fm_ready_init.container() == broken_data);
+
+    // Create flat_map with flat_map_ready_tag using iterators
+    flat_map<int, int> fm_ready_iter(broken_data.begin(), broken_data.end(), flat_map_ready_tag{});
+
+    // Check that the container is unchanged
+    CHECK(fm_ready_iter.container() == broken_data);
+}

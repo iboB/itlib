@@ -1,11 +1,11 @@
-// itlib-flat-map v1.09
+// itlib-flat-map v1.10
 //
 // std::map-like class with an underlying vector
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2016-2019 Chobolabs Inc.
-// Copyright(c) 2020-2023 Borislav Stanimirov
+// Copyright(c) 2020-2025 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.10 (2025-03-18) Add constructors from ready-to-use containers and sequences
 //  1.09 (2023-01-17) BUGIFX: at() was not throwing exceptions as it should
 //  1.08 (2023-01-16) Constructors from iterator ranges.
 //                    Constructor from container
@@ -133,6 +134,9 @@ struct pair_compare : public Compare
 };
 }
 
+// tag for constructors which tage ready-to-use containers and sequences
+struct flat_map_ready_tag {};
+
 template <typename Key, typename T, typename Compare = fmimpl::less, typename Container = std::vector<std::pair<Key, T>>>
 class flat_map : private fmimpl::pair_compare<Key, T, Compare>
 {
@@ -192,6 +196,31 @@ public:
     template <class InputIterator, typename = decltype(*std::declval<InputIterator>())>
     flat_map(InputIterator begin, InputIterator end, const allocator_type& alloc = allocator_type())
         : flat_map(begin, end, key_compare(), alloc)
+    {}
+
+    // ready-to-use containers and sequences
+
+    flat_map(container_type container, flat_map_ready_tag, const key_compare& comp = key_compare())
+        : pair_compare(comp)
+        , m_container(std::move(container))
+    {}
+
+    flat_map(std::initializer_list<value_type> init, flat_map_ready_tag, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type())
+        : flat_map(container_type(std::move(init), alloc), flat_map_ready_tag{}, comp)
+    {}
+
+    flat_map(std::initializer_list<value_type> init, flat_map_ready_tag, const allocator_type& alloc)
+        : flat_map(std::move(init), flat_map_ready_tag{}, key_compare(), alloc)
+    {}
+
+    template <class InputIterator, typename = decltype(*std::declval<InputIterator>())>
+    flat_map(InputIterator begin, InputIterator end, flat_map_ready_tag, const key_compare& comp, const allocator_type& alloc = allocator_type())
+        : flat_map(container_type(begin, end, alloc), flat_map_ready_tag{}, comp)
+    {}
+
+    template <class InputIterator, typename = decltype(*std::declval<InputIterator>())>
+    flat_map(InputIterator begin, InputIterator end, flat_map_ready_tag, const allocator_type& alloc = allocator_type())
+        : flat_map(begin, end, flat_map_ready_tag{}, key_compare(), alloc)
     {}
 
     flat_map(const flat_map& x) = default;

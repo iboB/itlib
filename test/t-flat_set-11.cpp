@@ -320,3 +320,31 @@ TEST_CASE("[flat_set] static_vector test")
     ifit = sset.find(6);
     CHECK(ifit == sset.end());
 }
+
+TEST_CASE("flat_set_ready_tag")
+{
+    using namespace itlib;
+
+#define BROKEN_DATA {5, 3, 23, 3, 5, 23}
+
+    // Unsorted and with duplicated elements
+    std::vector<int> broken_data = BROKEN_DATA;
+
+    // Create flat_set with flat_set_ready_tag
+    flat_set<int> fs_ready(broken_data, flat_set_ready_tag{});
+
+    // Check that the container is unchanged
+    CHECK(fs_ready.container() == broken_data);
+
+    // Create flat_set with flat_set_ready_tag using initializer list
+    flat_set<int> fs_ready_init(BROKEN_DATA, flat_set_ready_tag{});
+
+    // Check that the container is unchanged
+    CHECK(fs_ready_init.container() == broken_data);
+
+    // Create flat_set with flat_set_ready_tag using iterators
+    flat_set<int> fs_ready_iter(broken_data.begin(), broken_data.end(), flat_set_ready_tag{});
+
+    // Check that the container is unchanged
+    CHECK(fs_ready_iter.container() == broken_data);
+}
