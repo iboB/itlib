@@ -371,6 +371,23 @@ TEST_CASE("[flat_map] static_vector test")
     CHECK(ifit == smap.end());
 }
 
+TEST_CASE("emplace_hint")
+{
+    itlib::flat_map<int, int> m = {{1, 1}, {2, 2}, {3, 3}};
+    auto it = m.emplace_hint(m.begin(), 4, 4);
+    CHECK(it == m.end() - 1);
+    it = m.emplace_hint(m.begin(), 0, 0);
+    CHECK(it == m.begin());
+    it = m.emplace_hint(m.end(), 7, 7);
+    CHECK(it == m.end() - 1);
+    it = m.emplace_hint(m.end(), 3, 3);
+    CHECK(it == m.begin() + 3);
+    it = m.emplace_hint(m.begin(), 3, 3);
+    CHECK(it == m.begin() + 3);
+    it = m.emplace_hint(m.begin() + 5, 5, 5);
+    CHECK(it == m.end() - 2);
+}
+
 TEST_CASE("flat_map_ready_tag")
 {
     using namespace itlib;

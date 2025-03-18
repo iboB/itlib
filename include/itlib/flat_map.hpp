@@ -29,7 +29,9 @@
 //
 //                  VERSION HISTORY
 //
-//  1.10 (2025-03-18) Add constructors from ready-to-use containers and sequences
+//  1.10 (2025-03-18) Add hint-based insert and emplace ops
+//                    Add constructors from ready-to-use containers and
+//                    sequences
 //  1.09 (2023-01-17) BUGIFX: at() was not throwing exceptions as it should
 //  1.08 (2023-01-16) Constructors from iterator ranges.
 //                    Constructor from container
@@ -320,7 +322,7 @@ public:
             return { i, false };
         }
 
-        return{ m_container.emplace(i, std::forward<P>(val)), true };
+        return {m_container.emplace(i, std::forward<P>(val)), true};
     }
 
     std::pair<iterator, bool> insert(const value_type& val)
@@ -331,7 +333,18 @@ public:
             return { i, false };
         }
 
-        return{ m_container.emplace(i, val), true };
+        return {m_container.emplace(i, val), true};
+    }
+
+    template <typename P>
+    iterator insert(const_iterator pos, P&& val)
+    {
+        return emplace_hint(pos, std::forward<P>(val));
+    }
+
+    iterator insert(const_iterator pos, const value_type& val)
+    {
+        return emplace_hint(pos, val);
     }
 
     template <typename... Args>
@@ -339,6 +352,37 @@ public:
     {
         value_type val(std::forward<Args>(args)...);
         return insert(std::move(val));
+    }
+
+    template <typename... Args>
+    iterator emplace_hint(const_iterator pos, Args&&... args)
+    {
+        if (empty())
+        {
+            m_container.emplace_back(std::forward<Args>(args)...);
+            return begin();
+        }
+
+        value_type val(std::forward<Args>(args)...);
+
+        bool bok = true, eok = true;
+
+        if (pos != end())
+        {
+            bok = cmp()(val, *pos);
+        }
+
+        if (pos != begin())
+        {
+            eok = cmp()(*(pos - 1), val);
+        }
+
+        if (bok && eok)
+        {
+            return m_container.emplace(pos, std::move(val));
+        }
+
+        return insert(std::move(val)).first;
     }
 
     iterator erase(const_iterator pos)

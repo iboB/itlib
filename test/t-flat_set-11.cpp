@@ -321,6 +321,30 @@ TEST_CASE("[flat_set] static_vector test")
     CHECK(ifit == sset.end());
 }
 
+TEST_CASE("emplace_hint")
+{
+    using namespace itlib;
+    flat_set<int> s = {1, 2, 3, 4, 5};
+    auto it = s.emplace_hint(s.begin(), 3);
+    CHECK(it == s.begin() + 2);
+    it = s.emplace_hint(s.begin(), 0);
+    CHECK(it == s.begin());
+    it = s.emplace_hint(s.end(), 6);
+    CHECK(it == s.end() - 1);
+    it = s.emplace_hint(s.end(), 3);
+    CHECK(it == s.begin() + 3);
+    it = s.emplace_hint(s.begin() + 2, 3);
+    CHECK(it == s.begin() + 3);
+    it = s.emplace_hint(s.begin() + 2, 2);
+    CHECK(it == s.begin() + 2);
+    it = s.emplace_hint(s.begin() + 2, 1);
+    CHECK(it == s.begin() + 1);
+    it = s.emplace_hint(s.begin() + 2, 4);
+    CHECK(it == s.begin() + 4);
+    it = s.emplace_hint(s.begin() + 2, 5);
+    CHECK(it == s.end() - 2);
+}
+
 TEST_CASE("flat_set_ready_tag")
 {
     using namespace itlib;
