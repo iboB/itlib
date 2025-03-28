@@ -1,6 +1,7 @@
 // itlib-generator v1.04
 //
-// Simple coroutine generator class for C++20 and later
+// Simple coroutine generator class for C++20 and later, similar to
+// std::generator from C++23, but also allowing return values
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
@@ -29,7 +30,8 @@
 //                  VERSION HISTORY
 //
 //
-//  1.04 (2025-03-28) Use std::default_sentinel_t for end iterator
+//  1.04 (2025-03-28) - Allow generator return type (default void)
+//                    - Use std::default_sentinel_t for end iterator
 //  1.03 (2024-09-24) Improve iterator-like interface when yielding
 //                    non-copyable values
 //  1.02 (2024-07-18) Store exception to work around clang's ridiculous
@@ -106,13 +108,37 @@ public:
     explicit operator bool() const noexcept { return has_value(); }
 };
 
-template <typename T>
+namespace gen_impl {
+template <typename R>
+struct ret_promise_helper {
+    generator_value<R> m_ret;
+
+    void return_value(R value) noexcept {
+        if constexpr (std::is_reference_v<R>) {
+            m_ret.emplace(value);
+        }
+        else {
+            m_ret.emplace(std::move(value));
+        }
+    }
+
+    decltype(auto) rval() { return *m_ret; }
+};
+template <>
+struct ret_promise_helper<void> {
+    void return_void() noexcept {}
+    void rval() noexcept {}
+};
+
+} // namespace impl
+
+template <typename T, typename R = void>
 class generator {
 public:
     // return ref in case we're generating values, otherwise keep the ref type
     using value_ret_t = std::conditional_t<std::is_reference_v<T>, T, T&>;
 
-    struct promise_type {
+    struct promise_type : public gen_impl::ret_promise_helper<R> {
         generator_value<T> m_yval;
         std::exception_ptr m_exception;
 
@@ -133,7 +159,7 @@ public:
             }
             return {};
         }
-        void return_void() noexcept {}
+
         void unhandled_exception() noexcept {
             m_exception = std::current_exception();
         }
@@ -181,6 +207,11 @@ public:
         if (done()) return {};
         safe_resume(m_handle);
         return std::move(m_handle.promise().m_yval);
+    }
+
+    // NOTE: only valid if done would return true or iteration reached the end
+    decltype(auto) rval() {
+        return m_handle.promise().rval();
     }
 
     // iterator-like/range-for interface

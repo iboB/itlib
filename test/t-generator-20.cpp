@@ -173,3 +173,33 @@ TEST_CASE("yield non copyable") {
         ++i;
     }
 }
+
+itlib::generator<std::string, int> yield_strings(int begin, int end) {
+    for (int i = begin; i < end; ++i) {
+        co_yield std::to_string(i);
+    }
+    co_return end - begin;
+}
+
+TEST_CASE("return iter") {
+    auto gen = yield_strings(10, 15);
+    std::vector<std::string> values;
+    int i = 10;
+    for (auto s : gen) {
+        CHECK(s == std::to_string(i));
+        ++i;
+    }
+    CHECK(i == 15);
+    CHECK(gen.rval() == 5);
+}
+
+TEST_CASE("return next") {
+    auto gen = yield_strings(10, 13);
+    CHECK(*gen.next() == "10");
+    CHECK(*gen.next() == "11");
+    CHECK(*gen.next() == "12");
+    CHECK_FALSE(gen.next().has_value());
+    CHECK(gen.rval() == 3);
+    CHECK(gen.done());
+    CHECK(gen.rval() == 3);
+}
