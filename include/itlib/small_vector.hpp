@@ -1,11 +1,11 @@
-// itlib-small-vector v2.05
+// itlib-small-vector v2.06
 //
 // std::vector-like class with a static buffer for initial capacity
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2016-2018 Chobolabs Inc.
-// Copyright(c) 2020-2024 Borislav Stanimirov
+// Copyright(c) 2020-2025 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  2.06 (2025-03-28) Minor: Add missing header <cstdint>
 //  2.05 (2024-03-06) Minor: Return bool from shrink_to_fit
 //  2.04 (2022-04-29) Minor: Disable MSVC warning for constant conditional
 //  2.03 (2022-10-31) Minor: Removed unused local var
