@@ -1,10 +1,10 @@
-// itlib-generator v1.03
+// itlib-generator v1.04
 //
 // Simple coroutine generator class for C++20 and later
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2024 Borislav Stanimirov
+// Copyright(c) 2024-2025 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -28,6 +28,8 @@
 //
 //                  VERSION HISTORY
 //
+//
+//  1.04 (2025-03-28) Use std::default_sentinel_t for end iterator
 //  1.03 (2024-09-24) Improve iterator-like interface when yielding
 //                    non-copyable values
 //  1.02 (2024-07-18) Store exception to work around clang's ridiculous
@@ -206,7 +208,7 @@ public:
             return *this;
         }
 
-        struct end_t {};
+        using end_t = std::default_sentinel_t;
 
         // we're not really an iterator, but we can pretend to be one
         friend bool operator==(const pseudo_iterator& i, end_t) noexcept { return i.m_handle.done(); }
