@@ -113,7 +113,7 @@ public:
     using value_ret_t = std::conditional_t<std::is_reference_v<T>, T, T&>;
 
     struct promise_type {
-        generator_value<T> m_val;
+        generator_value<T> m_yval;
         std::exception_ptr m_exception;
 
         promise_type() noexcept = default;
@@ -126,10 +126,10 @@ public:
         std::suspend_always final_suspend() noexcept { return {}; }
         std::suspend_always yield_value(T value) noexcept { // assume T is noexcept move constructible
             if constexpr (std::is_reference_v<T>) {
-                m_val.emplace(value);
+                m_yval.emplace(value);
             }
             else {
-                m_val.emplace(std::move(value));
+                m_yval.emplace(std::move(value));
             }
             return {};
         }
@@ -138,14 +138,12 @@ public:
             m_exception = std::current_exception();
         }
 
-        value_ret_t val() & noexcept {
-            return *m_val;
+        value_ret_t yval() & noexcept {
+            return *m_yval;
         }
-        T&& val() && noexcept {
-            return std::move(*m_val);
-        }
-        void clear_value() noexcept {
-            m_val.reset();
+
+        void clear_yval() noexcept {
+            m_yval.reset();
         }
     };
 
@@ -182,7 +180,7 @@ public:
     generator_value<T> next() {
         if (done()) return {};
         safe_resume(m_handle);
-        return std::move(m_handle.promise().m_val);
+        return std::move(m_handle.promise().m_yval);
     }
 
     // iterator-like/range-for interface
@@ -200,7 +198,7 @@ public:
         explicit pseudo_iterator(handle_t handle) noexcept : m_handle(handle) {}
 
         reference operator*() const noexcept {
-            return m_handle.promise().val();
+            return m_handle.promise().yval();
         }
 
         pseudo_iterator& operator++() {
@@ -229,7 +227,7 @@ public:
 private:
     static void safe_resume(handle_t& h) {
         auto& p = h.promise();
-        p.clear_value();
+        p.clear_yval();
         h.resume();
         if (p.m_exception) {
             std::rethrow_exception(p.m_exception);
