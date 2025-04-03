@@ -220,6 +220,23 @@ TEST_CASE("lifetime")
         CHECK(vs.living == 1);
     }
 
+    // error to value 2
+    {
+        value::lifetime_stats vs;
+        error::lifetime_stats es;
+        auto x = func(false);
+        auto& ref = x.emplace(8);
+        CHECK(ref.val == 8);
+        CHECK(x.has_value());
+        CHECK(es.d_ctr == 1);
+        CHECK(es.total == 1);
+        CHECK(es.living == 0);
+        CHECK(vs.d_ctr == 1);
+        CHECK(vs.m_ctr == 0);
+        CHECK(vs.total == 1);
+        CHECK(vs.living == 1);
+    }
+
     // value to error
     {
         value::lifetime_stats vs;
@@ -234,6 +251,20 @@ TEST_CASE("lifetime")
         CHECK(es.m_ctr == 1);
         CHECK(es.total == 2);
         CHECK(es.living == 1);
+    }
+
+    // value to value
+    {
+        value::lifetime_stats vs;
+        error::lifetime_stats es;
+        auto x = func(true);
+        auto& ref = x.emplace(105);
+        CHECK(ref.val == 105);
+        CHECK(x.has_value());
+        CHECK(vs.d_ctr == 2);
+        CHECK(vs.total == 2);
+        CHECK(vs.living == 1);
+        CHECK(es.checkpoint() == empty);
     }
 }
 
@@ -374,6 +405,25 @@ TEST_CASE("ref lifetime")
         CHECK(vs.living == 1);
     }
 
+    // error to value 2
+    {
+        value::lifetime_stats vs;
+        error::lifetime_stats es;
+        const obj o;
+
+        auto x = o.ie();
+        value v;
+        auto& ref = x.emplace(v);
+        CHECK(&ref == &v);
+
+        CHECK(x.has_value());
+        CHECK(es.d_ctr == 1);
+        CHECK(es.total == 1);
+        CHECK(es.living == 0);
+        CHECK(vs.total == 2);
+        CHECK(vs.living == 2);
+    }
+
     // value to error
     {
         value::lifetime_stats vs;
@@ -420,6 +470,9 @@ TEST_CASE("void basic")
     CHECK(!v);
     REQUIRE(v.has_error());
     CHECK(v.error().err == 1);
+
+    v.emplace();
+    CHECK(v.has_value());
 }
 
 TEST_CASE("void lifetime")
@@ -443,15 +496,15 @@ TEST_CASE("void lifetime")
     {
         error::lifetime_stats es;
 
-        const auto x = func(true);
+        const auto x = vfunc(true);
         CHECK(es.checkpoint() == empty);
     }
 
     {
         error::lifetime_stats es;
 
-        auto x = func(false);
-        x = func(false);
+        auto x = vfunc(false);
+        x = vfunc(false);
         REQUIRE(x.has_error());
         CHECK(x.error().err == 1);
         CHECK(es.d_ctr == 2);
@@ -459,7 +512,7 @@ TEST_CASE("void lifetime")
         CHECK(es.m_asgn == 1);
         CHECK(es.living == 1);
 
-        auto e = func(false).error();
+        auto e = vfunc(false).error();
         CHECK(es.d_ctr == 3);
         CHECK(es.m_ctr == 1);
         CHECK(es.m_asgn == 1);
@@ -470,8 +523,8 @@ TEST_CASE("void lifetime")
     {
         error::lifetime_stats es;
 
-        auto x = func(true);
-        x = func(true);
+        auto x = vfunc(true);
+        x = vfunc(true);
         CHECK(es.checkpoint() == empty);
     }
 
@@ -481,6 +534,17 @@ TEST_CASE("void lifetime")
         error::lifetime_stats es;
         auto x = func(false);
         x = func(true);
+        CHECK(x.has_value());
+        CHECK(es.d_ctr == 1);
+        CHECK(es.total == 1);
+        CHECK(es.living == 0);
+    }
+
+    // error to value 2
+    {
+        error::lifetime_stats es;
+        auto x = func(false);
+        x.emplace();
         CHECK(x.has_value());
         CHECK(es.d_ctr == 1);
         CHECK(es.total == 1);
@@ -530,10 +594,13 @@ TEST_CASE("eoptional")
     CHECK(io.value_or(44) == 44);
     io.error(); // should compile and safely do nothing
 
-    io.emplace(5);
+    auto& ref = io.emplace(5);
     CHECK(io);
     CHECK(*io == 5);
     CHECK(io.value_or(44) == 5);
+    CHECK(ref == 5);
+    ref = 10;
+    CHECK(io.value_or(44) == 10);
 }
 
 TEST_CASE("eoptional ref")
@@ -564,10 +631,13 @@ TEST_CASE("eoptional ref")
     CHECK(io.value_or(44) == 44);
 
     int i = 34;
-    io.emplace(i);
+    auto& ref = io.emplace(i);
     CHECK(io);
     CHECK(*io == 34);
     CHECK(&io.value() == &i);
+    CHECK(ref == 34);
+    i = 10;
+    CHECK(ref == 10);
 }
 
 TEST_CASE("eoptional void")

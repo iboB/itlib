@@ -1,4 +1,4 @@
-// itlib-expected v1.03
+// itlib-expected v1.04
 //
 // A union-type of a value and an error
 //
@@ -28,6 +28,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.04 (2025-04-03) - Fix move assign in <void, E> specialization
+//                    - Add emplace for all specializations
 //  1.03 (2025-01-23) Add value and error "getters" in void specializations
 //  1.02 (2022-09-02) Specializations for ref and void values and void errors
 //  1.01 (2021-09-27) Fixed value_or which could return a ref to temporary
@@ -198,11 +200,11 @@ public:
     {
         if (m_has_value)
         {
-            new (&m_value) T(std::move(other.m_value));
+            ::new (&m_value) T(std::move(other.m_value));
         }
         else
         {
-            new (&m_error) E(std::move(other.m_error));
+            ::new (&m_error) E(std::move(other.m_error));
         }
     }
 
@@ -241,6 +243,22 @@ public:
         {
             m_error.~E();
         }
+    }
+
+    template <typename... Args>
+    T& emplace(Args&&... args)
+    {
+        if (m_has_value)
+        {
+            m_value.~T();
+        }
+        else
+        {
+            m_error.~E();
+        }
+        ::new (&m_value) T(std::forward<Args>(args)...);
+        m_has_value = true;
+        return m_value;
     }
 
     // bool interface
@@ -366,6 +384,16 @@ public:
         }
     }
 
+    T& emplace(T& t)
+    {
+        if (!m_value)
+        {
+            m_error.~E();
+        }
+        m_value = &t;
+        return t;
+    }
+
     // bool interface
     bool has_value() const { return !!m_value; }
     bool has_error() const { return !m_value; }
@@ -447,10 +475,11 @@ public:
             m_has_value = true;
             m_error.~E();
         }
-        else
+        else if (!m_has_value && !other.has_value())
         {
             m_error = std::move(other.m_error);
         }
+        // else nothing to do
         return *this;
     }
 
@@ -460,6 +489,15 @@ public:
         {
             m_error.~E();
         }
+    }
+
+    void emplace()
+    {
+        if (!m_has_value)
+        {
+            m_error.~E();
+        }
+        m_has_value = true;
     }
 
     // bool interface
@@ -517,7 +555,7 @@ public:
     {
         if (m_has_value)
         {
-            new (&m_value) T(other.m_value);
+            ::new (&m_value) T(other.m_value);
         }
     }
     expected& operator=(const expected& other)
@@ -544,7 +582,7 @@ public:
     {
         if (m_has_value)
         {
-            new (&m_value) T(std::move(other.m_value));
+            ::new (&m_value) T(std::move(other.m_value));
         }
     }
 
@@ -588,11 +626,12 @@ public:
         m_has_value = false;
     }
     template <typename... Args>
-    void emplace(Args&&... args)
+    T& emplace(Args&&... args)
     {
         clear();
         ::new (&m_value) T(std::forward<Args>(args)...);
         m_has_value = true;
+        return m_value;
     }
 
     // value getters
@@ -661,7 +700,11 @@ public:
 
     // optional interface
     void clear() { m_value = nullptr; }
-    void emplace(T& t) { m_value = &t; }
+    T& emplace(T& t)
+    {
+        m_value = &t;
+        return t;
+    }
 
     // value getters (pointer semantics)
     T& value() const
