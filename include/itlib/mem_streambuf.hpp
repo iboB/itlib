@@ -1,10 +1,10 @@
-// itlib-mem-streambuf v1.03
+// itlib-mem-streambuf v1.04
 //
 // std::streambuf implementations for working with contiguous memory
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2020-2022 Borislav Stanimirov
+// Copyright(c) 2020-2025 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -28,7 +28,9 @@
 //
 //                  VERSION HISTORY
 //
-//  1.03 (2023-04-21) Minor rearangement to avoid ub of adding val to nullptr
+//  1.04 (2025-06-12) get_container() first resize and then swap to accommodate
+//                    static/small containers which may copy on swap
+//  1.03 (2023-04-21) Minor rearrangement to avoid ub of adding val to nullptr
 //  1.02 (2022-02-01) Switched static assert from is_pod to is_trivial
 //  1.01 (2021-11-18) Fixed mem_ostreambuf bug when used with containers whose
 //                    data() returns non-null when empty
@@ -38,7 +40,7 @@
 //                  DOCUMENTATION
 //
 // Simply include this file wherever you need.
-// It defines two classes which help working with std::stream-s with contguous
+// It defines two classes which help working with std::stream-s with contiguous
 // memory.
 //
 // *** itlib::mem_ostreambuf ***
@@ -129,9 +131,9 @@ public:
     {
         Container ret;
         auto size = this->poff();
+        m_data.resize(size);
         ret.swap(m_data);
         this->setp(nullptr, nullptr);
-        ret.resize(size);
         return ret;
     }
 
