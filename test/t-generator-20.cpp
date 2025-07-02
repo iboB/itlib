@@ -203,3 +203,27 @@ TEST_CASE("return next") {
     CHECK(gen.done());
     CHECK(gen.rval() == 3);
 }
+
+TEST_CASE("empty") {
+    {
+        int i = 0;
+        for (auto val : range(5, 5)) {
+            CHECK(val == 0xBAADBEEF);
+            ++i;
+        }
+        CHECK(i == 0);
+    }
+
+    {
+        auto gen = range(10, 10);
+        CHECK_FALSE(gen.next());
+        CHECK(gen.done());
+    }
+
+    {
+        auto gen = yield_strings(5, 5);
+        CHECK_FALSE(gen.next());
+        CHECK(gen.done());
+        CHECK(gen.rval() == 0);
+    }
+}
