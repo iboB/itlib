@@ -5,8 +5,8 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 include(./get_cpm.cmake)
 
-CPMAddPackage(gh:iboB/icm@1.5.1)
-CPMAddPackage(gh:iboB/doctest-util@0.1.2)
+CPMAddPackage(gh:iboB/icm@1.5.5)
+CPMAddPackage(gh:iboB/doctest-util@0.1.3)
 
 include(${icm_SOURCE_DIR}/icm_build_failure_testing.cmake)
 
