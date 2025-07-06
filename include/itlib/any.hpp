@@ -1,4 +1,4 @@
-// itlib-any v1.02
+// itlib-any v1.03
 //
 // An alternative implementation of C++17's std::any
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.03 (2025-07-06) * Fix unscoped std::nullptr_t (pedantic clang error)
 //  1.02 (2023-04-29) * Support for typied and any_cast
 //                    * Fixed tdata<const T>
 //  1.01 (2023-02-28) Fixed allocator awareness
@@ -262,7 +263,7 @@ private:
 };
 
 template <typename T>
-const T* any_cast(nullptr_t) { return nullptr; }
+const T* any_cast(std::nullptr_t) { return nullptr; }
 
 template <typename T, typename Alloc>
 const T* any_cast(const any<Alloc>* a) {
