@@ -64,7 +64,7 @@
       "inherits": "clang",
       "cacheVariables": {
         "CMAKE_CXX_FLAGS": "-fprofile-instr-generate -fcoverage-mapping",
-        "CMAKE_EXE_LINKER_FLAGS": "-fprofile-instr-generate -fcoverage-mapping"
+        "CMAKE_EXE_LINKER_FLAGS": "-fprofile-instr-generate"
       }
     },
 

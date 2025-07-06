@@ -19,13 +19,13 @@ jobs:
       - name: Test
         run: ctest --test-dir coverage --output-on-failure
         env:
-          LLVM_PROFILE_FILE: coverage.profraw
+          LLVM_PROFILE_FILE: cov-%p-%m.profraw
       - name: Generate Coverage Report
         run: |
-          llvm-profdata merge -sparse coverage/test/coverage.profraw -o coverage.profdata
-          llvm-cov export coverage/test/itlib* -instr-profile=coverage.profdata -format=lcov > coverage.lcov
+          llvm-profdata merge -o coverage.profdata $(find coverage -name "*.profraw")
+          llvm-cov export -instr-profile=coverage.profdata -format=lcov -object $(find coverage/test -name "itlib*") -sources $(find include -name "*.hpp") > coverage.lcov
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
-          file: ./coverage.lcov
+          files: ./coverage.lcov
           token: ${{ secrets.CODECOV_TOKEN }}
