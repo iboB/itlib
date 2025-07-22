@@ -122,7 +122,7 @@ struct ret_promise_helper {
         }
     }
 
-    decltype(auto) rval() { return *m_ret; }
+    R& rval() noexcept { return *m_ret; }
 };
 template <>
 struct ret_promise_helper<void> {
@@ -210,7 +210,7 @@ public:
     }
 
     // NOTE: only valid if done would return true or iteration reached the end
-    decltype(auto) rval() {
+    decltype(auto) rval() noexcept {
         return m_handle.promise().rval();
     }
 
@@ -251,7 +251,7 @@ public:
         return pseudo_iterator{m_handle};
     }
 
-    pseudo_iterator::end_t end() {
+    static pseudo_iterator::end_t end() noexcept {
         return {};
     }
 
