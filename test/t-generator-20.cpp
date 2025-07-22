@@ -174,7 +174,7 @@ TEST_CASE("yield non copyable") {
     }
 }
 
-itlib::generator<std::string, int> yield_strings(int begin, int end) {
+itlib::generator<std::string, int, itlib::noexcept_generator> yield_strings(int begin, int end) {
     for (int i = begin; i < end; ++i) {
         co_yield std::to_string(i);
     }

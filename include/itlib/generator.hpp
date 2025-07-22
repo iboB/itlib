@@ -30,7 +30,8 @@
 //                  VERSION HISTORY
 //
 //
-//  1.05 (2025-07-22) Stronger noexcept guarantees
+//  1.05 (2025-07-22) - Stronger noexcept guarantees
+//                    - Allow specifying noexcept for the generator itself
 //  1.04 (2025-03-28) - Allow generator return type (default void)
 //                    - Use std::default_sentinel_t for end iterator
 //  1.03 (2024-09-24) Improve iterator-like interface when yielding
@@ -133,7 +134,10 @@ struct ret_promise_helper<void> {
 
 } // namespace impl
 
-template <typename T, typename R = void>
+// utility to make the noexcept intent clearer and more readable
+inline constexpr bool noexcept_generator = true;
+
+template <typename T, typename R = void, bool Noexcept = false>
 class generator {
 public:
     // return ref in case we're generating values, otherwise keep the ref type
@@ -162,7 +166,12 @@ public:
         }
 
         void unhandled_exception() noexcept {
-            m_exception = std::current_exception();
+            if constexpr (Noexcept) {
+                std::terminate();
+            }
+            else {
+                m_exception = std::current_exception();
+            }
         }
 
         value_ret_t yval() & noexcept {
@@ -204,7 +213,7 @@ public:
         return m_handle.done();
     }
 
-    generator_value<T> next() {
+    generator_value<T> next() noexcept(Noexcept) {
         if (done()) return {};
         safe_resume(m_handle);
         return std::move(m_handle.promise().m_yval);
@@ -233,7 +242,7 @@ public:
             return m_handle.promise().yval();
         }
 
-        pseudo_iterator& operator++() {
+        pseudo_iterator& operator++() noexcept(Noexcept) {
             safe_resume(m_handle);
             return *this;
         }
@@ -247,7 +256,7 @@ public:
         friend bool operator!=(end_t, const pseudo_iterator& i) noexcept { return !i.m_handle.done(); }
     };
 
-    pseudo_iterator begin() {
+    pseudo_iterator begin() noexcept(Noexcept) {
         safe_resume(m_handle);
         return pseudo_iterator{m_handle};
     }
@@ -257,12 +266,14 @@ public:
     }
 
 private:
-    static void safe_resume(handle_t& h) {
+    static void safe_resume(handle_t& h) noexcept(Noexcept) {
         auto& p = h.promise();
         p.clear_yval();
         h.resume();
-        if (p.m_exception) {
-            std::rethrow_exception(p.m_exception);
+        if constexpr (!Noexcept) {
+            if (p.m_exception) {
+                std::rethrow_exception(p.m_exception);
+            }
         }
     }
 
