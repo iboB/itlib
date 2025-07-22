@@ -1,4 +1,4 @@
-// itlib-generator v1.04
+// itlib-generator v1.05
 //
 // Simple coroutine generator class for C++20 and later, similar to
 // std::generator from C++23, but also allowing return values
@@ -30,6 +30,7 @@
 //                  VERSION HISTORY
 //
 //
+//  1.05 (2025-07-22) Stronger noexcept guarantees
 //  1.04 (2025-03-28) - Allow generator return type (default void)
 //                    - Use std::default_sentinel_t for end iterator
 //  1.03 (2024-09-24) Improve iterator-like interface when yielding
@@ -144,7 +145,7 @@ public:
 
         promise_type() noexcept = default;
 
-        ~promise_type() = default;
+        ~promise_type() noexcept = default;
         generator get_return_object() noexcept {
             return generator{std::coroutine_handle<promise_type>::from_promise(*this)};
         }
@@ -183,7 +184,7 @@ public:
         return *this;
     }
 
-    ~generator() {
+    ~generator() noexcept {
         if (m_handle) m_handle.destroy();
     }
 
