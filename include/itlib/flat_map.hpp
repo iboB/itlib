@@ -1,4 +1,4 @@
-// itlib-flat-map v1.10
+// itlib-flat-map v1.11
 //
 // std::map-like class with an underlying vector
 //
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.11 (2025-07-24) Fix const_pointer typedef
 //  1.10 (2025-03-18) Add hint-based insert and emplace ops
 //                    Add constructors from ready-to-use containers and
 //                    sequences
@@ -156,7 +157,7 @@ public:
     typedef const value_type& const_reference;
     typedef typename container_type::allocator_type allocator_type;
     typedef typename std::allocator_traits<allocator_type>::pointer pointer;
-    typedef typename std::allocator_traits<allocator_type>::pointer const_pointer;
+    typedef typename std::allocator_traits<allocator_type>::const_pointer const_pointer;
     typedef typename container_type::iterator iterator;
     typedef typename container_type::const_iterator const_iterator;
     typedef typename container_type::reverse_iterator reverse_iterator;

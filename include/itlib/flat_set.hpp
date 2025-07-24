@@ -1,4 +1,4 @@
-// itlib-flat-set v1.08
+// itlib-flat-set v1.09
 //
 // std::set-like class with an underlying vector
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.09 (2025-07-24) Fix const_pointer typedef
 //  1.08 (2025-03-18) Add hint-based insert and emplace ops
 //                    Add constructors from ready-to-use containers and
 //                    sequences
@@ -121,7 +122,7 @@ public:
     using const_reference = const value_type& ;
     using allocator_type = typename container_type::allocator_type;
     using pointer = typename std::allocator_traits<allocator_type>::pointer;
-    using const_pointer = typename std::allocator_traits<allocator_type>::pointer;
+    using const_pointer = typename std::allocator_traits<allocator_type>::const_pointer;
     using iterator = typename container_type::iterator;
     using const_iterator = typename container_type::const_iterator;
     using reverse_iterator = typename container_type::reverse_iterator;
