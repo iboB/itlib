@@ -139,10 +139,14 @@ public:
         return opt_ref_buffer_t(0, make_span(container));
     }
 
-    template <typename U, size_t N>
-    static opt_ref_buffer_t ref(U(&ar)[N]) noexcept (is_congruent<U>) {
-        std::span<U> uspan(ar, N);
-        return opt_ref_buffer_t(0, make_span(uspan));
+    // helpers for strings
+    template <typename Char>
+    static opt_ref_buffer_t ref(std::basic_string_view<Char> str) noexcept requires (std::is_const_v<T>) {
+        return opt_ref_buffer_t(0, make_span(str));
+    }
+
+    static opt_ref_buffer_t ref(const char* str) noexcept requires (std::is_const_v<T>) {
+        return ref(std::string_view(str));
     }
 
     // taking ownership of existing buffer
@@ -187,9 +191,8 @@ public:
     {}
 
     // helper for string literals
-    template <size_t N>
-    explicit opt_ref_buffer_t(const char(&ar)[N])
-        : opt_ref_buffer_t(std::string(ar, N))
+    explicit opt_ref_buffer_t(const char* str)
+        : opt_ref_buffer_t(std::string(str))
     {}
 
     template <typename Container>
@@ -208,6 +211,9 @@ public:
     const span_type& span() const noexcept { return m_span; }
 
     element_type* data() const noexcept { return m_span.data(); }
+    size_t size() const noexcept { return m_span.size(); }
+    size_t size_bytes() const noexcept { return m_span.size_bytes(); }
+    bool empty() const noexcept { return m_span.empty(); }
 
     bool owns_data() const noexcept { return m_own.index() != 0; }
 

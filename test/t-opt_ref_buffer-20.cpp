@@ -11,6 +11,9 @@
 TEST_CASE("empty") {
     itlib::opt_ref_buffer b;
     CHECK(b.data() == nullptr);
+    CHECK(b.size() == 0);
+    CHECK(b.size_bytes() == 0);
+    CHECK(b.empty());
     CHECK(b.span().data() == nullptr);
     CHECK(b.span().size() == 0);
     CHECK(b.own().index() == 0);
@@ -19,13 +22,11 @@ TEST_CASE("empty") {
 
     itlib::opt_ref_buffer_t<int> ib;
     CHECK(ib.data() == nullptr);
-    CHECK(ib.span().data() == nullptr);
-    CHECK(ib.span().size() == 0);
+    CHECK(ib.size() == 0);
 
     itlib::const_opt_ref_buffer cb;
     CHECK(cb.data() == nullptr);
-    CHECK(cb.span().data() == nullptr);
-    CHECK(cb.span().size() == 0);
+    CHECK(cb.size() == 0);
 }
 
 TEST_CASE("take") {
@@ -66,9 +67,6 @@ TEST_CASE("noexcept guarantees") {
     SUBCASE("ref operations for congruent types") {
         std::vector<int> vec = {1, 2, 3};
         static_assert(noexcept(itlib::opt_ref_buffer_t<int>::ref(vec)));
-
-        int arr[5] = {1, 2, 3, 4, 5};
-        static_assert(noexcept(itlib::opt_ref_buffer_t<int>::ref(arr)));
     }
 
     SUBCASE("byte vector construction") {
@@ -80,7 +78,8 @@ TEST_CASE("congruency") {
     SUBCASE("congruent types - same size") {
         std::vector<int> ints = {0x12345678, 0x3ABCDEF0};
         auto b = itlib::opt_ref_buffer_t<int>::ref(ints);
-        CHECK(b.span().size() == 2);
+        CHECK(b.size() == 2);
+        CHECK(b.size_bytes() == sizeof(int) * 2);
         CHECK(b.data()[0] == 0x12345678);
         CHECK(b.data()[1] == 0x3ABCDEF0);
     }
@@ -90,7 +89,7 @@ TEST_CASE("congruency") {
         std::memset(bytes.data(), 0xAB, 8);
 
         auto b = itlib::opt_ref_buffer_t<uint32_t>::ref(bytes);
-        CHECK(b.span().size() == 2);
+        CHECK(b.size() == 2);
 
         // Check that we can access as uint32_t
         auto* ptr = reinterpret_cast<uint32_t*>(bytes.data());
@@ -101,7 +100,7 @@ TEST_CASE("congruency") {
     SUBCASE("congruent types - uint16_t to uint32_t") {
         std::vector<uint16_t> shorts = {0x1234, 0x5678, 0x9ABC, 0xDEF0};
         auto b = itlib::opt_ref_buffer_t<uint32_t>::ref(shorts);
-        CHECK(b.span().size() == 2);
+        CHECK(b.size() == 2);
     }
 
     SUBCASE("non-congruent types should throw") {
@@ -121,7 +120,7 @@ TEST_CASE("copying") {
         auto b = itlib::opt_ref_buffer_t<int>::copy(original);
         CHECK(b.owns_data());
         CHECK(b.data() != original_ptr); // Different pointer - it's a copy
-        CHECK(b.span().size() == 5);
+        CHECK(b.size() == 5);
         CHECK(b.data()[0] == 1);
         CHECK(b.data()[4] == 5);
 
@@ -136,7 +135,7 @@ TEST_CASE("copying") {
         auto b = itlib::opt_ref_buffer::copy(original);
         CHECK(b.owns_data());
         // Note: for small strings, pointer might be the same due to SSO, but data is still copied
-        CHECK(b.span().size() == original.size());
+        CHECK(b.size() == original.size());
 
         // Verify content
         auto span_chars = reinterpret_cast<const char*>(b.data());
@@ -148,7 +147,7 @@ TEST_CASE("copying") {
         auto b = itlib::opt_ref_buffer_t<int>::copy(arr);
         CHECK(b.owns_data());
         CHECK(b.data() != arr.data()); // Different pointer
-        CHECK(b.span().size() == 4);
+        CHECK(b.size() == 4);
         CHECK(b.data()[0] == 10);
         CHECK(b.data()[3] == 40);
     }
@@ -162,7 +161,7 @@ TEST_CASE("moving") {
         auto b = itlib::opt_ref_buffer_t<int>::take(std::move(vec));
         CHECK(b.owns_data());
         CHECK(b.data() == original_ptr); // Same pointer - moved
-        CHECK(b.span().size() == 5);
+        CHECK(b.size() == 5);
         CHECK(b.data()[0] == 1);
         CHECK(b.data()[4] == 5);
 
@@ -190,11 +189,11 @@ TEST_CASE("moving") {
         auto b2 = itlib::opt_ref_buffer_t<int>(std::move(b1));
         CHECK(b2.owns_data());
         CHECK(b2.data() == original_ptr);
-        CHECK(b2.span().size() == 3);
+        CHECK(b2.size() == 3);
 
         // b1 should be empty after move
         CHECK(b1.data() == nullptr);
-        CHECK(b1.span().size() == 0);
+        CHECK(b1.size() == 0);
         CHECK_FALSE(b1.owns_data());
     }
 
@@ -209,7 +208,7 @@ TEST_CASE("moving") {
         b1 = std::move(b2);
         CHECK(b1.owns_data());
         CHECK(b1.data() == ptr2);
-        CHECK(b1.span().size() == 4);
+        CHECK(b1.size() == 4);
         CHECK(b1.data()[3] == 7);
 
         // b2 should be empty after move
@@ -226,7 +225,7 @@ TEST_CASE("referencing") {
         auto b = itlib::opt_ref_buffer_t<int>::ref(vec);
         CHECK_FALSE(b.owns_data());
         CHECK(b.data() == original_ptr); // Same pointer - referencing
-        CHECK(b.span().size() == 5);
+        CHECK(b.size() == 5);
         CHECK(b.data()[0] == 1);
         CHECK(b.data()[4] == 5);
 
@@ -235,25 +234,28 @@ TEST_CASE("referencing") {
         CHECK(vec[0] == 10); // Original vector should be modified
     }
 
-    SUBCASE("reference array") {
-        int arr[4] = {10, 20, 30, 40};
-        auto b = itlib::opt_ref_buffer_t<int>::ref(arr);
-        CHECK_FALSE(b.owns_data());
-        CHECK(b.data() == arr);
-        CHECK(b.span().size() == 4);
-
-        // Modify through buffer
-        b.data()[1] = 25;
-        CHECK(arr[1] == 25);
-    }
-
     SUBCASE("reference string") {
         std::string str = "Hello";
 
         auto b = itlib::opt_ref_buffer::ref(str);
         CHECK_FALSE(b.owns_data());
         CHECK(b.data() == reinterpret_cast<std::byte*>(str.data()));
-        CHECK(b.span().size() == str.size());
+        CHECK(b.size() == str.size());
+    }
+
+    SUBCASE("reference string literal") {
+        auto b = itlib::const_opt_ref_buffer::ref("Hello");
+        CHECK_FALSE(b.owns_data());
+        CHECK(b.size() == 5);
+        CHECK(std::string_view(reinterpret_cast<const char*>(b.data()), b.size()) == "Hello");
+    }
+
+    SUBCASE("reference string view") {
+        const wchar_t* wstr = L"Buenos dias";
+        auto b = itlib::const_opt_ref_buffer::ref(std::wstring_view(wstr));
+        CHECK_FALSE(b.owns_data());
+        CHECK(b.size() == 11 * sizeof(wchar_t));
+        CHECK((void*)b.data() == wstr);
     }
 
     SUBCASE("const reference") {
@@ -261,7 +263,7 @@ TEST_CASE("referencing") {
         auto b = itlib::opt_ref_buffer_t<const int>::ref(vec);
         CHECK_FALSE(b.owns_data());
         CHECK(b.data() == vec.data());
-        CHECK(b.span().size() == 3);
+        CHECK(b.size() == 3);
         CHECK(b.data()[0] == 1);
     }
 }
@@ -299,7 +301,7 @@ TEST_CASE("pointer preservation") {
 
         auto b = itlib::opt_ref_buffer::take(std::move(small_str));
         CHECK(b.owns_data());
-        CHECK(b.span().size() == 5);
+        CHECK(b.size() == 5);
 
         // Content should be preserved regardless of pointer
         auto chars = reinterpret_cast<const char*>(b.data());
@@ -308,7 +310,7 @@ TEST_CASE("pointer preservation") {
         // Move to another buffer - content should still be preserved
         auto b2 = itlib::opt_ref_buffer(std::move(b));
         CHECK(b2.owns_data());
-        CHECK(b2.span().size() == 5);
+        CHECK(b2.size() == 5);
         chars = reinterpret_cast<const char*>(b2.data());
         CHECK(std::memcmp(chars, "small", 5) == 0);
     }
@@ -335,7 +337,7 @@ TEST_CASE("type conversions") {
         auto const_b = itlib::opt_ref_buffer_t<const int>(std::move(b));
         CHECK(const_b.data() == original_ptr);
         CHECK(const_b.owns_data());
-        CHECK(const_b.span().size() == 3);
+        CHECK(const_b.size() == 3);
         CHECK(const_b.data()[0] == 1);
     }
 
@@ -345,7 +347,7 @@ TEST_CASE("type conversions") {
 
         auto byte_b = itlib::opt_ref_buffer_t<std::byte>(std::move(b));
         CHECK(byte_b.owns_data());
-        CHECK(byte_b.span().size() == 8); // 2 * sizeof(uint32_t)
+        CHECK(byte_b.size() == 8); // 2 * sizeof(uint32_t)
     }
 }
 
@@ -353,10 +355,10 @@ TEST_CASE("string literal and string_view construction") {
     SUBCASE("string literal") {
         auto b = itlib::opt_ref_buffer("Hello");
         CHECK(b.owns_data());
-        CHECK(b.span().size() == 6); // Including null terminator
+        CHECK(b.size() == 5);
 
         auto chars = reinterpret_cast<const char*>(b.data());
-        CHECK(std::memcmp(chars, "Hello\0", 6) == 0);
+        CHECK(std::memcmp(chars, "Hello", 5) == 0);
     }
 
     SUBCASE("string_view") {
@@ -365,7 +367,7 @@ TEST_CASE("string literal and string_view construction") {
 
         auto b = itlib::opt_ref_buffer(sv);
         CHECK(b.owns_data());
-        CHECK(b.span().size() == 5);
+        CHECK(b.size() == 5);
 
         auto chars = reinterpret_cast<const char*>(b.data());
         CHECK(std::memcmp(chars, "World", 5) == 0);
@@ -377,17 +379,17 @@ TEST_CASE("edge cases") {
         std::vector<int> empty_vec;
         auto b = itlib::opt_ref_buffer::take(std::move(empty_vec));
         CHECK_FALSE(b.owns_data());
-        CHECK(b.span().empty());
+        CHECK(b.empty());
 
         std::string empty_str;
         b = itlib::opt_ref_buffer::copy(empty_str);
         CHECK_FALSE(b.owns_data());
-        CHECK(b.span().empty());
+        CHECK(b.empty());
 
         std::vector<std::byte> empty_bytes;
         b = itlib::opt_ref_buffer::take(std::move(empty_bytes));
         CHECK_FALSE(b.owns_data());
-        CHECK(b.span().empty());
+        CHECK(b.empty());
     }
 
     SUBCASE("single element") {
@@ -397,7 +399,7 @@ TEST_CASE("edge cases") {
         auto b = itlib::opt_ref_buffer_t<int>::take(std::move(single));
         CHECK(b.owns_data());
         CHECK(b.data() == original_ptr);
-        CHECK(b.span().size() == 1);
+        CHECK(b.size() == 1);
         CHECK(b.data()[0] == 42);
     }
 
@@ -411,6 +413,6 @@ TEST_CASE("edge cases") {
         b = std::move(b); // Self assignment
         CHECK(b.data() == original_ptr); // Should remain unchanged
         CHECK(b.owns_data());
-        CHECK(b.span().size() == 3);
+        CHECK(b.size() == 3);
     }
 }
