@@ -405,7 +405,9 @@ TEST_CASE("edge cases") {
         std::vector<int> vec = {1, 2, 3};
         auto b = itlib::opt_ref_buffer_t<int>::take(std::move(vec));
         auto original_ptr = b.data();
-
+#if !defined(_MSC_VER)
+#   pragma GCC diagnostic ignored "-Wself-move"
+#endif
         b = std::move(b); // Self assignment
         CHECK(b.data() == original_ptr); // Should remain unchanged
         CHECK(b.owns_data());
