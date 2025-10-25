@@ -94,7 +94,7 @@ TEST_CASE("uniform_uint_max_distribution") {
             auto v = dist(rng);
             CHECK(v == i);
         }
-        auto v = dist.roll(3, rng);
+        auto v = dist(rng);
         CHECK(v == 0);
         CHECK(rng.values.empty());
     }

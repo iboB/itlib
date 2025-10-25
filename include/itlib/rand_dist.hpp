@@ -61,7 +61,7 @@ struct uniform_uint_max_distribution {
     constexpr U max() const noexcept { return m_max; }
 
     template <typename R>
-    static U roll(U max, R& rng) noexcept {
+    static U draw(U max, R& rng) noexcept {
         using r_t = typename R::result_type;
         static_assert(std::is_unsigned_v<r_t>, "random engine result_type must be unsigned");
         constexpr r_t rng_range = R::max() - R::min();
@@ -69,18 +69,18 @@ struct uniform_uint_max_distribution {
         if constexpr (rng_range < std::numeric_limits<U>::max()) {
             // desired max might be bigger than rng's range
             // check if it fits
-            // note that the elso condition is compatible and will work either way,
+            // note that the else condition is compatible and will work either way,
             // we still check here to potentially save the extra multiplication by `multiplier` (which would be 1)
             if (max <= U(rng_range)) {
                 // it fits
-                return roll_with_rejection(max, rng);
+                return draw_with_rejection(max, rng);
             }
             else {
-                // we must roll multiple times
+                // we must draw multiple times
 
                 // we represent max as a number in base (rng_range + 1)
-                // we roll digit by digit, keeping track if we are within the limit
-                // if we are, we consrain the last (highest) digit more
+                // we draw digit by digit, keeping track if we are within the limit
+                // if we are, we constrain the last (highest) digit more
                 constexpr U base = U(rng_range) + 1;
                 U result = 0;
                 U multiplier = 1;
@@ -88,41 +88,41 @@ struct uniform_uint_max_distribution {
                 while (max >= base) {
                     const U m_digit = max % base;
                     max /= base;
-                    U r_digit = range_roll(rng);
+                    U r_digit = range_draw(rng);
                     result += multiplier * r_digit;
                     multiplier *= base;
                     if (!over_limit && r_digit > m_digit) {
-                        // rolled digit is too big, must re-roll everything
+                        // drawed digit is too big, must re-draw everything
                         over_limit = true;
                     }
                 }
                 // adjust max for highest digit
                 max -= over_limit;
-                // and roll
-                result += multiplier * roll_with_rejection(max, rng);
+                // and draw
+                result += multiplier * draw_with_rejection(max, rng);
 
                 return result;
             }
         }
         else {
-            return roll_with_rejection(max, rng);
+            return draw_with_rejection(max, rng);
         }
     }
 
     template <typename R>
     U operator()(R& rng) const noexcept {
-        return roll(m_max, rng);
+        return draw(m_max, rng);
     }
 
 private:
     template <typename R>
-    static auto range_roll(R& rng) noexcept -> typename R::result_type {
+    static auto range_draw(R& rng) noexcept -> typename R::result_type {
         return rng() - R::min();
     }
 
     // rejection sample rng ASSUMING max is within R's range
     template <typename R>
-    static U roll_with_rejection(U umax, R& rng) noexcept {
+    static U draw_with_rejection(U umax, R& rng) noexcept {
         if (umax == 0) return 0;
 
         using r_t = typename R::result_type;
@@ -130,12 +130,12 @@ private:
         const auto max = r_t(umax);
 
         if (rng_range == max) {
-            return range_roll(rng);
+            return range_draw(rng);
         }
 
         const auto reject_limit = rng_range - (rng_range % (max + 1));
         while (true) {
-            const auto v = range_roll(rng);
+            const auto v = range_draw(rng);
             if (v < reject_limit) {
                 return v % (max + 1);
             }
@@ -165,9 +165,9 @@ struct uniform_int_distribution {
     constexpr I max() const noexcept { return I(m_max.max()); }
 
     template <typename R>
-    static I roll(I min, I max, R& rng) noexcept {
+    static I draw(I min, I max, R& rng) noexcept {
         const auto umax = UT(max) - UT(min);
-        return I(min + uniform_uint_max_distribution<UT>::roll(umax, rng));
+        return I(min + uniform_uint_max_distribution<UT>::draw(umax, rng));
     }
 
     template <typename R>
