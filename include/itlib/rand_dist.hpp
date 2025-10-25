@@ -61,16 +61,13 @@ struct uniform_uint_max_distribution {
     constexpr U max() const noexcept { return m_max; }
 
     template <typename R>
-    static U draw(U max, R& rng) noexcept {
+    constexpr static U draw(U max, R& rng) noexcept {
         using r_t = typename R::result_type;
         static_assert(std::is_unsigned_v<r_t>, "random engine result_type must be unsigned");
         constexpr r_t rng_range = R::max() - R::min();
 
         if constexpr (rng_range < std::numeric_limits<U>::max()) {
             // desired max might be bigger than rng's range
-            // check if it fits
-            // note that the else condition is compatible and will work either way,
-            // we still check here to potentially save the extra multiplication by `multiplier` (which would be 1)
             if (max <= U(rng_range)) {
                 // it fits
                 return draw_with_rejection(max, rng);
@@ -88,7 +85,7 @@ struct uniform_uint_max_distribution {
                 while (max >= base) {
                     const U m_digit = max % base;
                     max /= base;
-                    U r_digit = range_draw(rng);
+                    U r_digit = draw(rng);
                     result += multiplier * r_digit;
                     multiplier *= base;
                     if (!over_limit && r_digit > m_digit) {
@@ -110,19 +107,20 @@ struct uniform_uint_max_distribution {
     }
 
     template <typename R>
-    U operator()(R& rng) const noexcept {
+    constexpr U operator()(R& rng) const noexcept {
         return draw(m_max, rng);
     }
 
-private:
+//private:
     template <typename R>
-    static auto range_draw(R& rng) noexcept -> typename R::result_type {
+    constexpr static auto draw(R& rng) noexcept -> typename R::result_type {
         return rng() - R::min();
     }
 
-    // rejection sample rng ASSUMING max is within R's range
+    // rejection sample rng
+    // ASSUMING max <= rng_range!!!
     template <typename R>
-    static U draw_with_rejection(U umax, R& rng) noexcept {
+    constexpr static U draw_with_rejection(U umax, R& rng) noexcept {
         if (umax == 0) return 0;
 
         using r_t = typename R::result_type;
@@ -130,14 +128,23 @@ private:
         const auto max = r_t(umax);
 
         if (rng_range == max) {
-            return range_draw(rng);
+            return U(draw(rng));
         }
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4310) // constant overflow
+#endif
+        // note that this value can potentially overflow, but that's ok as we only use it in modulo
+        constexpr auto rng_range_size = r_t(rng_range + 1);
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+        const auto result_range_size = r_t(max + 1);
+        const auto accept_max = r_t(rng_range - (rng_range_size % result_range_size));
 
-        const auto reject_limit = rng_range - (rng_range % (max + 1));
         while (true) {
-            const auto v = range_draw(rng);
-            if (v < reject_limit) {
-                return v % (max + 1);
+            if (auto v = draw(rng); v <= accept_max) {
+                return U(v % result_range_size);
             }
         }
     }
@@ -165,13 +172,13 @@ struct uniform_int_distribution {
     constexpr I max() const noexcept { return I(m_max.max()); }
 
     template <typename R>
-    static I draw(I min, I max, R& rng) noexcept {
+    constexpr static I draw(I min, I max, R& rng) noexcept {
         const auto umax = UT(max) - UT(min);
         return I(min + uniform_uint_max_distribution<UT>::draw(umax, rng));
     }
 
     template <typename R>
-    I operator()(R& rng) const noexcept {
+    constexpr I operator()(R& rng) const noexcept {
         return I(m_min + m_max(rng));
     }
 
