@@ -87,4 +87,32 @@ struct atomic_relaxed_counter {
     }
 };
 
+struct atomic_flag_bool {
+
+   std::atomic_bool a{ true };
+
+   atomic_flag_bool() noexcept = default;
+   explicit atomic_flag_bool(bool init) noexcept {
+      set(init);
+   }
+
+   void set(bool value) noexcept {
+      a.store(value, std::memory_order_release);
+   }
+
+   atomic_flag_bool& operator=(bool i) {
+      set(i);
+      return *this;
+   }
+
+   operator bool() const noexcept {
+      return get();
+   }
+
+   bool get() const noexcept {
+      return a.load(std::memory_order_acquire);
+   }
+};
+
+
 }
