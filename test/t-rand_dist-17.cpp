@@ -43,6 +43,9 @@ struct q_test_rng {
     explicit q_test_rng(std::initializer_list<result_type> vals) {
         push(vals);
     }
+    ~q_test_rng() {
+        CHECK(values.empty());
+    }
 
     void push(result_type v) {
         if (v < Min || v > Max) {
@@ -94,6 +97,40 @@ TEST_CASE("uniform_uint_max_distribution") {
         auto v = dist.roll(3, rng);
         CHECK(v == 0);
         CHECK(rng.values.empty());
+    }
+    SUBCASE("multi-roll") {
+        SUBCASE("range 0 - 3, max 10") {
+            // 10 in base 4 is 22
+            itlib::uniform_uint_max_distribution<uint8_t> dist(10);
+
+            q_test_rng<uint8_t, 0, 3> rng{
+                // base 4
+                2, // d0
+                1, // d1 -> 6
+            };
+            auto v1 = dist(rng);
+            CHECK(v1 == 6);
+
+            // 10 in base 4 is 22
+            rng.push({
+                3, // d0 overl limit
+                2, // d1 -> reject
+                3, // d1 -> reject
+                1, // d1 -> 7
+            });
+            v1 = dist(rng);
+            CHECK(v1 == 7);
+        }
+
+
+        //rng.push({
+        //    3, // d0 reject
+        //    3, // d0 reject
+        //    2, // d0 ok
+        //    2, // d1 ok -> 10
+        //});
+
+        //CHECK(rng.values.empty());
     }
 }
 
