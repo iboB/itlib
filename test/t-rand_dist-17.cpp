@@ -4,7 +4,6 @@
 #include <itlib/rand_dist.hpp>
 #include <doctest/doctest.h>
 #include <deque>
-#include <stdexcept>
 
 template <typename R, R Min = 0, R Max = std::numeric_limits<R>::max()>
 struct i_test_rng {
@@ -22,7 +21,7 @@ struct i_test_rng {
         current = start;
     }
 
-    result_type operator()() {
+    result_type operator()() noexcept {
         if (current > Max) {
             current = Min;
         }
@@ -49,7 +48,7 @@ struct q_test_rng {
 
     void push(result_type v) {
         if (v < Min || v > Max) {
-            throw std::runtime_error("test_rng: bad value");
+            REQUIRE(false);
         }
         values.push_back(v);
     }
@@ -60,9 +59,9 @@ struct q_test_rng {
         }
     }
 
-    result_type operator()() {
+    result_type operator()() noexcept {
         if (values.empty()) {
-            throw std::runtime_error("test_rng: no more values");
+            REQUIRE(false);
         }
         auto v = values.front();
         values.pop_front();
@@ -80,23 +79,44 @@ TEST_CASE("uniform_uint_max_distribution") {
         }
     }
     SUBCASE("rejection") {
-        // rng range 0-5, max 3
-        q_test_rng<uint8_t, 0, 5> rng{
-            0, // ok -> 0
-            1, // ok -> 1
-            2, // ok -> 2
-            4, // reject
-            5, // reject
-            0, // ok -> 0
-        };
-        itlib::uniform_uint_max_distribution<uint8_t> dist(3);
-        for (uint8_t i = 0; i < 3; ++i) {
-            auto v = dist(rng);
-            CHECK(v == i);
+        SUBCASE("full rng range") {
+            itlib::uniform_uint_max_distribution<uint8_t> dist(9);
+
+            q_test_rng<uint8_t> rng{
+                104, // ok -> 4
+                254, // reject
+                232, // ok -> 2
+                251, // reject
+                18,  // ok -> 8
+                250, // reject
+                249, // ok -> 9
+            };
+
+            CHECK(dist(rng) == 4);
+            CHECK(dist(rng) == 2);
+            CHECK(dist(rng) == 8);
+            CHECK(dist(rng) == 9);
         }
-        auto v = dist(rng);
-        CHECK(v == 0);
-        CHECK(rng.values.empty());
+        SUBCASE("0-5 rng range") {
+            itlib::uniform_uint_max_distribution<uint8_t> dist(3);
+
+            q_test_rng<uint8_t, 0, 5> rng{
+                0, // ok -> 0
+                1, // ok -> 1
+                2, // ok -> 2
+                4, // reject
+                5, // reject
+                0, // ok -> 0
+            };
+
+            for (uint8_t i = 0; i < 3; ++i) {
+                auto v = dist(rng);
+                CHECK(v == i);
+            }
+            auto v = dist(rng);
+            CHECK(v == 0);
+            CHECK(rng.values.empty());
+        }
     }
     SUBCASE("multi-roll") {
         SUBCASE("range 0 - 3, max 10") {
@@ -105,18 +125,19 @@ TEST_CASE("uniform_uint_max_distribution") {
 
             q_test_rng<uint8_t, 0, 3> rng{
                 // base 4
-                2, // d0
-                1, // d1 -> 6
+                2, // accept
+                1, // accept => 9
             };
             auto v1 = dist(rng);
-            CHECK(v1 == 6);
+            CHECK(v1 == 9);
 
             // 10 in base 4 is 22
             rng.push({
-                3, // d0 overl limit
-                2, // d1 -> reject
-                3, // d1 -> reject
-                1, // d1 -> 7
+                3, // reject
+                2, // accept tight
+                3, // reject and restart
+                1, // accept
+                3, // accept => 7
             });
             v1 = dist(rng);
             CHECK(v1 == 7);

@@ -62,47 +62,70 @@ struct uniform_uint_max_distribution {
 
     template <typename R>
     constexpr static U draw(U max, R& rng) noexcept {
+        static_assert(noexcept(rng()), "exceptional random engines are evil");
         using r_t = typename R::result_type;
         static_assert(std::is_unsigned_v<r_t>, "random engine result_type must be unsigned");
         constexpr r_t rng_range = R::max() - R::min();
+        static_assert(rng_range > 0, "broken random engine with zero range");
 
         if constexpr (rng_range < std::numeric_limits<U>::max()) {
             // desired max might be bigger than rng's range
             if (max <= U(rng_range)) {
                 // it fits
-                return draw_with_rejection(max, rng);
+                return draw_in_rng_range(max, rng);
             }
             else {
                 // we must draw multiple times
 
                 // we represent max as a number in base (rng_range + 1)
                 // we draw digit by digit, keeping track if we are within the limit
-                // if we are, we constrain the last (highest) digit more
+                // if we go outside the limit, we reject and stat over
+
                 constexpr U base = U(rng_range) + 1;
-                U result = 0;
-                U multiplier = 1;
-                bool over_limit = false;
-                while (max >= base) {
-                    const U m_digit = max % base;
-                    max /= base;
-                    U r_digit = draw(rng);
-                    result += multiplier * r_digit;
-                    multiplier *= base;
-                    if (!over_limit && r_digit > m_digit) {
-                        // drawed digit is too big, must re-draw everything
-                        over_limit = true;
+
+                // collect base_(rng_range+1) digits of max
+                // array size enough even if rng_range is 2
+                // (we *could* be fancy and compute this more precisely, but stack is cheap)
+                r_t max_digits[sizeof(U) * 8];
+                int max_digit_count = 0;
+                {
+                    U temp = max;
+                    while (temp > 0) {
+                        max_digits[max_digit_count++] = r_t(temp % base);
+                        temp /= base;
                     }
                 }
-                // adjust max for highest digit
-                max -= over_limit;
-                // and draw
-                result += multiplier * draw_with_rejection(max, rng);
 
-                return result;
+                // rejection loop
+                while (true) {
+                    // start with most significant digit
+                    U result = 0;
+                    bool tight = true;
+                    for (int i = max_digit_count - 1; ; --i) {
+                        const auto random_digit = rng_range_draw(rng); // unconstrained draw
+
+                        if (tight) {
+                            if (random_digit > max_digits[i]) {
+                                break;
+                            }
+                            if (random_digit < max_digits[i]) {
+                                tight = false; // we are now free to choose any digit
+                            }
+                        }
+
+                        result = result * base + U(random_digit);
+
+                        if (i == 0) {
+                            // done
+                            return result;
+                        }
+                    }
+                }
             }
         }
         else {
-            return draw_with_rejection(max, rng);
+            // rng range is guaranteed to cover desired max
+            return draw_in_rng_range(max, rng);
         }
     }
 
@@ -111,16 +134,16 @@ struct uniform_uint_max_distribution {
         return draw(m_max, rng);
     }
 
-//private:
+private:
     template <typename R>
-    constexpr static auto draw(R& rng) noexcept -> typename R::result_type {
+    constexpr static auto rng_range_draw(R& rng) noexcept -> typename R::result_type {
         return rng() - R::min();
     }
 
-    // rejection sample rng
-    // ASSUMING max <= rng_range!!!
+    // draw from rng ASSUMING max <= rng_range!!!
+    // use rejection sampling to avoid modulo bias
     template <typename R>
-    constexpr static U draw_with_rejection(U umax, R& rng) noexcept {
+    constexpr static U draw_in_rng_range(U umax, R& rng) noexcept {
         if (umax == 0) return 0;
 
         using r_t = typename R::result_type;
@@ -128,24 +151,25 @@ struct uniform_uint_max_distribution {
         const auto max = r_t(umax);
 
         if (rng_range == max) {
-            return U(draw(rng));
+            return U(rng_range_draw(rng));
         }
-#if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4310) // constant overflow
-#endif
-        // note that this value can potentially overflow, but that's ok as we only use it in modulo
-        constexpr auto rng_range_size = r_t(rng_range + 1);
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
-        const auto result_range_size = r_t(max + 1);
-        const auto accept_max = r_t(rng_range - (rng_range_size % result_range_size));
 
+        // after the check above, now we have a gurantee that max < rng_range
+
+        // this means that result_range_size will not overflow and reject_count will not underflow
+        const auto result_range_size = r_t(max + 1);
+
+        // mathematically we should use just rng_range + 1 here, but if rng_range is limits<r_t>::max(),
+        // it will overflow and wrap to 0 leading to reject_count == 0 and no rejections ever.
+        const auto reject_count = r_t(rng_range - result_range_size + 1) % result_range_size;
+
+        const auto accept_max = r_t(rng_range - reject_count);
         while (true) {
-            if (auto v = draw(rng); v <= accept_max) {
+            if (auto v = rng_range_draw(rng); v <= accept_max) {
                 return U(v % result_range_size);
             }
+            // food for thought:
+            // is it worth checking for broken (malicious?) RNG that might lead to an infinite loop here?
         }
     }
 
@@ -157,11 +181,11 @@ struct uniform_int_distribution {
     static_assert(std::is_integral_v<I>, "integral type required");
     using result_type = I;
 
-    using UT = std::make_unsigned_t<I>;
+    using U = std::make_unsigned_t<I>;
 
     constexpr uniform_int_distribution(I min, I max) noexcept
-        : m_min(UT(min))
-        , m_max(UT(max) - UT(min))
+        : m_min(U(min))
+        , m_range(U(max) - U(min)) // as per the standard: UB if max < min
     {}
 
     constexpr explicit uniform_int_distribution(I max = std::numeric_limits<I>::max()) noexcept
@@ -169,22 +193,24 @@ struct uniform_int_distribution {
     {}
 
     constexpr I min() const noexcept { return I(m_min); }
-    constexpr I max() const noexcept { return I(m_max.max()); }
+    constexpr I max() const noexcept { return I(U(m_min + m_range.max())); }
 
     template <typename R>
     constexpr static I draw(I min, I max, R& rng) noexcept {
-        const auto umax = UT(max) - UT(min);
-        return I(min + uniform_uint_max_distribution<UT>::draw(umax, rng));
+        // multiple seemingly redundant casts to U to handle 8-bit types which auto-promote to int in expressions
+        const auto umin = U(min);
+        const auto urange = U(U(max) - umin); // as per the standard: UB if max < min
+        return I(U(umin + uniform_uint_max_distribution<U>::draw(urange, rng)));
     }
 
     template <typename R>
     constexpr I operator()(R& rng) const noexcept {
-        return I(m_min + m_max(rng));
+        return I(U(m_min + m_range(rng)));
     }
 
 private:
-    const UT m_min;
-    const uniform_uint_max_distribution<UT> m_max;
+    const U m_min;
+    const uniform_uint_max_distribution<U> m_range;
 };
 
 } // namespace itlib
