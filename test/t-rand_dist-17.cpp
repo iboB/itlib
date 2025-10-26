@@ -73,6 +73,8 @@ TEST_CASE("uniform_uint_max_distribution") {
     SUBCASE("trivial") {
         i_test_rng<uint8_t> rng;
         itlib::uniform_uint_max_distribution<uint8_t> dist(10);
+        CHECK(dist.min() == 0);
+        CHECK(dist.max() == 10);
         for (uint8_t i = 0; i <= 4; ++i) {
             auto v = dist(rng);
             CHECK(v == i);
@@ -124,14 +126,28 @@ TEST_CASE("uniform_uint_max_distribution") {
             itlib::uniform_uint_max_distribution<uint8_t> dist(10);
 
             q_test_rng<uint8_t, 0, 3> rng{
-                // base 4
                 2, // accept
                 1, // accept => 9
             };
             auto v1 = dist(rng);
             CHECK(v1 == 9);
 
-            // 10 in base 4 is 22
+            rng.push({
+                3, // reject
+                0, // accept
+                3, // accept => 3
+            });
+            v1 = dist(rng);
+            CHECK(v1 == 3);
+
+            rng.push({
+                3, // reject
+                2, // accept
+                2, // accept => 10
+            });
+            v1 = dist(rng);
+            CHECK(v1 == 10);
+
             rng.push({
                 3, // reject
                 2, // accept tight
@@ -142,16 +158,6 @@ TEST_CASE("uniform_uint_max_distribution") {
             v1 = dist(rng);
             CHECK(v1 == 7);
         }
-
-
-        //rng.push({
-        //    3, // d0 reject
-        //    3, // d0 reject
-        //    2, // d0 ok
-        //    2, // d1 ok -> 10
-        //});
-
-        //CHECK(rng.values.empty());
     }
 }
 
@@ -159,6 +165,8 @@ TEST_CASE("uniform_int_distribution") {
     SUBCASE("trivial") {
         i_test_rng<uint32_t> rng;
         itlib::uniform_int_distribution<int32_t> dist(-5, 4);
+        CHECK(dist.min() == -5);
+        CHECK(dist.max() == 4);
         for (int32_t expected = -5; expected <= 4; ++expected) {
             auto v = dist(rng);
             CHECK(v == expected);
