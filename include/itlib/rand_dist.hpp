@@ -47,6 +47,15 @@
 
 namespace itlib {
 
+namespace impl {
+template <typename R>
+constexpr void do_rng_checks(R&) {
+    static_assert(std::is_unsigned_v<typename R::result_type>, "random engine result_type must be unsigned");
+    static_assert(R::max() > R::min(), "random engine must have non-zero range");
+    static_assert(noexcept(std::declval<R&>()()), "random engine operator() must be noexcept");
+};
+} // namespace impl
+
 // uniform distribution for unsigned integers in [0, max]
 template <typename U = uint32_t>
 struct uniform_uint_max_distribution {
@@ -62,11 +71,9 @@ struct uniform_uint_max_distribution {
 
     template <typename R>
     constexpr static U draw(U max, R& rng) noexcept {
-        static_assert(noexcept(rng()), "exceptional random engines are evil");
+        impl::do_rng_checks(rng);
         using r_t = typename R::result_type;
-        static_assert(std::is_unsigned_v<r_t>, "random engine result_type must be unsigned");
         constexpr r_t rng_range = R::max() - R::min();
-        static_assert(rng_range > 0, "broken random engine with zero range");
 
         if constexpr (rng_range < std::numeric_limits<U>::max()) {
             // desired max might be bigger than rng's range
