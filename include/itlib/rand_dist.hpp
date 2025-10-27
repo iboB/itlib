@@ -220,4 +220,58 @@ private:
     const uniform_uint_max_distribution<U> m_range;
 };
 
+// return floating point in the range [-min, max)
+// guaranteed to draw a single value from the RNG
+template <typename F>
+struct fast_uniform_real_distribution {
+    static_assert(std::is_floating_point_v<F>, "floating point type required");
+    static_assert(std::numeric_limits<F>::radix == 2, "only binary floating point types are supported");
+    static_assert(std::numeric_limits<F>::digits <= 64, "max floating point precision must fit uint64_t");
+
+    using result_type = F;
+
+    constexpr fast_uniform_real_distribution(F min = F(0), F max = F(1)) noexcept
+        : m_min(min)
+        , m_scale(max - min)
+    {}
+    constexpr F min() const noexcept { return m_min; }
+    constexpr F scale() const noexcept { return m_scale; }
+    constexpr F max() const noexcept { return m_min + m_scale; }
+
+    // draws from [0, 1)
+    template <typename R>
+    constexpr static F draw_01(R& rng) noexcept {
+        impl::do_rng_checks(rng);
+
+        // (1 << d) - 1 is more readable, but might overflow
+        constexpr uint64_t max_int = ~uint64_t(0) >> (64 - std::numeric_limits<F>::digits);
+
+        using r_t = typename R::result_type;
+        constexpr r_t rng_range = R::max() - R::min();
+        if constexpr (rng_range >= r_t(max_int)) {
+            const auto random_value = (rng() - R::min()) & max_int;
+            return F(random_value) / F(max_int);
+        }
+        else {
+            return F(rng() - R::min()) / F(rng_range);
+        }
+
+        constexpr auto rng_range = R::max() - R::min();
+    }
+
+    template <typename R>
+    constexpr static F draw(F min, F max, R& rng) noexcept {
+        return min + (max - min) * draw_01(rng);
+    }
+
+    template <typename R>
+    constexpr F operator()(R& rng) const noexcept {
+        return m_min + m_scale * draw_01(rng);
+    }
+
+private:
+    const F m_min;
+    const F m_scale;
+};
+
 } // namespace itlib
