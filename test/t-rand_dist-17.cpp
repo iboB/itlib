@@ -173,3 +173,36 @@ TEST_CASE("uniform_int_distribution") {
         }
     }
 }
+
+TEST_CASE("fast_uniform_real_distribution") {
+    SUBCASE("bigger rng range") {
+        itlib::fast_uniform_real_distribution<float> dist;
+        q_test_rng<uint32_t> rng{
+            0u,
+            1u << 24,
+            (1u << 24) - 1, // almost 1
+            1u << 23,
+        };
+        CHECK(dist(rng) == 0.0f);
+        CHECK(dist(rng) == 0.0f);
+
+        auto f = dist(rng);
+        CHECK(f > 0.999999f);
+        CHECK(f < 1);
+        CHECK(dist(rng) == 0.5);
+    }
+    SUBCASE("smaller rng range") {
+        using dist = itlib::fast_uniform_real_distribution<double>;
+        q_test_rng<uint16_t> rng{
+            0u,
+            1u,
+            65535u, // almost 1
+            32768u,
+        };
+
+        CHECK(dist::draw_01(rng) == 0.0);
+        CHECK(dist::draw_01(rng) == double(1) / 65536.0);
+        CHECK(dist::draw_01(rng) == 65535.0 / 65536.0);
+        CHECK(dist::draw_01(rng) == 0.5);
+    }
+}

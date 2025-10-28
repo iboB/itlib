@@ -248,12 +248,12 @@ struct fast_uniform_real_distribution {
 
         using r_t = typename R::result_type;
         constexpr uint64_t rng_range = R::max() - R::min();
-        if constexpr (rng_range > max_int) {
+        if constexpr (rng_range >= max_int) {
             const auto random_value = r_t(rng() - R::min()) & r_t(max_int);
-            return F(random_value) / F(max_int);
+            return F(random_value) / F(max_int + 1);
         }
         else {
-            return F(rng() - R::min()) / F(rng_range);
+            return F(rng() - R::min()) / F(rng_range + 1);
         }
     }
 
