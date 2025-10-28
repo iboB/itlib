@@ -44,6 +44,7 @@
 #include <cstdint>
 #include <limits>
 #include <type_traits>
+#include <cmath>
 
 namespace itlib {
 
@@ -220,8 +221,8 @@ private:
     const uniform_uint_max_distribution<U> m_range;
 };
 
-// return floating point in the range [-min, max)
-// guaranteed to draw a single value from the RNG
+// return floating point in the range [min, max)
+// guaranteed to draw a single value from the RNG (potentially at the cost of entropy or stretching)
 template <typename F>
 struct fast_uniform_real_distribution {
     static_assert(std::is_floating_point_v<F>, "floating point type required");
@@ -249,22 +250,26 @@ struct fast_uniform_real_distribution {
         using r_t = typename R::result_type;
         constexpr uint64_t rng_range = R::max() - R::min();
         if constexpr (rng_range >= max_int) {
+            // rng_range is enough to saturate our float precision
+            // we slice off the needed bits (and hope that rng is uniform over all bits)
             const auto random_value = r_t(rng() - R::min()) & r_t(max_int);
-            return F(random_value) / F(max_int + 1);
+            return F(random_value) / (F(max_int) + 1);
         }
         else {
-            return F(rng() - R::min()) / F(rng_range + 1);
+            // "stretching" to rng_range
+            // some F values are unreachable
+            return F(rng() - R::min()) / (F(rng_range) + 1);
         }
     }
 
     template <typename R>
     constexpr static F draw(F min, F max, R& rng) noexcept {
-        return min + (max - min) * draw_01(rng);
+        return std::fma(max - min, draw_01(rng), min);
     }
 
     template <typename R>
     constexpr F operator()(R& rng) const noexcept {
-        return m_min + m_scale * draw_01(rng);
+        return std::fma(m_scale, draw_01(rng), m_min);
     }
 
 private:
