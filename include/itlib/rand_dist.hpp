@@ -253,7 +253,7 @@ struct fast_uniform_real_distribution {
             // rng_range is enough to saturate our float precision
             // we slice off the needed bits (and hope that rng is uniform over all bits)
             const auto random_value = r_t(rng() - R::min()) & r_t(max_int);
-            return F(random_value) / (F(max_int) + 1);
+            return std::ldexp(F(random_value), -std::numeric_limits<F>::digits);
         }
         else {
             // "stretching" to rng_range
