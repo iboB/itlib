@@ -1,6 +1,6 @@
-// itlib-rand_dist v0.01 alpha
+// itlib-rand_dist v1.00 alpha
 //
-// Deterministic and pure random distributions compatible with std::random
+// Alternative random distributions compatible with std::random
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
@@ -28,13 +28,39 @@
 //
 //                  VERSION HISTORY
 //
-//  0.01 (2025-10-24) Initial release
+//  0.01 (2025-10-30) Initial release
 //
 //
 //                  DOCUMENTATION
 //
 // Simply include this file wherever you need.
-// It defines several random distribution types to extend the existing standard
+// It defines several random distributions to extend the existing standard.
+//
+// In the list of distributions they can be tagged in several ways:
+// * new  - not present in the standard library
+// * alt  - alternative drop-in replacement for a standard distribution
+// * det  - deterministic - produce a predictable sequence of values when used
+//          with a deterministic random engine
+// * pure - does not contain a mutable state: usable from multiple threads as
+//          long as the RNG is used in a thread-safe manner (e.g. thread_local
+//          RNGs)
+//
+// Distributions:
+//
+// uniform_uint_max_distribution<U> (new, det, pure)
+//      Uniform distribution for unsigned integers in the range [0, max]
+//
+// uniform_int_distribution<I> (alt, det, pure)
+//      Uniform distribution for integers in the range [min, max]
+//
+// fast_uniform_real_distribution<F> (new, pure)
+//      Uniform distribution for floating point numbers in the range [min, max)
+//      Guaranteed to draw a single value from the RNG
+//      Note that it's not deterministic in the same sense as the others, as it
+//      relies on std::fma which may have different implementations on
+//      different hardware platforms.
+//      It is "slightly" deterministic in that it will produce the same output
+//      sequence when run on the same type of FPU and floating point mode.
 //
 //
 // You can find unit tests in the official repo:
