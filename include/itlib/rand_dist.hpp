@@ -72,6 +72,13 @@
 #include <type_traits>
 #include <cmath>
 
+// the standard requires random engines to have constexpr min() and max()
+// if you want to use these distributions with unorthodox non-constexpr engines,
+// define this macro to empty before including this file
+#if !defined(ITLIB_RAND_DIST_CONSTEXPR)
+#define ITLIB_RAND_DIST_CONSTEXPR constexpr
+#endif
+
 namespace itlib {
 
 namespace impl {
@@ -79,8 +86,11 @@ template <typename R>
 constexpr void do_rng_checks(R&) {
     static_assert(std::is_unsigned_v<typename R::result_type>, "random engine result_type must be unsigned");
     static_assert(R::max() > R::min(), "random engine must have non-zero range");
-    static_assert(noexcept(std::declval<R&>()()), "random engine operator() must be noexcept");
-};
+
+    // why the fuck is std::mersenne_twister_engine::operator() noexcept(false)??
+    // static_assert(noexcept(std::declval<R&>()()), "random engine operator() must be noexcept");
+}
+
 } // namespace impl
 
 // uniform distribution for unsigned integers in [0, max]
@@ -97,12 +107,12 @@ struct uniform_uint_max_distribution {
     constexpr U max() const noexcept { return m_max; }
 
     template <typename R>
-    constexpr static U draw(U max, R& rng) noexcept {
+    constexpr static U draw(U max, R& rng) {
         impl::do_rng_checks(rng);
         using r_t = typename R::result_type;
-        constexpr r_t rng_range = R::max() - R::min();
+        ITLIB_RAND_DIST_CONSTEXPR r_t rng_range = R::max() - R::min();
 
-        if constexpr (rng_range < std::numeric_limits<U>::max()) {
+        if ITLIB_RAND_DIST_CONSTEXPR(rng_range < std::numeric_limits<U>::max()) {
             // desired max might be bigger than rng's range
             if (max <= U(rng_range)) {
                 // it fits
@@ -115,7 +125,7 @@ struct uniform_uint_max_distribution {
                 // we draw digit by digit, keeping track if we are within the limit
                 // if we go outside the limit, we reject and stat over
 
-                constexpr U base = U(rng_range) + 1;
+                ITLIB_RAND_DIST_CONSTEXPR U base = U(rng_range) + 1;
 
                 // collect base_(rng_range+1) digits of max
                 // array size enough even if rng_range is 2
@@ -164,24 +174,24 @@ struct uniform_uint_max_distribution {
     }
 
     template <typename R>
-    constexpr U operator()(R& rng) const noexcept {
+    constexpr U operator()(R& rng) const {
         return draw(m_max, rng);
     }
 
 private:
     template <typename R>
-    constexpr static auto rng_range_draw(R& rng) noexcept -> typename R::result_type {
+    constexpr static auto rng_range_draw(R& rng) -> typename R::result_type {
         return rng() - R::min();
     }
 
     // draw from rng ASSUMING max <= rng_range!!!
     // use rejection sampling to avoid modulo bias
     template <typename R>
-    constexpr static U draw_in_rng_range(U umax, R& rng) noexcept {
+    constexpr static U draw_in_rng_range(U umax, R& rng) {
         if (umax == 0) return 0;
 
         using r_t = typename R::result_type;
-        constexpr r_t rng_range = R::max() - R::min();
+        ITLIB_RAND_DIST_CONSTEXPR r_t rng_range = R::max() - R::min();
         const auto max = r_t(umax);
 
         if (rng_range == max) {
@@ -230,7 +240,7 @@ struct uniform_int_distribution {
     constexpr I max() const noexcept { return I(U(m_min + m_range.max())); }
 
     template <typename R>
-    constexpr static I draw(I min, I max, R& rng) noexcept {
+    constexpr static I draw(I min, I max, R& rng) {
         // multiple seemingly redundant casts to U to handle 8-bit types which auto-promote to int in expressions
         const auto umin = U(min);
         const auto urange = U(U(max) - umin); // as per the standard: UB if max < min
@@ -238,7 +248,7 @@ struct uniform_int_distribution {
     }
 
     template <typename R>
-    constexpr I operator()(R& rng) const noexcept {
+    constexpr I operator()(R& rng) const {
         return I(U(m_min + m_range(rng)));
     }
 
@@ -267,15 +277,15 @@ struct fast_uniform_real_distribution {
 
     // draws from [0, 1)
     template <typename R>
-    constexpr static F draw_01(R& rng) noexcept {
+    constexpr static F draw_01(R& rng) {
         impl::do_rng_checks(rng);
 
         // (1 << d) - 1 is more readable, but might overflow
-        constexpr uint64_t max_int = ~uint64_t(0) >> (64 - std::numeric_limits<F>::digits);
+        ITLIB_RAND_DIST_CONSTEXPR uint64_t max_int = ~uint64_t(0) >> (64 - std::numeric_limits<F>::digits);
 
         using r_t = typename R::result_type;
-        constexpr uint64_t rng_range = R::max() - R::min();
-        if constexpr (rng_range >= max_int) {
+        ITLIB_RAND_DIST_CONSTEXPR uint64_t rng_range = R::max() - R::min();
+        if ITLIB_RAND_DIST_CONSTEXPR(rng_range >= max_int) {
             // rng_range is enough to saturate our float precision
             // we slice off the needed bits (and hope that rng is uniform over all bits)
             const auto random_value = r_t(rng() - R::min()) & r_t(max_int);
@@ -289,12 +299,12 @@ struct fast_uniform_real_distribution {
     }
 
     template <typename R>
-    constexpr static F draw(F min, F max, R& rng) noexcept {
+    constexpr static F draw(F min, F max, R& rng) {
         return std::fma(max - min, draw_01(rng), min);
     }
 
     template <typename R>
-    constexpr F operator()(R& rng) const noexcept {
+    constexpr F operator()(R& rng) const {
         return std::fma(m_scale, draw_01(rng), m_min);
     }
 

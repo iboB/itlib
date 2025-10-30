@@ -206,3 +206,53 @@ TEST_CASE("fast_uniform_real_distribution") {
         CHECK(dist::draw_01(rng) == 0.5);
     }
 }
+
+#include <random>
+#include <initializer_list>
+
+template <typename F, typename R>
+void test_nondeterministic_reals(R& rng) {
+    constexpr int lim = 10000;
+    {
+        itlib::fast_uniform_real_distribution<F> dist(1.0f, 2.0f);
+        double sum = 0.0f;
+        for (int i = 0; i <lim ; ++i) {
+            auto v = dist(rng);
+            CHECK(v >= 1.0f);
+            CHECK(v < 2.0f);
+            sum += v;
+        }
+        auto avg = sum / lim;
+        CHECK(avg == doctest::Approx(1.5).epsilon(0.1));
+    }
+}
+
+template <typename R>
+void test_deterministic_ints_neg50_100(R& rng, std::initializer_list<int> expected) {
+    itlib::uniform_int_distribution<int> dist(-50, 100);
+    for (auto e : expected) {
+        auto v = dist(rng);
+        CHECK(v == e);
+    }
+}
+
+TEST_CASE("std compat") {
+    SUBCASE("minstd_rand") {
+        std::minstd_rand rng(1234);
+        test_nondeterministic_reals<float>(rng);
+        test_nondeterministic_reals<double>(rng);
+        test_deterministic_ints_neg50_100(rng, {-48, 89, -34, 57, 7, 91, 49, 71, 5, 24});
+    }
+    SUBCASE("mt19937") {
+        std::mt19937 rng(5678);
+        test_nondeterministic_reals<float>(rng);
+        test_nondeterministic_reals<double>(rng);
+        test_deterministic_ints_neg50_100(rng, {19, 88, 63, -25, 45, 86, 67, -50, 46, 61});
+    }
+    SUBCASE("mt19937_64") {
+        std::mt19937_64 rng(91011);
+        test_nondeterministic_reals<float>(rng);
+        test_nondeterministic_reals<double>(rng);
+        test_deterministic_ints_neg50_100(rng, {80, 57, 74, 95, 22, -24, 5, 44, 92, -30});
+    }
+}
