@@ -57,10 +57,10 @@
 //      Uniform distribution for floating point numbers in the range [min, max)
 //      Guaranteed to draw a single value from the RNG
 //      Note that it's not deterministic in the same sense as the others, as it
-//      relies on std::fma which may have different implementations on
-//      different hardware platforms.
-//      It is "slightly" deterministic in that it will produce the same output
-//      sequence when run on the same type of FPU and floating point mode.
+//      relies on floating point arithmetic which may have produce different
+//      results depending on compiler options.
+//      It is "almost" deterministic in that it will produce the same output
+//      sequence when run without -ffast-math or similar optimizations.
 //
 //
 // You can find unit tests in the official repo:
