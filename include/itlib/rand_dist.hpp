@@ -28,7 +28,7 @@
 //
 //                  VERSION HISTORY
 //
-//  0.01 (2025-10-30) Initial release
+//  1.00 (2025-10-31) Initial release
 //
 //
 //                  DOCUMENTATION
@@ -281,7 +281,7 @@ struct fast_uniform_real_distribution {
         impl::do_rng_checks(rng);
 
         // (1 << d) - 1 is more readable, but might overflow
-        ITLIB_RAND_DIST_CONSTEXPR uint64_t max_int = ~uint64_t(0) >> (64 - std::numeric_limits<F>::digits);
+        constexpr uint64_t max_int = ~uint64_t(0) >> (64 - std::numeric_limits<F>::digits);
 
         using r_t = typename R::result_type;
         ITLIB_RAND_DIST_CONSTEXPR uint64_t rng_range = R::max() - R::min();
@@ -289,7 +289,14 @@ struct fast_uniform_real_distribution {
             // rng_range is enough to saturate our float precision
             // we slice off the needed bits (and hope that rng is uniform over all bits)
             const auto random_value = r_t(rng() - R::min()) & r_t(max_int);
-            return std::ldexp(F(random_value), -std::numeric_limits<F>::digits);
+
+            // ideally we would use this here:
+            // return std::ldexp(F(random_value), -std::numeric_limits<F>::digits);
+            // ... but in reality no compiler would would optimize it well enough
+            // every single one does a `call ldexp[f]`!
+            // at best they would do value * exp2[f](-digits) which is literally the same as below
+            // well, not literally, as exp2 only gets an overload with C++23, but still...
+            return F(random_value) / F(max_int + 1);
         }
         else {
             // "stretching" to rng_range
@@ -300,12 +307,19 @@ struct fast_uniform_real_distribution {
 
     template <typename R>
     constexpr static F draw(F min, F max, R& rng) {
-        return std::fma(max - min, draw_01(rng), min);
+        // see comment below about fma
+        //return std::fma(max - min, draw_01(rng), min);
+        return min + (max - min) * draw_01(rng);
     }
 
     template <typename R>
     constexpr F operator()(R& rng) const {
-        return std::fma(m_scale, draw_01(rng), m_min);
+        // in the interest of precision we should use fma here:
+        // return std::fma(m_scale, draw_01(rng), m_min);
+        // unfortunately it's slower than simple multiply+add on most hardware
+        // std::uniform_real_distribution uses multiply+add as well
+        // we want to be fast, so we do it as well
+        return m_min + m_scale * draw_01(rng);
     }
 
 private:
