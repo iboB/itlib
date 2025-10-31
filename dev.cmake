@@ -3,6 +3,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # misc config
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # export compile commands to json
 set_property(GLOBAL PROPERTY USE_FOLDERS ON) # use solution folders
 
 if(MSVC)
