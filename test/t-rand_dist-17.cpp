@@ -256,3 +256,45 @@ TEST_CASE("std compat") {
         test_deterministic_ints_neg50_100(rng, {80, 57, 74, 95, 22, -24, 5, 44, 92, -30});
     }
 }
+
+#define uauto [[maybe_unused]] auto
+
+TEST_CASE("degenerate") {
+    SUBCASE("int") {
+        q_test_rng<uint32_t> rng; // empty rng, should not be used
+        SUBCASE("0 range") {
+            itlib::uniform_uint_max_distribution<uint32_t> dist(0);
+            for (uauto _ : rng.values) {
+                CHECK(dist(rng) == 0);
+            }
+        }
+        SUBCASE("fixed range") {
+            itlib::uniform_int_distribution<int32_t> dist(42, 42);
+            for (uauto _ : rng.values) {
+                CHECK(dist(rng) == 42);
+            }
+        }
+    }
+    SUBCASE("real") {
+        q_test_rng<uint32_t> rng{
+            0u,
+            1u << 10,
+            1u << 23,
+            1u << 24,
+            (1u << 24) - 1, // almost 1
+            1u << 23,
+        };
+        SUBCASE("0 range") {
+            itlib::fast_uniform_real_distribution<float> dist(0, 0);
+            for (uauto _ : rng.values) {
+                CHECK(dist(rng) == 0);
+            }
+        }
+        SUBCASE("fixed range") {
+            itlib::fast_uniform_real_distribution<float> dist(3.14f, 3.14f);
+            for (uauto _ : rng.values) {
+                CHECK(dist(rng) == 3.14f);
+            }
+        }
+    }
+}
