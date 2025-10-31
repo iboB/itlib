@@ -5,8 +5,9 @@ cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 include(./get_cpm.cmake)
 
-CPMAddPackage(gh:iboB/icm@1.5.5)
-CPMAddPackage(gh:iboB/doctest-util@0.1.3)
+CPMAddPackage(gh:iboB/icm@1.5.6)
+CPMAddPackage(gh:iboB/doctest-util@0.1.4)
+CPMAddPackage(gh:iboB/picobench@2.08)
 
 include(${icm_SOURCE_DIR}/icm_build_failure_testing.cmake)
 
@@ -28,9 +29,9 @@ macro(add_test_for_std test std)
     set_target_properties(${targetname} PROPERTIES
         CXX_STANDARD ${std}
     )
-    target_link_libraries(${targetname} doctest-${std} doctest::util itlib::itlib ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(${targetname} PRIVATE doctest-${std} doctest::util itlib::itlib ${CMAKE_THREAD_LIBS_INIT})
 
-    set(testname itlib-${test}-${std} )
+    set(testname itlib-${test}-${std})
     add_test(NAME ${testname} COMMAND ${targetname})
 
     set(labels ${ARGN})
@@ -106,3 +107,19 @@ icm_add_multiple_build_failure_tests(
     PROPERTIES
         CXX_STANDARD 11
 )
+
+macro(add_itlib_benchmark name)
+    set(fname b-${name}.cpp)
+    set(targetname itlib-bench-${name})
+    add_executable(${targetname} ${fname})
+    set_target_properties(${targetname} PROPERTIES
+        CXX_STANDARD 20
+    )
+    target_link_libraries(${targetname} PRIVATE itlib::itlib picobench::picobench ${CMAKE_THREAD_LIBS_INIT})
+    add_custom_target(
+        run-${targetname}
+        COMMAND ${targetname}
+    )
+endmacro()
+
+add_itlib_benchmark(rand_dist)
