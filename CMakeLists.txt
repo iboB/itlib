@@ -14,7 +14,7 @@ endif()
 
 project(itlib
     LANGUAGES CXX
-    VERSION 1.11.8
+    VERSION 1.11.9
 )
 
 if(dev_mode)
