@@ -61,3 +61,26 @@ TEST_CASE("is_noop_convertible") {
     CCHECK_FALSE(itlib::is_noop_convertible<int8_t, bool>::value);
     CCHECK_FALSE(itlib::is_noop_convertible<int8_t, const bool>::value);
 }
+
+TEST_CASE("copy_cv") {
+    CCHECK(std::is_same<
+        itlib::copy_cv<int, const volatile float>::type,
+        const volatile int
+    >::value);
+    CCHECK(std::is_same<
+        itlib::copy_cv<const int, volatile float>::type,
+        volatile const int
+    >::value);
+    CCHECK(std::is_same<
+        itlib::copy_cv<volatile int, const float>::type,
+        const volatile int
+    >::value);
+    CCHECK(std::is_same<
+        itlib::copy_cv<const volatile int, float>::type,
+        const volatile int
+    >::value);
+    CCHECK(std::is_same<
+        itlib::copy_cv<int, float>::type,
+        int
+    >::value);
+}

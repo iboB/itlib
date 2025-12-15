@@ -53,3 +53,15 @@ TEST_CASE("is_noop_convertible") {
     CCHECK_FALSE(itlib::is_noop_convertible_v<void*, float>);
     CCHECK_FALSE(itlib::is_noop_convertible_v<void*, double>);
 }
+
+
+TEST_CASE("copy_cv") {
+    using T1 = itlib::copy_cv_t<float, const volatile int>;
+    CCHECK(std::is_same_v<T1, const volatile float>);
+    using T2 = itlib::copy_cv_t<double, int>;
+    CCHECK(std::is_same_v<T2, double>);
+    using T3 = itlib::copy_cv_t<long, volatile char>;
+    CCHECK(std::is_same_v<T3, volatile long>);
+    using T4 = itlib::copy_cv_t<unsigned short, const short>;
+    CCHECK(std::is_same_v<T4, const unsigned short>);
+}

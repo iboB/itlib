@@ -1,4 +1,4 @@
-// itlib-type_traits v1.02
+// itlib-type_traits v1.03
 //
 // Additional helper type traits extending the standard <type_traits>
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.03 (2025-12-15) Add copy_cv
 //  1.02 (2023-11-27) Added is_noop_convertible
 //  1.01 (2023-03-10) Added type_identity
 //  1.00 (2020-12-28) First pulic release
@@ -89,6 +90,14 @@ struct is_noop_convertible {
         ;
 };
 
+template <typename To, typename From>
+struct copy_cv {
+    using type = typename std::conditional<std::is_const<From>::value,
+        typename std::conditional<std::is_volatile<From>::value, const volatile To, const To>::type,
+        typename std::conditional<std::is_volatile<From>::value, volatile To, To>::type
+    >::type;
+};
+
 #if __cplusplus >= 201700
 template <template <typename...> class Template, typename Type>
 inline constexpr bool is_instantiation_of_v = is_instantiation_of<Template, Type>::value;
@@ -98,6 +107,9 @@ using type_identity_t = typename type_identity<T>::type;
 
 template <typename From, typename To>
 inline constexpr bool is_noop_convertible_v = is_noop_convertible<From, To>::value;
+
+template <typename To, typename From>
+using copy_cv_t = typename copy_cv<To, From>::type;
 #endif
 
 }
