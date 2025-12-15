@@ -28,7 +28,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.03 (2025-12-15) Add copy_cv
+//  1.03 (2025-12-15) Add copy_cv, add concepts
 //  1.02 (2023-11-27) Added is_noop_convertible
 //  1.01 (2023-03-10) Added type_identity
 //  1.00 (2020-12-28) First pulic release
@@ -110,6 +110,14 @@ inline constexpr bool is_noop_convertible_v = is_noop_convertible<From, To>::val
 
 template <typename To, typename From>
 using copy_cv_t = typename copy_cv<To, From>::type;
+#endif
+
+#if __cplusplus >= 202000
+template <typename Type, template <typename...> class Template>
+concept instantiation_of = is_instantiation_of_v<Template, Type>;
+
+template <typename From, typename To>
+concept noop_convertible_to = is_noop_convertible_v<From, To>;
 #endif
 
 }
