@@ -62,11 +62,15 @@ TEST_CASE("transfer_view") {
     CHECK(vb.size() == 3);
     CHECK(vb.data() == b.data() + 3);
 
-    vb[0] = 100;
-
     auto cvb = itlib::transfer_view(cva28, a, b);
     CHECK(cvb.size() == 6);
     CHECK(cvb.data() == b.data() + 2);
 
+    auto vb2 = itlib::transfer_view_as<itlib::span<int>>(cva28, a, b);
+
+    vb[0] = 100;
     CHECK(cvb[1] == 100);
+
+    vb2[2] = 200;
+    CHECK(cvb[2] == 200);
 }

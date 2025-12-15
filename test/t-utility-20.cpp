@@ -5,6 +5,8 @@
 #include <doctest/doctest.h>
 #include <vector>
 #include <span>
+#include <string>
+#include <string_view>
 
 TEST_CASE("transfer std::span") {
     std::vector<int> a = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
@@ -24,4 +26,14 @@ TEST_CASE("transfer std::span") {
     CHECK(cvb.data() == b.data() + 2);
 
     CHECK(cvb[1] == 100);
+}
+
+TEST_CASE("transfer_view_as") {
+    std::string a = "hello world!!";
+
+    auto hello = std::string_view(a).substr(0, 5);
+    auto hello_span = itlib::transfer_view_as<std::span<char>>(hello, a, a);
+
+    hello_span[0] = 'H';
+    CHECK(hello == "Hello");
 }

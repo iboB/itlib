@@ -1,4 +1,4 @@
-// itlib-utility v1.03
+// itlib-utility v1.04
 //
 // Utility functions to extend <utility>
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.04 (2025-12-15) Added transfer_view_as
 //  1.03 (2025-12-15) Added transfer_view
 //  1.02 (2023-11-27) Added bit_cast
 //  1.01 (2023-02-08) Added make_nullptr
@@ -52,7 +53,7 @@
 // * bit_cast:
 //      A function which allows you to reinterpret_cast between types of the
 //      same size without UB. The same as C++20's std::bit_cast
-// * transfer_view:
+// * transfer_view/transfer_view_as:
 //      A function which allows you to transfer a view (pointer+size) from one
 //      container to another
 //
@@ -96,19 +97,28 @@ constexpr Dst bit_cast(const Src& src) noexcept {
     return dst;
 }
 
+template <typename TgtView, typename View, typename SrcContainer, typename TgtContainer>
+TgtView transfer_view_as(
+    const View& srcView,
+    const SrcContainer& srcContainer,
+    TgtContainer& tgtContainer
+) {
+    if (srcView.data() == nullptr) {
+        return TgtView{};
+    }
+    return TgtView(
+        tgtContainer.data() + (srcView.data() - srcContainer.data()),
+        srcView.size()
+    );
+}
+
 template <typename View, typename SrcContainer, typename TgtContainer>
 View transfer_view(
     const View& srcView,
     const SrcContainer& srcContainer,
     TgtContainer& tgtContainer
 ) {
-    if (srcView.data() == nullptr) {
-        return View{};
-    }
-    return View(
-        tgtContainer.data() + (srcView.data() - srcContainer.data()),
-        srcView.size()
-    );
+    return transfer_view_as<View>(srcView, srcContainer, tgtContainer);
 }
 
 }
