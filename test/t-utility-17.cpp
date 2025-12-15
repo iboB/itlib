@@ -22,24 +22,24 @@ TEST_CASE("transfer string_view") {
     CHECK(o_w == "o w");
 
     {
-        auto ts = itlib::transfer_view<std::string_view>(hello, a, b);
+        auto ts = itlib::transfer_view(hello, a, b);
         CHECK(ts == std::string_view("abcde"));
     }
     {
-        auto ts = itlib::transfer_view<std::string_view>(world, a, b);
+        auto ts = itlib::transfer_view(world, a, b);
         CHECK(ts == std::string_view("ghijk"));
     }
     {
-        auto ts = itlib::transfer_view<std::string_view>(o_w, a, b);
+        auto ts = itlib::transfer_view(o_w, a, b);
         CHECK(ts == std::string_view("efg"));
     }
     {
-        auto ts = itlib::transfer_view<std::string_view>(o0, a, b);
+        auto ts = itlib::transfer_view(o0, a, b);
         CHECK(ts.empty());
         CHECK(ts.data() == b.data() + 4);
     }
     {
-        auto ts = itlib::transfer_view<std::string_view>(empty, a, b);
+        auto ts = itlib::transfer_view(empty, a, b);
         CHECK(ts.empty());
         CHECK(ts.data() == nullptr);
     }
