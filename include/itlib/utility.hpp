@@ -1,4 +1,4 @@
-// itlib-utility v1.02
+// itlib-utility v1.03
 //
 // Utility functions to extend <utility>
 //
@@ -28,6 +28,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.03 (2025-12-15) Added transfer_view
 //  1.02 (2023-11-27) Added bit_cast
 //  1.01 (2023-02-08) Added make_nullptr
 //  1.00 (2022-11-28) Initial release
@@ -51,6 +52,9 @@
 // * bit_cast:
 //      A function which allows you to reinterpret_cast between types of the
 //      same size without UB. The same as C++20's std::bit_cast
+// * transfer_view:
+//      A function which allows you to transfer a view (pointer+size) from one
+//      container to another
 //
 //
 //                  TESTS
@@ -90,6 +94,21 @@ constexpr Dst bit_cast(const Src& src) noexcept {
     Dst dst;
     std::memcpy(&dst, &src, sizeof(Src));
     return dst;
+}
+
+template <typename View, typename SrcContainer, typename TgtContainer>
+View transfer_view(
+    const View& srcView,
+    const SrcContainer& srcContainer,
+    TgtContainer& tgtContainer
+) {
+    if (srcView.data() == nullptr) {
+        return View{};
+    }
+    return View(
+        tgtContainer.data() + (srcView.data() - srcContainer.data()),
+        srcView.size()
+    );
 }
 
 }

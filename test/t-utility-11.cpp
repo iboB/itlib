@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MIT
 //
 #include <itlib/utility.hpp>
-
-#include <string>
-
 #include <doctest/doctest.h>
+#include <string>
+#include <itlib/span.hpp>
+#include <vector>
 
 TEST_CASE("force_move") {
     auto i = itlib::force_move(7);
@@ -49,4 +49,24 @@ TEST_CASE("bit_cast") {
     float f = 2.5f;
     auto i = itlib::bit_cast<uint32_t>(f);
     CHECK(i == 0x40200000);
+}
+
+TEST_CASE("transfer_view") {
+    std::vector<int> a = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    std::vector<int> b = {10,11,12,13,14,15,16,17,18};
+
+    auto va36 = itlib::span<int>(a).subspan(3, 3);
+    auto cva28 = itlib::span<const int>(a).subspan(2, 6);
+
+    auto vb = itlib::transfer_view(va36, a, b);
+    CHECK(vb.size() == 3);
+    CHECK(vb.data() == b.data() + 3);
+
+    vb[0] = 100;
+
+    auto cvb = itlib::transfer_view(cva28, a, b);
+    CHECK(cvb.size() == 6);
+    CHECK(cvb.data() == b.data() + 2);
+
+    CHECK(cvb[1] == 100);
 }
