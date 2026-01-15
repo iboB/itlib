@@ -1,4 +1,4 @@
-// itlib-ufunction v1.02
+// itlib-ufunction v1.03
 //
 // Unique Function
 // Non-copyable and noexcept move-constructible replacement for std::function
@@ -6,7 +6,7 @@
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2020 Borislav Stanimirov
+// Copyright(c) 2020-2026 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -30,6 +30,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.03 (2026-01-15) Remove assignment operators from nullptr_t to allow
+//                    resets via the `ufunc = {}` syntax
 //  1.02 (2024-09-24) Allow binding to copies of source functions as per C++23
 //  1.01 (2022-09-23) Allow ufunction from a free function
 //  1.00 (2020-10-15) Initial release
@@ -80,7 +82,6 @@ public:
     ufunction() noexcept = default;
 
     ufunction(std::nullptr_t) noexcept : function(nullptr) {}
-    ufunction& operator=(std::nullptr_t) noexcept { function::operator=(nullptr); return *this; }
 
     ufunction(const ufunction&) = delete;
     ufunction operator=(const ufunction&) = delete;
@@ -90,7 +91,6 @@ public:
 
     template <typename FO>
     ufunction(FO f) noexcept : function(copy_wrapper<FO>{std::move(f)}) {}
-
     template <typename FO>
     ufunction& operator=(FO f) noexcept
     {
@@ -99,8 +99,13 @@ public:
     }
 
     // function pointer overloads (otherwise clang and gcc complain for const_cast of function pointers)
-    // noexcept since we're relying on small function opti
+    // noexcept since we're relying on the small function optimization to kick in here
+    // we can also afford to disregard the copy wrapper here since function pointers are copyable
     ufunction(F* fptr) noexcept : function(fptr) {}
+
+    // this also servers to handle = nullptr_t
+    // yes, this will make it a tiny bit slower compared to having a separate assignment overload for nullptr_t,
+    // but without the nullptr_t overload we can write `ufunc = {}` which is a nice syntax for resetting
     ufunction& operator=(F* fptr) noexcept
     {
         function::operator=(fptr);

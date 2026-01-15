@@ -27,4 +27,7 @@ TEST_CASE("Basic")
     auto f2 = std::move(func);
     CHECK(!func);
     f2();
+
+    f2 = {};
+    CHECK_FALSE(f2);
 }
