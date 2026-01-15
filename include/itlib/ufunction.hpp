@@ -30,8 +30,8 @@
 //
 //                  VERSION HISTORY
 //
-//  1.03 (2026-01-15) Remove assignment operators from nullptr_t to allow
-//                    resets via the `ufunc = {}` syntax
+//  1.03 (2026-01-15) Move assignment from nullptr_t to the template
+//                    assignment overload to allow the `ufunc = {}` syntax
 //  1.02 (2024-09-24) Allow binding to copies of source functions as per C++23
 //  1.01 (2022-09-23) Allow ufunction from a free function
 //  1.00 (2020-10-15) Initial release
@@ -91,21 +91,31 @@ public:
 
     template <typename FO>
     ufunction(FO f) noexcept : function(copy_wrapper<FO>{std::move(f)}) {}
+
+    // this also servers to handle ufunc = nullptr_t
+    // we use it instead of a separate assignment overload for nullptr_t, to allow us to write
+    // we can write `ufunc = {}` which is a nice syntax for resetting
+    // `ufunc = {}` will resolve to operator=(F* fptr) which is a tiny bit slower than assigning
+    // nullptr_t directly (because of an additional if check) but we consider it negligible
+    // and worth the syntactic sugar
     template <typename FO>
     ufunction& operator=(FO f) noexcept
     {
-        function::operator=(copy_wrapper<FO>{std::move(f)});
+        function::operator=(
+            typename std::conditional<
+                std::is_same<FO, std::nullptr_t>::value,
+                std::nullptr_t,
+                copy_wrapper<FO>
+            >::type(std::move(f))
+        );
         return *this;
     }
 
     // function pointer overloads (otherwise clang and gcc complain for const_cast of function pointers)
     // noexcept since we're relying on the small function optimization to kick in here
     // we can also afford to disregard the copy wrapper here since function pointers are copyable
-    ufunction(F* fptr) noexcept : function(fptr) {}
 
-    // this also servers to handle = nullptr_t
-    // yes, this will make it a tiny bit slower compared to having a separate assignment overload for nullptr_t,
-    // but without the nullptr_t overload we can write `ufunc = {}` which is a nice syntax for resetting
+    ufunction(F* fptr) noexcept : function(fptr) {}
     ufunction& operator=(F* fptr) noexcept
     {
         function::operator=(fptr);

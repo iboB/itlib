@@ -30,4 +30,7 @@ TEST_CASE("Basic")
 
     f2 = {};
     CHECK_FALSE(f2);
+
+    f2 = nullptr; // must compile
+    CHECK_FALSE(f2);
 }
