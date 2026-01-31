@@ -93,3 +93,13 @@ TEST_CASE("poly") {
     CHECK(a >= d);
     CHECK_FALSE(a < d);
 }
+
+TEST_CASE("unsafe") {
+    auto sp = std::make_shared<int>(55);
+    auto rp = itlib::_ref_ptr_from_shared_ptr_unsafe(sp);
+    CHECK(sp.get() == rp.get());
+    CHECK_FALSE(rp.unique());
+    auto sp2 = rp._as_shared_ptr_unsafe();
+    CHECK(sp == sp2);
+    CHECK(rp.use_count() == 3);
+}

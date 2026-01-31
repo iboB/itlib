@@ -72,6 +72,7 @@
 //
 // Future Ideas:
 // * void support
+// * static/const/dynamic casts
 // * strong_ref_ptr - a non-nullable ref_ptr variant
 //
 //
@@ -161,6 +162,9 @@ public:
     std::shared_ptr<T> _as_shared_ptr_unsafe() && noexcept {
         return std::move(*this);
     }
+    static ref_ptr<T> _from_shared_ptr_unsafe(std::shared_ptr<T> ptr) noexcept {
+        return ref_ptr<T>(std::move(ptr));
+    }
 };
 
 template <typename T, typename... Args>
@@ -171,6 +175,11 @@ ref_ptr<T> make_ref_ptr(Args&&... args) {
 template <typename T>
 auto make_ref_ptr_from(T&& obj) -> ref_ptr<typename std::remove_reference<T>::type>{
     return ref_ptr<typename std::remove_reference<T>::type>::make(std::forward<T>(obj));
+}
+
+template <typename T>
+ref_ptr<T> _ref_ptr_from_shared_ptr_unsafe(std::shared_ptr<T> ptr) noexcept {
+    return ref_ptr<T>::_from_shared_ptr_unsafe(std::move(ptr));
 }
 
 } // namespace itlib
