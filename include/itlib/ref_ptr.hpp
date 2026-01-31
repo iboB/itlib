@@ -54,15 +54,24 @@
 // internally within the implementation where copy guards and other logic will
 // be implemented as needed
 //
+// NO VOID SUPPORT (YET)
+// Note that ref_ptr<void> is not supported at the moment.
+// It's not a huge additional effort, but there is no immediate use case for it
+// either. The main use case is CoW and complete type erasure in this context
+// is simply not very useful.
+//
 // API:
 // * everything from std::shared_ptr including...
 // * bool unique() const noexcept; - reliable uniqueness check (which used to
-// be in std::shared_ptr but was deprecated and removed)
+//   be in std::shared_ptr but was deprecated and removed)
+// * _as_shared_ptr_unsafe() - to get a shared_ptr as a last resort or to
+//   interop with existing APIs
 // * external factory functions:
 //  * make_ref_ptr<T>(Args&&... args) - corresponds to std::make_shared<T>
 //  * make_ref_ptr_from(T&& obj) - creates a ref_ptr by copying/moving a value
 //
 // Future Ideas:
+// * void support
 // * strong_ref_ptr - a non-nullable ref_ptr variant
 //
 //
@@ -141,6 +150,16 @@ public:
     template <typename... Args>
     static ref_ptr make(Args&&... args) {
         return ref_ptr(std::make_shared<T>(std::forward<Args>(args)...));
+    }
+
+    // only use as a last resort
+    // when ref_ptr needs to be provided to an existing API relying on shared_ptr
+    // be sure that the leaked shared_ptr will not be used to create weak_ptr-s
+    std::shared_ptr<T> _as_shared_ptr_unsafe() const& noexcept {
+        return *this;
+    }
+    std::shared_ptr<T> _as_shared_ptr_unsafe() && noexcept {
+        return std::move(*this);
     }
 };
 

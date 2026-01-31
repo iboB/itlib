@@ -63,10 +63,6 @@ TEST_CASE("ref_ptr") {
     CHECK_FALSE(p2);
     CHECK(p3.unique());
     CHECK(*p3 == 42);
-
-    ref_ptr<const void> p4 = p3;
-    CHECK(p4);
-    CHECK(p4.use_count() == 2);
 }
 
 // other casts
