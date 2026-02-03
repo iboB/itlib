@@ -63,6 +63,9 @@ TEST_CASE("ref_ptr") {
     CHECK_FALSE(p2);
     CHECK(p3.unique());
     CHECK(*p3 == 42);
+
+    p3 = nullptr;
+    CHECK_FALSE(p3);
 }
 
 // other casts

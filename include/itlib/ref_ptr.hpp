@@ -1,4 +1,4 @@
-// itlib-ref_ptr v1.00
+// itlib-ref_ptr v1.01
 //
 // A ref-counting smart pointer with a stable use_count
 //
@@ -28,7 +28,9 @@
 //
 //                  VERSION HISTORY
 //
-//  1.00 (2022-01-31) Initial release
+//  1.01 (2026-02-03) * nullptr_t constructor and assignment
+//                    * _as_shared_ptr_unsafe return ref to avoid copy
+//  1.00 (2026-01-31) Initial release
 //
 //
 //                  DOCUMENTATION
@@ -43,7 +45,7 @@
 // Since there is no weak_ptr, use_count() == 1 is reliable and can be used to
 // determine if the state is unique.
 //
-// An importaant use case for this is copy-on-write implementations.
+// An important use case for this is copy-on-write implementations.
 // ref_ptr<const T> would be a detached read-only view of a state.//
 // Since unique() is reliable, a safe "promotion" via a const_cast is possible
 // (We're not doing this until we have a good motivational use case)
@@ -83,6 +85,7 @@
 //
 #pragma once
 #include <memory>
+#include <cstddef>
 #include <type_traits>
 
 namespace itlib {
@@ -103,6 +106,14 @@ public:
     ref_ptr& operator=(const ref_ptr&) = default;
     ref_ptr(ref_ptr&&) noexcept = default;
     ref_ptr& operator=(ref_ptr&&) noexcept = default;
+
+    ref_ptr(std::nullptr_t)
+        : super(nullptr)
+    {}
+    ref_ptr& operator=(std::nullptr_t) {
+        super::operator=(nullptr);
+        return *this;
+    }
 
     template <typename U>
     ref_ptr(const ref_ptr<U>& ptr) noexcept
@@ -156,7 +167,7 @@ public:
     // only use as a last resort
     // when ref_ptr needs to be provided to an existing API relying on shared_ptr
     // be sure that the leaked shared_ptr will not be used to create weak_ptr-s
-    std::shared_ptr<T> _as_shared_ptr_unsafe() const& noexcept {
+    const std::shared_ptr<T>& _as_shared_ptr_unsafe() const& noexcept {
         return *this;
     }
     std::shared_ptr<T> _as_shared_ptr_unsafe() && noexcept {
