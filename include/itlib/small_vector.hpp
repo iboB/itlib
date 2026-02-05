@@ -1,11 +1,11 @@
-// itlib-small-vector v2.06
+// itlib-small-vector v2.07
 //
 // std::vector-like class with a static buffer for initial capacity
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2016-2018 Chobolabs Inc.
-// Copyright(c) 2020-2025 Borislav Stanimirov
+// Copyright(c) 2020-2026 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  2.07 (2026-02-05) Drop use of deprecated std::aligned_storage
 //  2.06 (2025-03-28) Minor: Add missing header <cstdint>
 //  2.05 (2024-03-06) Minor: Return bool from shrink_to_fit
 //  2.04 (2022-04-29) Minor: Disable MSVC warning for constant conditional
@@ -153,7 +154,7 @@
 //
 #pragma once
 
-#include <type_traits>
+//#include <type_traits>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -716,12 +717,12 @@ public:
 private:
     const T* static_begin_ptr() const
     {
-        return reinterpret_cast<const_pointer>(m_static_data + 0);
+        return &m_static_data[0].data;
     }
 
     T* static_begin_ptr()
     {
-        return reinterpret_cast<pointer>(m_static_data + 0);
+        return &m_static_data[0].data;
     }
 
     void destroy_all()
@@ -1005,7 +1006,12 @@ private:
     pointer m_begin; // begin either points to m_static_data or to new memory
     pointer m_end;
     size_t m_capacity;
-    typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type m_static_data[StaticCapacity];
+    union aligned_storage {
+        aligned_storage() {}
+        ~aligned_storage() {}
+        T data;
+    };
+    aligned_storage m_static_data[StaticCapacity];
 };
 
 template<typename T,

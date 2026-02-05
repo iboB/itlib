@@ -1,11 +1,11 @@
-// itlib-static-vector v1.07
+// itlib-static-vector v1.08
 //
 // std::vector-like class with a fixed capacity
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
 // Copyright(c) 2016-2019 Chobolabs Inc.
-// Copyright(c) 2020-2023 Borislav Stanimirov
+// Copyright(c) 2020-2026 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -29,6 +29,7 @@
 //
 //                  VERSION HISTORY
 //
+//  1.08 (2026-02-05) Drop use of deprecated std::aligned_storage
 //  1.07 (2023-04-06) Added resize with initializer
 //  1.06 (2023-01-17) Shim allocator arg to constructors for template code
 //                    All standard overloads of insert
@@ -289,13 +290,13 @@ public:
     const_reference at(size_type i) const
     {
         I_ITLIB_STATIC_VECTOR_BOUNDS_CHECK(i);
-        return *reinterpret_cast<const T*>(m_data + i);
+        return m_data[i].data;
     }
 
     reference at(size_type i)
     {
         I_ITLIB_STATIC_VECTOR_BOUNDS_CHECK(i);
-        return *reinterpret_cast<T*>(m_data + i);
+        return m_data[i].data;
     }
 
     const_reference operator[](size_type i) const
@@ -330,12 +331,12 @@ public:
 
     const_pointer data() const noexcept
     {
-        return reinterpret_cast<const T*>(m_data);
+        return &m_data[0].data;
     }
 
     pointer data() noexcept
     {
-        return reinterpret_cast<T*>(m_data);
+        return &m_data[0].data;;
     }
 
     // iterators
@@ -669,7 +670,12 @@ private:
         return position;
     }
 
-    typename std::aligned_storage<sizeof(T), std::alignment_of<T>::value>::type m_data[Capacity];
+    union aligned_storage {
+        aligned_storage() {}
+        ~aligned_storage() {}
+        T data;
+    };
+    aligned_storage m_data[Capacity];
     size_t m_size = 0;
 };
 
