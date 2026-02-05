@@ -72,6 +72,7 @@ TEST_CASE("ref_ptr") {
 
 struct animal {
     animal(std::string n) : name(std::move(n)) {}
+    virtual ~animal() = default;
     std::string name;
     virtual std::string speak() const = 0;
 };
