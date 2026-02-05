@@ -257,22 +257,16 @@ TEST_CASE("std compat") {
     }
 }
 
-#define uauto [[maybe_unused]] auto
-
 TEST_CASE("degenerate") {
     SUBCASE("int") {
         q_test_rng<uint32_t> rng; // empty rng, should not be used
         SUBCASE("0 range") {
             itlib::uniform_uint_max_distribution<uint32_t> dist(0);
-            for (uauto _ : rng.values) {
-                CHECK(dist(rng) == 0);
-            }
+            CHECK(dist(rng) == 0);
         }
         SUBCASE("fixed range") {
             itlib::uniform_int_distribution<int32_t> dist(42, 42);
-            for (uauto _ : rng.values) {
-                CHECK(dist(rng) == 42);
-            }
+            CHECK(dist(rng) == 42);
         }
     }
     SUBCASE("real") {
@@ -284,15 +278,16 @@ TEST_CASE("degenerate") {
             (1u << 24) - 1, // almost 1
             1u << 23,
         };
+        const auto size = int(rng.values.size());
         SUBCASE("0 range") {
             itlib::fast_uniform_real_distribution<float> dist(0, 0);
-            for (uauto _ : rng.values) {
+            for (int i = 0; i < size; ++i) {
                 CHECK(dist(rng) == 0);
             }
         }
         SUBCASE("fixed range") {
             itlib::fast_uniform_real_distribution<float> dist(3.14f, 3.14f);
-            for (uauto _ : rng.values) {
+            for (int i = 0; i < size; ++i) {
                 CHECK(dist(rng) == 3.14f);
             }
         }
