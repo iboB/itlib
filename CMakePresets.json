@@ -96,6 +96,15 @@
     },
 
     {
+      "name": "debug-clang",
+      "inherits": ["base-debug", "clang"]
+    },
+    {
+      "name": "release-clang",
+      "inherits": ["base-release", "clang"]
+    },
+
+    {
       "name": "debug-asan",
       "inherits": ["base-debug", "asan"]
     },
