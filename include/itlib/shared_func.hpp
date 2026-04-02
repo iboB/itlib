@@ -123,7 +123,7 @@ private:
     template <typename FO>
     struct wrapper : public wrapper_base {
         FO func_object;
-        wrapper(FO&& f) : func_object(std::forward<FO>(f)) {
+        wrapper(FO f) : func_object(std::move(f)) {
             this->func = +[](void* obj, Args&&... args) -> R {
                 return static_cast<wrapper*>(obj)->func_object(std::forward<Args>(args)...);
             };
@@ -144,7 +144,7 @@ private:
         if (!f) {
             return {};
         }
-        return std::make_shared<wrapper<FP>>(f);
+        return std::make_shared<wrapper<FP*>>(f);
     }
 };
 
