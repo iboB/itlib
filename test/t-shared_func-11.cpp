@@ -55,3 +55,14 @@ TEST_CASE("lambda") {
         CHECK(func.use_count() == 2);
     }
 }
+
+int sum(int a, int b) { return a + b; }
+
+TEST_CASE("free func") {
+    itlib::shared_func<int(int, int)> func = sum;
+    CHECK(func(1, 2) == 3);
+    func = [](int a, int b) { return a * b; };
+    CHECK(func(3, 4) == 12);
+    func = sum;
+    CHECK(func(3, 4) == 7);
+}
