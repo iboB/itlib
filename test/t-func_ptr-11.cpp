@@ -3,6 +3,8 @@
 //
 #include <itlib/func_ptr.hpp>
 #include <doctest/doctest.h>
+#include <doctest/util/lifetime_counter.hpp>
+#include <string>
 
 TEST_CASE("empty") {
     SUBCASE("default") {
@@ -60,4 +62,50 @@ TEST_CASE("function pointer") {
 
     auto fptr2 = fptr;
     CHECK(fptr2(3) == 9);
+}
+
+struct val : public doctest::util::lifetime_counter<val> {
+    int value = 0;
+};
+
+struct str : public doctest::util::lifetime_counter<str> {
+    std::string value;
+};
+
+TEST_CASE("arg lifetime") {
+    using namespace doctest::util;
+    lifetime_counter_sentry vsentry(val::root_lifetime_stats()), ssentry(str::root_lifetime_stats());
+
+    auto func_v = [](val v) { return v.value; };
+    auto func_vr = [](val& v) { v.value += 5; return v.value; };
+    auto func_vcr = [](const val& v) { return v.value; };
+
+    auto func_vs = [](val v, str s) { return v.value + std::stoi(s.value); };
+
+    // refs
+    {
+        val::lifetime_stats vs;
+        val v;
+        v.value = 42;
+
+        itlib::func_ptr<int(val&)> fptr(&func_vr);
+        CHECK(fptr(v) == 47);
+        CHECK(v.value == 47);
+
+        fptr.reset(&func_vcr);
+        CHECK(fptr(v) == 47);
+
+        CHECK(vs.total == 1);
+    }
+
+    // copies
+    {
+        val::lifetime_stats vs;
+        val v;
+        v.value = 42;
+
+        itlib::func_ptr<int(val)> fptr(&func_v);
+
+
+    }
 }
