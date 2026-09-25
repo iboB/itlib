@@ -1,4 +1,4 @@
-// itlib-pod-vector v1.08
+// itlib-pod-vector v1.09
 //
 // A vector of PODs. Similar to std::vector, but doesn't call constructors or
 // destructors and instead uses memcpy and memmove to manage the data
@@ -29,6 +29,9 @@
 //
 //                  VERSION HISTORY
 //
+//  1.09 (2026-09-25) Rename pod_allocator to podvec_allocator and move
+//                    out of impl namespace
+//                    Add podvec_noinit_allocator and pod_vector_noinit
 //  1.08 (2024-03-06) Return bool from void resizing methods to indicate
 //                    whether iterators were invalidated
 //  1.07 (2023-01-18) Use std::copy and std::fill. This does help compilers
@@ -80,7 +83,7 @@
 //   lose data if the byte size of other_vec's data is not divisible by
 //   sizeof(T)
 //
-// pod_vector uses pod_allocator, which needs to have methods to allocate,
+// pod_vector uses podvec_allocator, which needs to have methods to allocate,
 // deallocate, and reallocate. The default version uses malloc, free, and
 // realloc. If you make your own allocator you must conform to the definitons
 // of these functions.
@@ -119,9 +122,7 @@
 namespace itlib
 {
 
-namespace impl
-{
-class pod_allocator
+class podvec_allocator
 {
 public:
     using size_type = size_t;
@@ -144,9 +145,20 @@ public:
     static constexpr size_type realloc_wasteful_copy_size() { return 4096; }
 #endif
 };
-}
 
-template<typename T, class Alloc = impl::pod_allocator>
+class podvec_noinit_allocator : public podvec_allocator {
+public:
+    podvec_noinit_allocator() noexcept = default;
+    podvec_noinit_allocator(const podvec_noinit_allocator&) noexcept = default;
+    podvec_noinit_allocator& operator=(const podvec_noinit_allocator&) noexcept = default;
+
+    podvec_noinit_allocator(const podvec_allocator&) noexcept {}
+    podvec_noinit_allocator& operator=(const podvec_allocator&) noexcept { return *this; }
+
+    static constexpr bool zero_fill_new() { return false; }
+};
+
+template<typename T, class Alloc = podvec_allocator>
 class pod_vector : private Alloc
 {
     static_assert(std::is_trivial<T>::value, "itlib::pod_vector with non-trivial type");
@@ -921,5 +933,8 @@ bool operator!=(const pod_vector<T, Alloc>& a, const pod_vector<T, Alloc>& b)
     if (a.empty()) return false;
     return std::memcmp(a.data(), b.data(), a.byte_size()) != 0;
 }
+
+template <typename T>
+using pod_vector_noinit = pod_vector<T, podvec_noinit_allocator>;
 
 }

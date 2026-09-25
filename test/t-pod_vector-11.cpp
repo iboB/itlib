@@ -10,6 +10,10 @@
 #pragma warning(disable : 4127)
 #endif
 
+// check EBO
+static_assert(sizeof(itlib::pod_vector<int>) == 3 * sizeof(void*), "Empty base optimization fails");
+static_assert(sizeof(itlib::pod_vector_noinit<int>) == 3 * sizeof(void*), "Empty base optimization fails");
+
 int32_t mallocs, frees, reallocs;
 
 void clear_alloc_counters()
@@ -521,7 +525,7 @@ struct counting_allocator_wrapper
     }
 };
 
-using default_allocator = counting_allocator_wrapper<itlib::impl::pod_allocator>;
+using default_allocator = counting_allocator_wrapper<itlib::podvec_allocator>;
 
 using one_alloc_r = counting_allocator_wrapper<n_align_allocator<1, align_alloc_type::realloc>>;
 using one_alloc_fr = counting_allocator_wrapper<n_align_allocator<1, align_alloc_type::fail_realloc>>;
@@ -733,3 +737,21 @@ TEST_CASE("recast")
     clear_alloc_counters();
 }
 
+TEST_CASE("take_from other alloc") {
+    itlib::pod_vector<int> vec = {1, 2, 3, 4};
+    auto ptr = vec.data();
+
+    itlib::pod_vector_noinit<int> vec2;
+    vec2.recast_take_from(std::move(vec));
+
+    CHECK(vec2.data() == ptr);
+    CHECK(vec2.size() == 4);
+    CHECK(vec2[0] == 1);
+
+    CHECK(vec.empty());
+
+    vec.recast_copy_from(vec2);
+    CHECK(vec.size() == 4);
+    CHECK(vec.data() != ptr);
+    CHECK(vec[3] == 4);
+}
