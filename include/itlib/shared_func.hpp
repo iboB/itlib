@@ -67,46 +67,7 @@ class weak_func;
 template <typename R, typename... Args>
 class shared_func<R(Args...)> {
 public:
-    shared_func() noexcept = default;
-    shared_func(std::nullptr_t) noexcept : m_wrapper(nullptr) {}
-    shared_func(const shared_func&) = default;
-    shared_func& operator=(const shared_func&) = default;
-    shared_func(shared_func&&) noexcept = default;
-    shared_func& operator=(shared_func&&) noexcept = default;
-
-    template <typename FO>
-    explicit shared_func(FO f) : m_wrapper(make_wrapper(std::move(f))) {}
-
-    // this also serves to handle nullptr_t
-    template <typename FO>
-    void reset(FO f) {
-        m_wrapper = make_wrapper(std::move(f));
-    }
-
-    void reset() noexcept {
-        m_wrapper.reset();
-    }
-
-    explicit operator bool() const noexcept {
-        return !!m_wrapper;
-    }
-
-    R operator()(Args&&... args) const {
-        // intentionally not checking and throwing bad_function_call here
-        // * I personally dislike this behavior
-        // * now we don't have to include <functional> for this exception
-        return m_wrapper->func(m_wrapper.get(), std::forward<Args>(args)...);
-    }
-
-    // shared_ptr interface
-    size_t use_count() const noexcept {
-        return m_wrapper.use_count();
-    }
-
-private:
-    friend class weak_func<R(Args...)>;
-
-    struct wrapper_base {
+    struct payload_type {
         // Note that we're not using virtual here, even though we have dynamic
         // dispatch. The problem with virtual is that it will create a vtable
         // pointer. It this is used across shared libraries (.so/.dll/.dylib),
@@ -120,12 +81,69 @@ private:
         R(*func)(void* obj, Args&&...);
     protected:
         // we can't afford a virtual dtor, so make sure that it's not available
-        ~wrapper_base() = default;
+        ~payload_type() = default;
     };
-    std::shared_ptr<wrapper_base> m_wrapper;
+    using payload_ptr = std::shared_ptr<payload_type>;
+
+    shared_func() noexcept = default;
+
+    shared_func(const shared_func&) = default;
+    shared_func& operator=(const shared_func&) = default;
+    shared_func(shared_func&&) noexcept = default;
+    shared_func& operator=(shared_func&&) noexcept = default;
+
+    shared_func(std::nullptr_t) noexcept : m_pl(nullptr) {}
+    shared_func& operator=(std::nullptr_t) noexcept {
+        m_pl.reset();
+        return *this;
+    }
+
+    shared_func(payload_ptr pl) noexcept : m_pl(std::move(pl)) {}
+    shared_func& operator=(payload_ptr pl) noexcept {
+        m_pl = std::move(pl);
+        return *this;
+    }
 
     template <typename FO>
-    struct wrapper : public wrapper_base {
+    explicit shared_func(FO f) : m_pl(make_payload(std::move(f))) {}
+
+    // this also serves to handle nullptr_t
+    template <typename FO>
+    void reset(FO f) {
+        m_pl = make_payload(std::move(f));
+    }
+
+    void reset() noexcept {
+        m_pl.reset();
+    }
+
+    explicit operator bool() const noexcept {
+        return !!m_pl;
+    }
+
+    R operator()(Args&&... args) const {
+        // intentionally not checking and throwing bad_function_call here
+        // * I personally dislike this behavior
+        // * now we don't have to include <functional> for this exception
+        return m_pl->func(m_pl.get(), std::forward<Args>(args)...);
+    }
+
+    // shared_ptr interface
+    size_t use_count() const noexcept {
+        return m_pl.use_count();
+    }
+
+    const std::shared_ptr<payload_type>& payload() const noexcept {
+        return m_pl;
+    }
+
+private:
+    friend class weak_func<R(Args...)>;
+
+    payload_ptr m_pl;
+
+    template <typename FO>
+    struct wrapper : public payload_type {
         FO func_object;
         wrapper(FO f) : func_object(std::move(f)) {
             this->func = +[](void* obj, Args&&... args) -> R {
@@ -134,17 +152,17 @@ private:
         }
     };
 
-    static std::shared_ptr<wrapper_base> make_wrapper(std::nullptr_t) {
+    static payload_ptr make_payload(std::nullptr_t) {
         return {};
     }
 
     template <typename FO>
-    static std::shared_ptr<wrapper_base> make_wrapper(FO f) {
+    static payload_ptr make_payload(FO f) {
         return std::make_shared<wrapper<FO>>(std::move(f));
     }
 
     template <typename FP>
-    static std::shared_ptr<wrapper_base> make_wrapper(FP* f) {
+    static payload_ptr make_payload(FP* f) {
         if (!f) {
             return {};
         }
@@ -155,21 +173,40 @@ private:
 template <typename T>
 class weak_func {
 public:
+    using payload_ptr = std::weak_ptr<typename shared_func<T>::payload_type>;
+
     weak_func() noexcept = default;
-    weak_func(const shared_func<T>& func) : m_wrapper(func.m_wrapper) {}
+    weak_func(const shared_func<T>& func) : m_pl(func.m_pl) {}
+
+    weak_func(const weak_func&) = default;
+    weak_func& operator=(const weak_func&) = default;
+    weak_func(weak_func&&) noexcept = default;
+    weak_func& operator=(weak_func&&) noexcept = default;
+
+    weak_func(payload_ptr pl) noexcept : m_pl(std::move(pl)) {}
+    weak_func& operator=(payload_ptr pl) noexcept {
+        m_pl = std::move(pl);
+        return *this;
+    }
 
     shared_func<T> lock() const {
-        shared_func<T> result;
-        result.m_wrapper = m_wrapper.lock();
-        return result;
+        return shared_func<T>(m_pl.lock());
     }
 
     bool expired() const noexcept {
-        return m_wrapper.expired();
+        return m_pl.expired();
+    }
+
+    void reset() noexcept {
+        m_pl.reset();
+    }
+
+    const payload_ptr& payload() const noexcept {
+        return m_pl;
     }
 
 private:
-    std::weak_ptr<typename shared_func<T>::wrapper_base> m_wrapper;
+    payload_ptr m_pl;
 };
 
 } // namespace itlib
