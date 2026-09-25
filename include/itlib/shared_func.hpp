@@ -29,7 +29,7 @@
 //
 //                  VERSION HISTORY
 //
-//  1.00 (2026-03-31) Initial release
+//  1.00 (2026-09-25) Initial release
 //
 //
 //                  DOCUMENTATION
@@ -73,14 +73,18 @@ public:
     shared_func& operator=(const shared_func&) = default;
     shared_func(shared_func&&) noexcept = default;
     shared_func& operator=(shared_func&&) noexcept = default;
-    template <typename FO>
-    shared_func(FO f) : m_wrapper(make_wrapper(std::move(f))) {}
 
-    // this also serves to handle shared_func = nullptr_t
     template <typename FO>
-    shared_func& operator=(FO f) {
+    explicit shared_func(FO f) : m_wrapper(make_wrapper(std::move(f))) {}
+
+    // this also serves to handle nullptr_t
+    template <typename FO>
+    void reset(FO f) {
         m_wrapper = make_wrapper(std::move(f));
-        return *this;
+    }
+
+    void reset() noexcept {
+        m_wrapper.reset();
     }
 
     explicit operator bool() const noexcept {

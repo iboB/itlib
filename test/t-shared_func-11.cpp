@@ -40,7 +40,7 @@ TEST_CASE("empty") {
 TEST_CASE("lambda") {
     int acc = 0;
     {
-        itlib::shared_func<void(int)> func = [&acc](int n) { acc += n; };
+        itlib::shared_func<void(int)> func{[&acc](int n) { acc += n; }};
         CHECK(func);
         func(5);
         CHECK(acc == 5);
@@ -59,10 +59,10 @@ TEST_CASE("lambda") {
 int sum(int a, int b) { return a + b; }
 
 TEST_CASE("free func") {
-    itlib::shared_func<int(int, int)> func = sum;
+    itlib::shared_func<int(int, int)> func{sum};
     CHECK(func(1, 2) == 3);
-    func = [](int a, int b) { return a * b; };
+    func.reset([](int a, int b) { return a * b; });
     CHECK(func(3, 4) == 12);
-    func = sum;
+    func.reset(sum);
     CHECK(func(3, 4) == 7);
 }
