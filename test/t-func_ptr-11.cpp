@@ -65,10 +65,12 @@ TEST_CASE("function pointer") {
 }
 
 struct val : public doctest::util::lifetime_counter<val> {
+    explicit val(int v = 0) : value(v) {}
     int value = 0;
 };
 
 struct str : public doctest::util::lifetime_counter<str> {
+    explicit str(std::string v = "") : value(std::move(v)) {}
     std::string value;
 };
 
@@ -76,17 +78,13 @@ TEST_CASE("arg lifetime") {
     using namespace doctest::util;
     lifetime_counter_sentry vsentry(val::root_lifetime_stats()), ssentry(str::root_lifetime_stats());
 
-    auto func_v = [](val v) { return v.value; };
-    auto func_vr = [](val& v) { v.value += 5; return v.value; };
-    auto func_vcr = [](const val& v) { return v.value; };
-
-    auto func_vs = [](val v, str s) { return v.value + std::stoi(s.value); };
-
     // refs
     {
+        auto func_vr = [](val& v) { v.value += 5; return v.value; };
+        auto func_vcr = [](const val& v) { return v.value; };
+
         val::lifetime_stats vs;
-        val v;
-        v.value = 42;
+        val v(42);
 
         itlib::func_ptr<int(val&)> fptr(&func_vr);
         CHECK(fptr(v) == 47);
@@ -98,14 +96,33 @@ TEST_CASE("arg lifetime") {
         CHECK(vs.total == 1);
     }
 
-    // copies
+    // copies and moves
     {
+        auto func_v = [](val v) { return v.value; };
+        auto func_vs = [](val v, str s) { return v.value + std::stoi(s.value); };
+
         val::lifetime_stats vs;
-        val v;
-        v.value = 42;
+        str::lifetime_stats ss;
+        val v(42);
 
         itlib::func_ptr<int(val)> fptr(&func_v);
 
+        CHECK(fptr(v) == 42);
+        CHECK(vs.copies == 1);
 
+        str s("58");
+
+        itlib::func_ptr<int(val, str)> fptr2(&func_vs);
+        CHECK(fptr2(v, s) == 100);
+        CHECK(vs.copies == 2);
+        CHECK(ss.copies == 1);
+
+        CHECK(fptr2(std::move(v), std::move(s)) == 100);
+        CHECK(vs.copies == 2);
+        CHECK(ss.copies == 1);
+
+        CHECK(fptr2(val(10), str("20")) == 30);
+        CHECK(vs.copies == 2);
+        CHECK(ss.copies == 1);
     }
 }
