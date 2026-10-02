@@ -167,11 +167,14 @@ private:
 
 inline std::string strftime(const char* format, const std::tm& tm)
 {
+    // A literal suffix distinguishes successful empty output from a full buffer.
+    std::string format_with_suffix(format);
+    format_with_suffix += ' ';
     std::string ret;
     ret.resize(128);
     size_t len;
-    while ((len = std::strftime(&ret.front(), ret.size(), format, &tm)) == 0) ret.resize(2 * ret.size());
-    ret.resize(len);
+    while ((len = std::strftime(&ret.front(), ret.size(), format_with_suffix.c_str(), &tm)) == 0) ret.resize(2 * ret.size());
+    ret.resize(len - 1);
     return ret;
 }
 
