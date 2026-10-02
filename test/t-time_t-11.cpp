@@ -5,6 +5,8 @@
 
 #include <itlib/time_t.hpp>
 
+#include <vector>
+
 TEST_CASE("[time_t] basic and arithmetic")
 {
     {
@@ -112,5 +114,23 @@ TEST_CASE("[time_t] from/to tm")
         auto fromlocal = itlib::time_t::from_localtime(localtm);
         CHECK(fromlocal == now);
         CHECK(eq(localtm, localtmc)); // localtm shouldn't be normalized it should be produced normalized by localtime
+    }
+}
+
+TEST_CASE("[time_t] strftime matches native output")
+{
+    auto tm = itlib::time_t(1000100000).gmtime();
+    tm.tm_isdst = -1;
+    std::vector<std::string> formats = {
+        "", "%z", "%Z", "%%", "literal", "trailing space ",
+        "%Y-%m-%d %H:%M:%S", std::string("head\0ignored", 12)
+    };
+    for (auto size : {126, 127, 128, 255, 256, 511, 2048}) {
+        formats.emplace_back(size, 'x');
+    }
+    for (const auto& format : formats) {
+        char buffer[4096] = {};
+        const auto size = std::strftime(buffer, sizeof(buffer), format.c_str(), &tm);
+        CHECK(itlib::strftime(format.c_str(), tm) == std::string(buffer, size));
     }
 }
