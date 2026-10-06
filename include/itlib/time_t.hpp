@@ -227,7 +227,7 @@ inline std::string strftime(const char* format, const std::tm& tm)
             // 256 times the format string is a generous limit, we figure
             return {};
         }
-    };
+    }
 }
 
 }
