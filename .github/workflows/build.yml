@@ -9,9 +9,7 @@ jobs:
         preset: [debug, release]
     steps:
       - name: Clone
-        uses: actions/checkout@v4
-      - name: Install Ninja
-        uses: seanmiddleditch/gha-setup-ninja@v5
+        uses: actions/checkout@v7
       - name: VC Vars
         # Setup vcvars on Windows
         # MSVC's address sanitizer attaches dependencies to several DLLs which are not in PATH
