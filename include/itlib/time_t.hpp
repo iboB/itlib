@@ -181,16 +181,22 @@ inline std::string strftime(const char* format, const std::tm& tm)
     // the format string with a space suffix at the end
 
     // but first let's devise a buffer reserve strategy
-    size_t initial_size;
+    std::string ret;
     if (flen < 32) {
         // small format string: likely only format sequences and a handful of literals
-        initial_size = flen * 4;
+        const auto initial_size = flen * 4;
+        if (initial_size < ret.capacity()) {
+            // no need to resize to anything smaller than capacity: it's zero allocations anyway
+            ret.resize(ret.capacity());
+        }
+        else {
+            ret.resize(initial_size);
+        }
     }
     else {
         // large format string: likely a lot of literal text
-        initial_size = 128 + flen + 1;
+        ret.resize(128 + flen + 1);
     }
-    std::string ret(initial_size, 0);
     auto fmtcopy = &ret.back() - flen;
     std::memcpy(fmtcopy, format, flen);
     ret.back() = ' '; // guarantee 1 byte of output in a legit empty result
