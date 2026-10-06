@@ -122,12 +122,14 @@ TEST_CASE("[time_t] strftime matches native output")
     auto tm = itlib::time_t(1000100000).gmtime();
     tm.tm_isdst = -1;
     std::vector<std::string> formats = {
-        "", "%z", "%Z", "%%", "literal", "trailing space ",
+        "", "%z", "%Z", "%Z ", "%c", "%%", "literal", "trailing space ",
         "%Y-%m-%d %H:%M:%S", std::string("head\0ignored", 12)
     };
     for (auto size : {126, 127, 128, 255, 256, 511, 2048}) {
         formats.emplace_back(size, 'x');
     }
+    formats.push_back(std::string(200, 'x') + " %Y-%m-%d %H:%M:%S " + std::string(200, 'y'));
+
     for (const auto& format : formats) {
         char buffer[4096] = {};
         const auto size = std::strftime(buffer, sizeof(buffer), format.c_str(), &tm);
