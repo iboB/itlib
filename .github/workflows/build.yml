@@ -15,7 +15,9 @@ jobs:
         # MSVC's address sanitizer attaches dependencies to several DLLs which are not in PATH
         # vcvars will add them to PATH and allow msvc asan executables to run
         if: matrix.os == 'windows-latest'
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: TheMrMilchmann/setup-msvc-dev@v4
+        with:
+          arch: x64
       - name: Configure ASAN
         run: cmake --preset=${{ matrix.preset }}-asan -B asan
       - name: Build ASAN
