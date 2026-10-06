@@ -1,11 +1,11 @@
-// itlib-time_t v1.02
+// itlib-time_t v1.03
 //
 // A thin wrapper of std::time_t which provides thread safe std::tm getters and
 // type-safe (std::chrono::duration-based) arithmetic
 //
 // SPDX-License-Identifier: MIT
 // MIT License:
-// Copyright(c) 2020-2023 Borislav Stanimirov
+// Copyright(c) 2020-2026 Borislav Stanimirov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files(the
@@ -29,6 +29,8 @@
 //
 //                  VERSION HISTORY
 //
+//  1.03 (2026-10-06) Reimplement strftime: correctly guard against valid
+//                    non-empty formats which produce empty output
 //  1.02 (2023-04-29) Fix MSVC warning for assignment in while
 //  1.01 (2021-04-29) Added named ctors: now, from_gmtime, from_localtime
 //  1.00 (2020-10-36) Initial release
@@ -62,6 +64,7 @@
 #include <ctime>
 #include <chrono>
 #include <cstdint>
+#include <cstring>
 #include <string>
 
 namespace itlib
@@ -167,15 +170,58 @@ private:
 
 inline std::string strftime(const char* format, const std::tm& tm)
 {
-    // A literal suffix distinguishes successful empty output from a full buffer.
-    std::string format_with_suffix(format);
-    format_with_suffix += ' ';
-    std::string ret;
-    ret.resize(128);
-    size_t len;
-    while ((len = std::strftime(&ret.front(), ret.size(), format_with_suffix.c_str(), &tm)) == 0) ret.resize(2 * ret.size());
-    ret.resize(len - 1);
-    return ret;
+    const auto flen = std::strlen(format);
+    if (flen <= 1) {
+        // empty or single char format string - no need to actually format anything
+        return std::string(format, flen);
+    }
+
+    // now, the problem is: how to guard for valid non-empty formats, which lead to an empty output
+    // since we allocate the result anyway, we can piggy-back on the allocation and write
+    // the format string with a space suffix at the end
+
+    // but first let's devise a buffer reserve strategy
+    size_t initial_size;
+    if (flen < 32) {
+        // small format string: likely only format sequences and a handful of literals
+        initial_size = flen * 4;
+    }
+    else {
+        // large format string: likely a lot of literal text
+        initial_size = 128 + flen + 1;
+    }
+    std::string ret(initial_size, 0);
+    auto fmtcopy = &ret.back() - flen;
+    std::memcpy(fmtcopy, format, flen);
+    ret.back() = ' '; // guarantee 1 byte of output in a legit empty result
+
+    auto len = std::strftime(&ret.front(), ret.size() - flen - 1, fmtcopy, &tm);
+    if (len == 1) {
+        // legit empty result
+        return {};
+    }
+    if (len != 0) {
+        // lucky! our buffer front was enough
+        ret.resize(len - 1);
+        return ret;
+    }
+
+    // now we know for sure that the buffer was too small, and we can do a safe resize loop with the original fmt
+
+    for (;;) {
+        ret.resize(2 * ret.size());
+        len = std::strftime(&ret.front(), ret.size(), format, &tm);
+        if (len != 0) {
+            ret.resize(len);
+            return ret;
+        }
+        if (ret.size() > flen * 256) {
+            // some platforms return 0 for invalid format strings, so we need to guard against that
+            // otherwise we could loop until we run out of memory
+            // 256 times the format string is a generous limit, we figure
+            return {};
+        }
+    };
 }
 
 }
