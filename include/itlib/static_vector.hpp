@@ -117,6 +117,7 @@
 #include <type_traits>
 #include <cstddef>
 #include <iterator>
+#include <memory>
 
 #define ITLIB_STATIC_VECTOR_ERROR_HANDLING_NONE  0
 #define ITLIB_STATIC_VECTOR_ERROR_HANDLING_THROW 1
@@ -331,12 +332,12 @@ public:
 
     const_pointer data() const noexcept
     {
-        return &m_data[0].data;
+        return std::addressof(m_data[0].data);
     }
 
     pointer data() noexcept
     {
-        return &m_data[0].data;;
+        return std::addressof(m_data[0].data);
     }
 
     // iterators
